@@ -1,0 +1,5 @@
+#!/bin/sh
+. /etc/profile
+while [ 1 ]; do
+	qtbrowser -qws http://boundarydevices.com/
+done

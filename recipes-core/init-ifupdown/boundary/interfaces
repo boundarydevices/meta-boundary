@@ -1,0 +1,25 @@
+# /etc/network/interfaces -- configuration file for ifup(8), ifdown(8)
+ 
+# The loopback interface
+auto lo
+iface lo inet loopback
+
+# Wireless interfaces
+iface wlan0 inet dhcp
+	wireless_mode managed
+	wireless_essid any
+	wpa-driver nl80211
+	wpa-conf /app/etc/wpa_supplicant.conf
+
+# Wired or wireless interfaces
+auto eth0
+iface eth0 inet dhcp
+    hostname `/bin/hostname`
+
+# Ethernet/RNDIS gadget (g_ether)
+# ... or on host side, usbnet and random hwaddr
+iface usb0 inet static
+	address 10.0.0.2
+	netmask 255.255.255.0
+	network 10.0.0.0
+

@@ -1,0 +1,20 @@
+Signed-off-by: Eric Nelson <eric.nelson@boundarydevices.com>
+---
+ src/3rdparty/webkit/Source/WebKit/qt/Api/qwebpage.cpp | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/3rdparty/webkit/Source/WebKit/qt/Api/qwebpage.cpp b/src/3rdparty/webkit/Source/WebKit/qt/Api/qwebpage.cpp
+index 078fe15..3b1dd25 100644
+--- a/src/3rdparty/webkit/Source/WebKit/qt/Api/qwebpage.cpp
++++ b/src/3rdparty/webkit/Source/WebKit/qt/Api/qwebpage.cpp
+@@ -2090,6 +2090,7 @@ QWidget *QWebPage::view() const
+ */
+ void QWebPage::javaScriptConsoleMessage(const QString& message, int lineNumber, const QString& sourceID)
+ {
++    fprintf (stdout, "%s:%d: %s\n", sourceID.toUtf8().constData(), lineNumber, message.toUtf8().constData());
+     Q_UNUSED(sourceID)
+
+     // Catch plugin logDestroy message for LayoutTests/plugins/open-and-close-window-with-plugin.html
+
+--
+1.9.1

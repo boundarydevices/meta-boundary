@@ -1,0 +1,21 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides: blank-displays
+# Required-Start:
+# Required-Stop:
+# Default-Start:     
+# Default-Stop:      K
+#
+# install with update-rc.d blank-displays start 85 0 .
+#
+### END INIT INFO
+mount -t sysfs none /sys
+echo "------------------blanking displays"
+for n in 0 2 4 5 ; do 
+        if [ -d /sys/class/graphics/fb${n}/ ]; then
+                echo 1 > /sys/class/graphics/fb${n}/blank;
+        fi
+done
+for d in /sys/class/backlight/* ; do
+    echo 0 > $d/brightness ;
+done

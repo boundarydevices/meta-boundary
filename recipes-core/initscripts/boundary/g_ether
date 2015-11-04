@@ -1,0 +1,37 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides: g_ether
+# Required-Start:    networking
+# Required-Stop:     networking
+# Default-Start:     S
+# Default-Stop:
+#
+# install with update-rc.d g_ether start 50 5 .
+#
+### END INIT INFO
+
+case "$1" in
+  start)
+	echo -n "Starting g_ether"
+        modprobe g_ether dev_addr=00:19:b8:00:00:02 host_addr=00:19:b8:00:00:01
+        ifconfig usb0 up
+        ifconfig usb0 10.0.0.2 netmask 255.255.255.0
+	echo "done"
+	;;
+  stop)
+	echo -n "Stopping g_ether"
+	ifconfig usb0 down
+	echo "done"
+	;;
+  restart)
+  	$0 stop
+	$0 start
+	;;
+  *)
+	echo "Usage: $0 { start | stop | restart }" >&2
+	exit 1
+	;;
+esac
+
+exit 0
+

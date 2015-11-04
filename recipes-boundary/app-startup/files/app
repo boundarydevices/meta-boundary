@@ -1,0 +1,46 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides: app
+# Required-Start:    wifi
+# Required-Stop:     wifi
+# Default-Start:     S
+# Default-Stop:
+#
+# install with update-rc.d app start 80 5 .
+#
+# SPDX-License-Identifier:	LGPL-3.0+
+#
+### END INIT INFO
+
+case "$1" in
+  start)
+	echo -n "Starting application"
+        daemonize /app/run-app
+	echo "done"
+	;;
+  stop)
+	echo -n "Stopping application"
+        /app/stop-app
+	echo "done"
+	;;
+  restart)
+	$0 stop
+	$0 start
+	;;
+  status)
+    pid=`pidof -x run-app`
+    if [ -n "$pid" ]; then
+        echo "run-app (pid $pid) is running ..."
+        exit 2
+    else
+        echo "run-app is stopped"
+    fi
+    ;;
+  *)
+	echo "Usage: app { start | stop | restart | status }" >&2
+	exit 1
+	;;
+esac
+
+exit 0
+
