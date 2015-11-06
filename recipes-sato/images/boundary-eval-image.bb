@@ -16,5 +16,5 @@ IMAGE_INSTALL += "\
 	chromium \
 	firefox \
 	nodejs \
-	packagegroup-fsl-gstreamer-full \
+	packagegroup-fsl-gstreamer1.0-full \
 "
