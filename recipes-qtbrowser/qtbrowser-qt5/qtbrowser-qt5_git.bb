@@ -1,4 +1,4 @@
-inherit qt5-module
+require recipes-qt/qt5/qt5.inc
 
 DESCRIPTION = "QT Browser"
 PR = "r0"
