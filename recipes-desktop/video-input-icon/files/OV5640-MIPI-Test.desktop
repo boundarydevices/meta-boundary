@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=OV5640 MIPI Test
+Comment=Launches gst-launch to show ov5640-mipi input on screen.
+Exec=/usr/bin/ov5640-mipi-test
+Icon=video-player
+Terminal=true
+Type=Application
+StartupNotify=true
+Categories=GTK;AudioVideo;Audio;Player;

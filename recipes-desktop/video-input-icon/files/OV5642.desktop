@@ -1,0 +1,9 @@
+[Desktop Entry]   
+Name=OV5642 Test
+Comment=Launches gst-launch to show ov5642 input on screen.
+Exec=/usr/bin/ov5642-test
+Icon=video-player 
+Terminal=true
+Type=Application  
+StartupNotify=true
+Categories=GTK;AudioVideo;Audio;Player;

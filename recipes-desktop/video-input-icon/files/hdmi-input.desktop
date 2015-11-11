@@ -1,0 +1,9 @@
+[Desktop Entry]   
+Name=HDMI Input Test
+Comment=Launches gst-launch to show hdmi input on screen.
+Exec=/usr/bin/hdmi-input
+Icon=video-player 
+Terminal=true
+Type=Application  
+StartupNotify=true
+Categories=GTK;AudioVideo;Audio;Player;

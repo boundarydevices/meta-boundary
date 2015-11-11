@@ -1,0 +1,1 @@
+gst-launch-1.0 imxv4l2videosrc device=/dev/video0 ! autovideosink;
