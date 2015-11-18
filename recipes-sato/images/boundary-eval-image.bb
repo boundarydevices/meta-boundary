@@ -14,7 +14,7 @@ inherit core-image
 IMAGE_INSTALL += "\
 	packagegroup-core-x11-sato-games \
 	chromium \
-	firefox \
 	nodejs \
 	packagegroup-fsl-gstreamer1.0-full \
+	video-input-icon \
 "
