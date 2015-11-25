@@ -17,4 +17,5 @@ IMAGE_INSTALL += "\
 	nodejs \
 	packagegroup-fsl-gstreamer1.0-full \
 	video-input-icon \
+	xinput-calibration-ft5x06 \
 "
