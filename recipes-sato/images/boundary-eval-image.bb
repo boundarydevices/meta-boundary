@@ -18,4 +18,15 @@ IMAGE_INSTALL += "\
 	packagegroup-fsl-gstreamer1.0-full \
 	video-input-icon \
 	xinput-calibration-ft5x06 \
+	\
+	flex \
+	gcc \
+	git \
+	m4 \
+	make \
+	iperf \
+	libtool \
+	nano \
+	python-compiler \
+	strace \
 "
