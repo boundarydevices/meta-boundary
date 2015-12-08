@@ -28,4 +28,6 @@ IMAGE_INSTALL += "\
 	nano \
 	python-compiler \
 	strace \
+	screen \
+	minicom \
 "
