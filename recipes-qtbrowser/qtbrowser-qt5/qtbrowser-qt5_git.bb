@@ -6,11 +6,10 @@ LICENSE = "CLOSED"
 
 DEPENDS = "qtbase qtwebkit"
 
-SRCREV = "e2ca0767b744c8e8a26b72b496b729e855462d3c"
-SRC_URI = "git://github.com/boundarydevices/qtbrowser;branch=qt5 \
-"
+SRCREV = "57ac373f948498810c3f276fe712e67f5ec0d4aa"
+SRC_URI = "git://github.com/boundarydevices/qtbrowser;branch=qt5"
 
-S = "${WORKDIR}/git"
+S = "${WORKDIR}/qtbrowser"
 
 PARALLEL_MAKE = ""
 
