@@ -15,6 +15,8 @@ IMAGE_INSTALL += "\
 	packagegroup-core-x11-sato-games \
 	firefox \
 	chromium \
+	chromium-codecs-ffmpeg \
+	chromium-codecs-ffmpeg-bin \
 	nodejs \
 	packagegroup-fsl-gstreamer1.0-full \
 	video-input-icon \
