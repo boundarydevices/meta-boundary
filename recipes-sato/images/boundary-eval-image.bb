@@ -19,7 +19,6 @@ IMAGE_INSTALL += "\
 	chromium-codecs-ffmpeg-bin \
 	nodejs \
 	packagegroup-fsl-gstreamer1.0-full \
-	video-input-icon \
 	\
 	flex \
 	gcc \
@@ -34,3 +33,5 @@ IMAGE_INSTALL += "\
 	screen \
 	minicom \
 "
+
+IMAGE_INSTALL_nitrogen6x += "video-input-icon"
