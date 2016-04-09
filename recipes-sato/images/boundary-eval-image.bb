@@ -34,4 +34,4 @@ IMAGE_INSTALL += "\
 	minicom \
 "
 
-IMAGE_INSTALL_nitrogen6x += "video-input-icon"
+IMAGE_INSTALL_append_nitrogen6x += "video-input-icon"
