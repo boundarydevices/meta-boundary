@@ -11,24 +11,27 @@
 ### END INIT INFO
 
 case "$1" in
-  start)
-	echo -n "Starting wifi"
-        modprobe brcmfmac
-	ifup wlan0
-	echo "done"
+	start)
+		echo -n "Starting wifi"
+		killall wpa_supplicant
+		rfkill unblock all
+		modprobe brcmfmac
+		ifup wlan0
+		udhcpc -b -i wlan0
+		echo "done"
 	;;
-  stop)
-	echo -n "Stopping wifi"
-	ifdown wlan0
-	echo "done"
+	stop)
+		echo -n "Stopping wifi"
+		ifdown wlan0
+		echo "done"
 	;;
-  restart)
-  	$0 stop
-	$0 start
+	restart)
+		$0 stop
+		$0 start
 	;;
-  *)
-	echo "Usage: wifi { start | stop | restart }" >&2
-	exit 1
+	*)
+		echo "Usage: wifi { start | stop | restart }" >&2
+		exit 1
 	;;
 esac
 
