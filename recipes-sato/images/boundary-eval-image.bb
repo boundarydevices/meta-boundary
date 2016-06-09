@@ -14,9 +14,6 @@ inherit core-image
 IMAGE_INSTALL += "\
 	packagegroup-core-x11-sato-games \
 	firefox \
-	chromium \
-	chromium-codecs-ffmpeg \
-	chromium-codecs-ffmpeg-bin \
 	nodejs \
 	packagegroup-fsl-gstreamer1.0-full \
 	\
@@ -34,4 +31,8 @@ IMAGE_INSTALL += "\
 	minicom \
 "
 
-IMAGE_INSTALL_append_nitrogen6x += "video-input-icon"
+# Video input demos only on nitrogen6x platform
+# Chromium not on nitrogen7
+IMAGE_INSTALL_append_nitrogen6x += "video-input-icon chromium"
+IMAGE_INSTALL_append_nitrogen6x-lite += "chromium"
+IMAGE_INSTALL_append_nitrogen6sx += "chromium"
