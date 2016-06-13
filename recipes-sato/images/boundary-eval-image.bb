@@ -31,8 +31,9 @@ IMAGE_INSTALL += "\
 	minicom \
 "
 
-# Video input demos only on nitrogen6x platform
+# Video input demos only on nitrogen6x/sx/7 platform
 # Chromium not on nitrogen7
 IMAGE_INSTALL_append_nitrogen6x += "video-input-icon chromium"
 IMAGE_INSTALL_append_nitrogen6x-lite += "chromium"
-IMAGE_INSTALL_append_nitrogen6sx += "chromium"
+IMAGE_INSTALL_append_nitrogen6sx += "video-input-icon chromium"
+IMAGE_INSTALL_append_nitrogen7 += "video-input-icon"
