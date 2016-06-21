@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Name=Chromium
+Comment=Access the Internet
+Exec=/usr/bin/google-chrome www.google.com
+Terminal=false
+Icon=/usr/bin/chromium/product_logo_48.png
+Type=Application
+Categories=Network;WebBrowser;
+MimeType=text/html;text/xml;application/xhtml_xml;x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/ftp;
