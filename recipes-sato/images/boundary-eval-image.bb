@@ -29,6 +29,7 @@ IMAGE_INSTALL += "\
 	strace \
 	screen \
 	minicom \
+	openssl \
 "
 
 # Video input demos only on nitrogen6x/sx/7 platform
