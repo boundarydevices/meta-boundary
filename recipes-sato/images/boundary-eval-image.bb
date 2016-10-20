@@ -29,6 +29,7 @@ IMAGE_INSTALL += "\
 	screen \
 	minicom \
 	openssl \
+	cryptodev-module \
 "
 
 # Video input demos only on nitrogen6x/sx/7 platform
