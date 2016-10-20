@@ -9,7 +9,7 @@ DEPENDS = "qtbase qtwebkit"
 SRCREV = "57ac373f948498810c3f276fe712e67f5ec0d4aa"
 SRC_URI = "git://github.com/boundarydevices/qtbrowser;branch=qt5"
 
-S = "${WORKDIR}/qtbrowser"
+S = "${WORKDIR}/git"
 
 PARALLEL_MAKE = ""
 
