@@ -9,9 +9,12 @@ IMAGE_FEATURES += "splash package-management x11-base x11-sato ssh-server-dropbe
 
 LICENSE = "MIT"
 
-inherit core-image
+inherit core-image distro_features_check
 
-IMAGE_INSTALL += "\
+REQUIRED_DISTRO_FEATURES = "x11"
+CONFLICT_DISTRO_FEATURES = "wayland"
+
+CORE_IMAGE_BASE_INSTALL += "\
 	packagegroup-core-x11-sato-games \
 	nodejs \
 	packagegroup-fsl-gstreamer1.0-full \
@@ -34,7 +37,7 @@ IMAGE_INSTALL += "\
 
 # Video input demos only on nitrogen6x/sx/7 platform
 # Chromium not on nitrogen7
-IMAGE_INSTALL_append_nitrogen6x += "video-input-icon chromium"
-IMAGE_INSTALL_append_nitrogen6x-lite += "chromium"
-IMAGE_INSTALL_append_nitrogen6sx += "video-input-icon chromium"
-IMAGE_INSTALL_append_nitrogen7 += "video-input-icon"
+CORE_IMAGE_BASE_INSTALL_append_nitrogen6x += "video-input-icon chromium firefox"
+CORE_IMAGE_BASE_INSTALL_append_nitrogen6x-lite += "chromium firefox"
+CORE_IMAGE_BASE_INSTALL_append_nitrogen6sx += "video-input-icon chromium firefox"
+CORE_IMAGE_BASE_INSTALL_append_nitrogen7 += "video-input-icon"
