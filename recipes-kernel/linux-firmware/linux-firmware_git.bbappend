@@ -9,7 +9,10 @@ SRC_URI[TIInit_7.6.15.md5sum] = "3f84f0d782376363d0028fc4b2402ccb"
 SRC_URI[TIInit_7.6.15.sha256sum] = "e78156ad81446fdeb46da661290f763f3fe97d111526b2d19cd764a634268888"
 
 do_install_append() {
+    rm -rf ${D}/lib/firmware/TIInit_*.bts
+    rm ${D}/lib/firmware/ti-connectivity/TIInit_*.bts
     cp ${WORKDIR}/TIInit_7.6.15.bts ${D}/lib/firmware/ti-connectivity/
+    ( cd ${D}/lib/firmware ; ln -sf ti-connectivity/TIInit_7.6.15.bts . )
 }
 
 PACKAGE_ARCH_mx7 = "${MACHINE_ARCH}"
