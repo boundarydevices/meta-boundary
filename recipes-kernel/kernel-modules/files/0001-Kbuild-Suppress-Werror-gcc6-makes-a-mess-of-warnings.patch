@@ -1,0 +1,25 @@
+From 8f31a64eb16618239267e734e4a8856a3de322b6 Mon Sep 17 00:00:00 2001
+From: Ian Coolidge <ian@boundarydevices.com>
+Date: Mon, 19 Dec 2016 16:19:01 -0800
+Subject: [PATCH] Kbuild: Suppress Werror, gcc6 makes a mess of warnings on
+ this code
+
+---
+ Kbuild | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/Kbuild b/Kbuild
+index c696869..d55a4f9 100644
+--- a/Kbuild
++++ b/Kbuild
+@@ -1041,7 +1041,6 @@ CDEFINES :=	-DANI_LITTLE_BYTE_ENDIAN \
+ 		-DWLAN_PERF \
+ 		-DPTT_SOCK_SVC_ENABLE \
+ 		-Wall\
+-		-Werror\
+ 		-D__linux__ \
+ 		-DHAL_SELF_STA_PER_BSS=1 \
+ 		-DWLAN_FEATURE_VOWIFI_11R \
+-- 
+2.7.4
+

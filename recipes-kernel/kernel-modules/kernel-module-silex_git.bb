@@ -7,7 +7,9 @@ inherit module
 
 SRCREV = "2279b68f9705c6a97552ee12079b2995510a41c1"
 
-SRC_URI = "git://github.com/boundarydevices/qcacld-2.0.git;branch=${SRCBRANCH}"
+SRC_URI = "git://github.com/boundarydevices/qcacld-2.0.git;branch=${SRCBRANCH} \
+	file://0001-Kbuild-Suppress-Werror-gcc6-makes-a-mess-of-warnings.patch \
+"
 SRCBRANCH = "boundary-LNX.LEH.4.2.2.2-4.5.20.034"
 
 S = "${WORKDIR}/git"
