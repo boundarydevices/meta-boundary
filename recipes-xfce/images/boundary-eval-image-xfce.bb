@@ -34,6 +34,11 @@ CORE_IMAGE_BASE_INSTALL += "\
 	cryptodev-module \
 "
 
+# For silex module support uncomment the line below and register your ssh key on our webserver to get access.
+# Silex requires some terms and conditions to be accepted before you can build
+# Contact laci@boundarydevices.com with a ssh key add request, please include your public ssh key
+#CORE_IMAGE_BASE_INSTALL += "kernel-module-silex linux-firmware-silex"
+
 # Video input demos only on nitrogen6x/sx/7 platform
 # Chromium not on nitrogen7
 CORE_IMAGE_BASE_INSTALL_append_nitrogen6x += "video-input-icon chromium firefox"
