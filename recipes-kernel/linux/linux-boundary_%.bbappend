@@ -1,4 +1,10 @@
 CUSTOM_DEFCONFIG ?= ""
+CUSTOM_DEFCONFIG_imx6-acl = "${WORKDIR}/defconfig-acl"
+
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
+SRC_URI += " file://defconfig-acl "
+
+SRCREV = "651db0bae82f186d3ed687848dd4b3764c0ba0a8"
 
 do_custom_defconfig () {
   if [ ! -z "${CUSTOM_DEFCONFIG}" ]; then 
