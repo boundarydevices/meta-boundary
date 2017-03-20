@@ -4,7 +4,7 @@ LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=4bc53cea4911b2abe17c307d0f49a5d8"
 SECTION = "base"
 
-SRCREV = "49dc7ff7b9657d9310cb49cfae77c9c2b2422ffe"
+SRCREV = "bfceff194b1266293eb59d0eb83fd2879e085638"
 SRCBRANCH = "ftp628"
 SRC_URI = "git://github.com/boundarydevices/printer-tools.git;protocol=git;branch=${SRCBRANCH}"
 
