@@ -1,9 +1,7 @@
 SUMMARY = "Firmware files for Silex wifi/bt module"
 SECTION = "kernel"
 
-LICENSE = "\
-    Firmware-QCA \
-"
+LICENSE = "Firmware-QCA"
 
 LIC_FILES_CHKSUM = "\
     file://LICENSE.TXT;md5=3d1167bd6ce1e9763e791a3d5bab379f \
@@ -11,7 +9,7 @@ LIC_FILES_CHKSUM = "\
 
 # These are not common licenses, set NO_GENERIC_LICENSE for them
 # so that the license files will be copied from fetched source
-NO_GENERIC_LICENSE[Firmware-QCA] = "LICENCE.TXT"
+NO_GENERIC_LICENSE[Firmware-QCA] = "${WORKDIR}/LICENCE.TXT"
 
 SRCREV = "889689ade3266a14557ccfd1b8c4ef47d2379ede"
 
