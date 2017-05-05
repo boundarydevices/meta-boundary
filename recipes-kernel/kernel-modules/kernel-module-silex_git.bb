@@ -5,10 +5,9 @@ LIC_FILES_CHKSUM = "file://${S}/CORE/HDD/src/wlan_hdd_main.c;beginline=1;endline
 
 inherit module
 
-SRCREV = "2279b68f9705c6a97552ee12079b2995510a41c1"
+SRCREV = "734ed269c802246b2d4a8a9a8385188b72864ce0"
 
 SRC_URI = "git://github.com/boundarydevices/qcacld-2.0.git;branch=${SRCBRANCH} \
-	file://0001-Kbuild-Suppress-Werror-gcc6-makes-a-mess-of-warnings.patch \
 "
 SRCBRANCH = "boundary-LNX.LEH.4.2.2.2-4.5.20.034"
 
