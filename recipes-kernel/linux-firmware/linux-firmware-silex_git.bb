@@ -11,7 +11,7 @@ LIC_FILES_CHKSUM = "\
 # so that the license files will be copied from fetched source
 NO_GENERIC_LICENSE[Firmware-QCA] = "${WORKDIR}/LICENCE.TXT"
 
-SRCREV = "889689ade3266a14557ccfd1b8c4ef47d2379ede"
+SRCREV = "4af71deda74166febd04bced37fb8a49b438d061"
 
 SRC_URI = "git://git@linode.boundarydevices.com/qca-firmware.git;protocol=ssh"
 
