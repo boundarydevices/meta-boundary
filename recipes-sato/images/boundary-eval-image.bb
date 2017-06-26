@@ -24,7 +24,7 @@ CORE_IMAGE_BASE_INSTALL += "\
 	git \
 	m4 \
 	make \
-	iperf \
+	iperf3 \
 	libtool \
 	nano \
 	python-compiler \
@@ -42,7 +42,7 @@ CORE_IMAGE_BASE_INSTALL += "\
 
 # Video input demos only on nitrogen6x/sx/7 platform
 # Chromium not on nitrogen7
-CORE_IMAGE_BASE_INSTALL_append_nitrogen6x += "video-input-icon chromium firefox"
+CORE_IMAGE_BASE_INSTALL_append_nitrogen6x += "video-input-icon chromium firefox qt5everywheredemo cinematicexperience"
 CORE_IMAGE_BASE_INSTALL_append_nitrogen6x-lite += "chromium firefox"
 CORE_IMAGE_BASE_INSTALL_append_nitrogen6sx += "video-input-icon chromium firefox"
 CORE_IMAGE_BASE_INSTALL_append_nitrogen7 += "video-input-icon"
