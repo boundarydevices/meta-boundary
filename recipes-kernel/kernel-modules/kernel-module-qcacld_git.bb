@@ -1,11 +1,11 @@
 # Copyright (C) 2016 Boundary Devices
-SUMMARY = "Silex QCA9377 WiFi kernel module"
+SUMMARY = "QCACLD driver for QCA9377-based BD-SDMAC module"
 LICENSE = "ISC"
 LIC_FILES_CHKSUM = "file://${S}/CORE/HDD/src/wlan_hdd_main.c;beginline=1;endline=20;md5=c191a07d6df8a17ee5b865137f729304"
 
 inherit module
 
-SRCREV = "ccc4f3062179eff2a49424fcc3776216da1f48fd"
+SRCREV = "18f2922c08a1ef6c003c8487621dc7b485737ee1"
 
 SRC_URI = "git://github.com/boundarydevices/qcacld-2.0.git;branch=${SRCBRANCH} \
 "
