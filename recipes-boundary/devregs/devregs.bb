@@ -9,14 +9,14 @@ S = "${WORKDIR}/git"
 
 SRC_URI = "git://github.com/boundarydevices/devregs.git;branch=${SRCBRANCH}"
 SRCBRANCH = "master"
-SRCREV = "4fffb7de640a1fe56d4ce18fffe74dfaec31f81a"
+SRCREV = "8e2537cec400a4cedd1e37a9cc823cea458732e9"
 
 inherit autotools-brokensep
 
 do_install_append() {
-        cp -fv ${S}/dat/devregs_imx6* ${D}${sysconfdir}/
+        cp -fv ${S}/dat/devregs_imx* ${D}${sysconfdir}/
 }
 
 FILES_${PN} += " \
-        ${sysconfdir}/devregs_imx6*.dat \
+        ${sysconfdir}/devregs_imx*.dat \
 "
