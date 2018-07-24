@@ -13,11 +13,6 @@ SRCBRANCH = "boundary-LNX.LEH.4.2.2.2"
 
 S = "${WORKDIR}/git"
 
-do_compile(){
-	KERNELDIRPATH=${WORKDIR}/../../linux-boundary/
-	KERNELVERSION=`ls ${KERNELDIRPATH}`
-	# Fairly certain build directory always exists and doesn't get cached in
-	KERNEL_SRC=${KERNELDIRPATH}/${KERNELVERSION}/build CONFIG_CLD_HL_SDIO_CORE=y make
-}
+EXTRA_OEMAKE_append = " CONFIG_CLD_HL_SDIO_CORE=y"
 
 COMPATIBLE_MACHINE = "mx6|mx7|mx8"
