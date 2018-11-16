@@ -1,4 +1,4 @@
-SUMMARY = "WiFi firmware files for BD-SDMAC module"
+SUMMARY = "WiFi and BT firmware files for BD-SDMAC module"
 SECTION = "kernel"
 
 LICENSE = "Firmware-qca"
@@ -7,7 +7,7 @@ LIC_FILES_CHKSUM = "\
     file://LICENSE.qca_firmware;md5=e8b1e9e8ce377ca5b2c1098e5690f470 \
 "
 
-SRCREV = "ce0b576bb1560ca7e6e99dbbb8e0b89428a78f05"
+SRCREV = "5e4b71211ecbb79e7693d2ee07361847f5a0cb40"
 
 SRC_URI = "git://github.com/boundarydevices/qca-firmware.git;branch=${SRCBRANCH}"
 SRCBRANCH = "bd-sdmac-qcacld"
