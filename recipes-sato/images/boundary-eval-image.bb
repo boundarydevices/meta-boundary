@@ -38,7 +38,7 @@ CORE_IMAGE_BASE_INSTALL += "\
 # For silex module support uncomment the line below and register your ssh key on our webserver to get access.
 # Silex requires some terms and conditions to be accepted before you can build
 # Please fill out the form located here for access: https://boundarydevices.com/private-git-access/
-#CORE_IMAGE_BASE_INSTALL += "kernel-module-silex linux-firmware-silex"
+CORE_IMAGE_BASE_INSTALL += "kernel-module-qcacld linux-firmware-bdsdmac bluez5 "
 
 # Video input demos only on nitrogen6x/sx/7 platform
 # Chromium not on nitrogen7
