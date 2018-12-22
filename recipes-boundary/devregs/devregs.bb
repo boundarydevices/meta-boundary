@@ -9,7 +9,7 @@ S = "${WORKDIR}/git"
 
 SRC_URI = "git://github.com/boundarydevices/devregs.git;branch=${SRCBRANCH}"
 SRCBRANCH = "master"
-SRCREV = "4fffb7de640a1fe56d4ce18fffe74dfaec31f81a"
+SRCREV = "24723266f8816f521053ee685531e4178292568d"
 
 inherit autotools-brokensep
 
