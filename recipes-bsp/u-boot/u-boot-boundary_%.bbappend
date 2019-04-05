@@ -1,5 +1,3 @@
-FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
-LIC_FILES_CHKSUM = "file://Licenses/README;md5=30503fd321432fc713238f582193b78e"
 SRCREV = "62132ae8ca90f821ae23bad8a70dfe50e1eaa62c"
 SRCBRANCH = "boundary-v2018.07"
 PV = "v2018.07+git${SRCPV}"
