@@ -12,4 +12,5 @@ CORE_IMAGE_EXTRA_INSTALL += " \
 	mmc-utils \
 	openssh \
 	spitools \
+	connman \
 "
