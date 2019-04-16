@@ -3,7 +3,7 @@ SRC_URI = "git://github.com/boundarydevices/imx-mkimage.git;branch=${SRCBRANCH}"
 SRCREV = "${AUTOREV}"
 PV = "1.0+git${SRCPV}"
 
-IMXBOOT_TARGETS  = "${@bb.utils.contains('MACHINE', 'nitrogen8mm', "u-boot-lpddr4-iMX8MM-2g.nohdmibin", "u-boot-lpddr4-iMX8M-2g.hdmibin", d)}"
+IMXBOOT_TARGETS  = "${@bb.utils.contains('MACHINE', 'nitrogen8mm', "u-boot-lpddr4-iMX8MM-2g.nohdmibin", "u-boot-lpddr4-iMX8MQ-2g.hdmibin", d)}"
 UBOOT_NAME = "u-boot-${MACHINE}.bin"
 BOOT_CONFIG_MACHINE = "${BOOT_NAME}-${MACHINE}.bin"
 
