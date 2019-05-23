@@ -13,4 +13,5 @@ CORE_IMAGE_EXTRA_INSTALL += " \
 	openssh \
 	spitools \
 	connman \
+	tslib-tests tslib-calibrate \
 "

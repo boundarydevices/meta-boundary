@@ -18,7 +18,7 @@ CORE_IMAGE_BASE_INSTALL += "\
 	packagegroup-core-x11-sato-games \
 	nodejs \
 	packagegroup-fsl-gstreamer1.0-full \
-	\
+	tslib-tests tslib-calibrate \
 	flex \
 	gcc \
 	git \
