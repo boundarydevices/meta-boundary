@@ -1,0 +1,1065 @@
+diff -Naur a/boilerplate/cairo-boilerplate-egl.c b/boilerplate/cairo-boilerplate-egl.c
+--- a/boilerplate/cairo-boilerplate-egl.c	2019-10-14 22:45:33.000000000 -0600
++++ b/boilerplate/cairo-boilerplate-egl.c	2019-10-14 22:48:52.000000000 -0600
+@@ -33,13 +33,10 @@
+ #include "cairo-boilerplate-private.h"
+ 
+ #include <cairo-gl.h>
+-#if CAIRO_HAS_GLESV3_SURFACE
+-#include <GLES3/gl3.h>
+-#include <EGL/eglext.h>
++#if CAIRO_HAS_GL_SURFACE
++#include <GL/gl.h>
+ #elif CAIRO_HAS_GLESV2_SURFACE
+ #include <GLES2/gl2.h>
+-#elif CAIRO_HAS_GL_SURFACE
+-#include <GL/gl.h>
+ #endif
+ 
+ static const cairo_user_data_key_t gl_closure_key;
+@@ -88,19 +85,15 @@
+ 	EGL_BLUE_SIZE, 8,
+ 	EGL_ALPHA_SIZE, 8,
+ 	EGL_SURFACE_TYPE, EGL_PBUFFER_BIT,
+-#if CAIRO_HAS_GLESV3_SURFACE
+-	EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT_KHR,
++#if CAIRO_HAS_GL_SURFACE
++	EGL_RENDERABLE_TYPE, EGL_OPENGL_BIT,
+ #elif CAIRO_HAS_GLESV2_SURFACE
+ 	EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+-#elif CAIRO_HAS_GL_SURFACE
+-	EGL_RENDERABLE_TYPE, EGL_OPENGL_BIT,
+ #endif
+ 	EGL_NONE
+     };
+     const EGLint ctx_attribs[] = {
+-#if CAIRO_HAS_GLESV3_SURFACE
+-	EGL_CONTEXT_CLIENT_VERSION, 3,
+-#elif CAIRO_HAS_GLESV2_SURFACE
++#if CAIRO_HAS_GLESV2_SURFACE
+ 	EGL_CONTEXT_CLIENT_VERSION, 2,
+ #endif
+ 	EGL_NONE
+@@ -117,22 +110,15 @@
+     }
+ 
+     eglChooseConfig (gltc->dpy, config_attribs, &config, 1, &numConfigs);
+-#if CAIRO_HAS_GLESV3_SURFACE && CAIRO_HAS_GLESV2_SURFACE
+-    if (numConfigs == 0) {
+-        /* retry with ES2_BIT */
+-        config_attribs[11] = ES2_BIT;  /* FIXME: Ick */
+-        eglChooseConfig (gltc->dpy, config_attribs, &config, 1, &numConfigs);
+-    }
+-#endif
+     if (numConfigs == 0) {
+ 	free (gltc);
+ 	return NULL;
+     }
+ 
+-#if CAIRO_HAS_GLESV3_SURFACE || CAIRO_HAS_GLESV2_SURFACE
+-    eglBindAPI (EGL_OPENGL_ES_API);
+-#elif CAIRO_HAS_GL_SURFACE
++#if CAIRO_HAS_GL_SURFACE
+     eglBindAPI (EGL_OPENGL_API);
++#elif CAIRO_HAS_GLESV2_SURFACE
++    eglBindAPI (EGL_OPENGL_ES_API);
+ #endif
+ 
+     gltc->ctx = eglCreateContext (gltc->dpy, config, EGL_NO_CONTEXT,
+diff -Naur a/boilerplate/Makefile.win32.features b/boilerplate/Makefile.win32.features
+--- a/boilerplate/Makefile.win32.features	2019-10-14 22:45:33.000000000 -0600
++++ b/boilerplate/Makefile.win32.features	2019-10-14 22:48:52.000000000 -0600
+@@ -235,18 +235,6 @@
+ enabled_cairo_boilerplate_sources += $(cairo_boilerplate_glesv2_sources)
+ endif
+ 
+-unsupported_cairo_boilerplate_headers += $(cairo_boilerplate_glesv3_headers)
+-all_cairo_boilerplate_headers += $(cairo_boilerplate_glesv3_headers)
+-all_cairo_boilerplate_private += $(cairo_boilerplate_glesv3_private)
+-all_cairo_boilerplate_cxx_sources += $(cairo_boilerplate_glesv3_cxx_sources)
+-all_cairo_boilerplate_sources += $(cairo_boilerplate_glesv3_sources)
+-ifeq ($(CAIRO_HAS_GLESV3_SURFACE),1)
+-enabled_cairo_boilerplate_headers += $(cairo_boilerplate_glesv3_headers)
+-enabled_cairo_boilerplate_private += $(cairo_boilerplate_glesv3_private)
+-enabled_cairo_boilerplate_cxx_sources += $(cairo_boilerplate_glesv3_cxx_sources)
+-enabled_cairo_boilerplate_sources += $(cairo_boilerplate_glesv3_sources)
+-endif
+-
+ unsupported_cairo_boilerplate_headers += $(cairo_boilerplate_cogl_headers)
+ all_cairo_boilerplate_headers += $(cairo_boilerplate_cogl_headers)
+ all_cairo_boilerplate_private += $(cairo_boilerplate_cogl_private)
+diff -Naur a/build/configure.ac.features b/build/configure.ac.features
+--- a/build/configure.ac.features	2019-10-14 22:45:33.000000000 -0600
++++ b/build/configure.ac.features	2019-10-14 22:48:52.000000000 -0600
+@@ -384,7 +384,6 @@
+ 	echo "  SVG:           $use_svg"
+ 	echo "  OpenGL:        $use_gl"
+ 	echo "  OpenGL ES 2.0: $use_glesv2"
+-	echo "  OpenGL ES 3.0: $use_glesv3"
+ 	echo "  BeOS:          $use_beos"
+ 	echo "  DirectFB:      $use_directfb"
+ 	echo "  OpenVG:        $use_vg"
+diff -Naur a/build/Makefile.win32.features b/build/Makefile.win32.features
+--- a/build/Makefile.win32.features	2019-10-14 22:45:33.000000000 -0600
++++ b/build/Makefile.win32.features	2019-10-14 22:48:52.000000000 -0600
+@@ -18,7 +18,6 @@
+ CAIRO_HAS_PNG_FUNCTIONS=1
+ CAIRO_HAS_GL_SURFACE=0
+ CAIRO_HAS_GLESV2_SURFACE=0
+-CAIRO_HAS_GLESV3_SURFACE=0
+ CAIRO_HAS_COGL_SURFACE=0
+ CAIRO_HAS_DIRECTFB_SURFACE=0
+ CAIRO_HAS_VG_SURFACE=0
+diff -Naur a/build/Makefile.win32.features-h b/build/Makefile.win32.features-h
+--- a/build/Makefile.win32.features-h	2019-10-14 22:45:33.000000000 -0600
++++ b/build/Makefile.win32.features-h	2019-10-14 22:48:52.000000000 -0600
+@@ -59,9 +59,6 @@
+ ifeq ($(CAIRO_HAS_GLESV2_SURFACE),1)
+ 	@echo "#define CAIRO_HAS_GLESV2_SURFACE 1" >> $(top_srcdir)/src/cairo-features.h
+ endif
+-ifeq ($(CAIRO_HAS_GLESV3_SURFACE),1)
+-	@echo "#define CAIRO_HAS_GLESV3_SURFACE 1" >> $(top_srcdir)/src/cairo-features.h
+-endif
+ ifeq ($(CAIRO_HAS_COGL_SURFACE),1)
+ 	@echo "#define CAIRO_HAS_COGL_SURFACE 1" >> $(top_srcdir)/src/cairo-features.h
+ endif
+diff -Naur a/configure.ac b/configure.ac
+--- a/configure.ac	2019-10-14 22:47:37.000000000 -0600
++++ b/configure.ac	2019-10-14 23:05:55.000000000 -0600
+@@ -249,6 +249,27 @@
+ 
+ dnl ===========================================================================
+ 
++CAIRO_ENABLE_SURFACE_BACKEND(skia, Skia, no, [
++  AC_ARG_WITH([skia],
++	      [AS_HELP_STRING([--with-skia=/path/to/skia],
++			      [directory to find compiled skia sources])],
++	      [skia_DIR="$withval"],
++	      [skia_DIR="`pwd`/../skia"])
++  AC_ARG_WITH([skia-build-type],
++	      [AS_HELP_STRING([--with-skia-build-type=(Release|Debug)]
++			      [build of skia to link with, default is Release])],
++	      [skia_BUILD_TYPE="$withval"],
++	      [skia_BUILD_TYPE="Release"])
++  skia_NONPKGCONFIG_CFLAGS="-I$skia_DIR/include/config -I$skia_DIR/include/core -I$skia_DIR/include/effects"
++  if test "x$skia_BUILD_TYPE" = "xRelease"; then
++  	skia_NONPKGCONFIG_CFLAGS="-DSK_RELEASE -DSK_CAN_USE_FLOAT $skia_NONPKGCONFIG_CFLAGS"
++  fi
++  skia_NONPKGCONFIG_LIBS="-L$skia_DIR/out/$skia_BUILD_TYPE/lib.target/ -lskia -lstdc++"
++  AC_SUBST(skia_DIR)
++])
++
++dnl ===========================================================================
++
+ CAIRO_ENABLE_SURFACE_BACKEND(os2, OS/2, no, [
+   case "$host" in
+     *-*-os2*)
+@@ -369,32 +390,6 @@
+ ])
+ 
+ dnl ===========================================================================
+-CAIRO_ENABLE_SURFACE_BACKEND(glesv3, OpenGLESv3, no, [
+-  dnl glesv3 is provided via libGLESv2.so, so require glesv2.pc (there is no libGLESv3, nor glesv3.pc)
+-  glesv3_REQUIRES="glesv2"
+-  PKG_CHECK_MODULES(glesv3, $glesv3_REQUIRES,, [
+-    use_glesv3="no (glesv2.pc not found, required for glesv3)"
+-  ])
+-
+-  dnl Since there is no glesv3.pc, need to search for header files
+-  AC_CHECK_HEADER(GLES3/gl3.h,, [use_glesv3="no (OpenGL ES 3.0 headers not found)"])
+-  if test "x$use_glesv3" = "xyes"; then
+-    glesv3_NONPKGCONFIG_CFLAGS=
+-    glesv3_NONPKGCONFIG_LIBS="-lGLESv2"
+-  fi
+-
+-  if test "x$have_dl" = "xyes" -a "x$have_dlsym" = "xyes"; then
+-    glesv3_LIBS="$glesv3_LIBS -ldl"
+-  fi
+-
+-  if test "x$use_glesv3" = "xyes" -a "x$use_gl" = "xyes"; then
+-      AC_MSG_ERROR([use either --enable-gl=yes or --enable-glesv3=yes. Not both at the same time.])
+-  fi
+-
+-  need_egl_functions=yes
+-])
+-
+-dnl ===========================================================================
+ CAIRO_ENABLE_SURFACE_BACKEND(cogl, Cogl, no, [
+   cogl_REQUIRES="cogl-2.0-experimental"
+   PKG_CHECK_MODULES(cogl, $cogl_REQUIRES,, [use_cogl="no"])
+@@ -862,6 +857,7 @@
+ 
+ dnl Extra stuff we need to do when building C++ code
+ need_cxx="no"
++AS_IF([test "x$use_skia" = "xyes"], [need_cxx="yes"])
+ AS_IF([test "x$use_qt" = "xyes"], [need_cxx="yes"])
+ AS_IF([test "x$use_beos" = "xyes"], [need_cxx="yes"])
+ 
+diff -Naur a/src/cairo-gl-composite.c b/src/cairo-gl-composite.c
+--- a/src/cairo-gl-composite.c	2019-10-14 22:45:33.000000000 -0600
++++ b/src/cairo-gl-composite.c	2019-10-14 22:48:52.000000000 -0600
+@@ -52,93 +52,6 @@
+ #include "cairo-error-private.h"
+ #include "cairo-image-surface-private.h"
+ 
+-/* FIXME: Copy of same routine in cairo-gl-msaa-compositor.c */
+-static cairo_int_status_t
+-_draw_int_rect (cairo_gl_context_t      *ctx,
+-		cairo_gl_composite_t    *setup,
+-		cairo_rectangle_int_t   *rect)
+-{
+-    cairo_box_t box;
+-    cairo_point_t quad[4];
+-
+-    _cairo_box_from_rectangle (&box, rect);
+-    quad[0].x = box.p1.x;
+-    quad[0].y = box.p1.y;
+-    quad[1].x = box.p1.x;
+-    quad[1].y = box.p2.y;
+-    quad[2].x = box.p2.x;
+-    quad[2].y = box.p2.y;
+-    quad[3].x = box.p2.x;
+-    quad[3].y = box.p1.y;
+-
+-    return _cairo_gl_composite_emit_quad_as_tristrip (ctx, setup, quad);
+-}
+-
+-static cairo_int_status_t
+-_blit_texture_to_renderbuffer (cairo_gl_surface_t *surface)
+-{
+-    cairo_gl_context_t *ctx = NULL;
+-    cairo_gl_composite_t setup;
+-    cairo_surface_pattern_t pattern;
+-    cairo_rectangle_int_t extents;
+-    cairo_int_status_t status;
+-
+-    /* FIXME: This only permits blit when glesv3 is enabled.  But note that
+-       glesv2 with the ANGLE extension should also be able to support this feature,
+-       so once the ANGLE support code is in place this check can be relaxed. */
+-    if (((cairo_gl_context_t *)surface->base.device)->gl_flavor != CAIRO_GL_FLAVOR_ES3)
+-	return CAIRO_INT_STATUS_SUCCESS;
+-
+-    if (! surface->content_in_texture)
+-	return CAIRO_INT_STATUS_SUCCESS;
+-
+-    memset (&setup, 0, sizeof (cairo_gl_composite_t));
+-
+-    status = _cairo_gl_composite_set_operator (&setup,
+-					       CAIRO_OPERATOR_SOURCE,
+-					       FALSE);
+-
+-    if (status)
+-	return status;
+-
+-    setup.dst = surface;
+-    setup.clip_region = surface->clip_region;
+-
+-    _cairo_pattern_init_for_surface (&pattern, &surface->base);
+-    status = _cairo_gl_composite_set_source (&setup, &pattern.base,
+-					     NULL, NULL, FALSE);
+-    _cairo_pattern_fini (&pattern.base);
+-
+-    if (unlikely (status))
+-	goto FAIL;
+-
+-    _cairo_gl_composite_set_multisample (&setup);
+-
+-    status = _cairo_gl_composite_begin (&setup, &ctx);
+-
+-    if (unlikely (status))
+-	goto FAIL;
+-
+-    extents.x = extents.y = 0;
+-    extents.width = surface->width;
+-    extents.height = surface->height;
+-
+-    status = _draw_int_rect (ctx, &setup, &extents);
+-
+-    if (status == CAIRO_INT_STATUS_SUCCESS)
+-	surface->content_in_texture = FALSE;
+-
+-FAIL:
+-    _cairo_gl_composite_fini (&setup);
+-
+-    if (ctx) {
+-	_cairo_gl_composite_flush (ctx);
+-	status = _cairo_gl_context_release (ctx, status);
+-    }
+-
+-    return status;
+-}
+-
+ cairo_int_status_t
+ _cairo_gl_composite_set_source (cairo_gl_composite_t *setup,
+ 				const cairo_pattern_t *pattern,
+@@ -155,13 +68,8 @@
+ _cairo_gl_composite_set_source_operand (cairo_gl_composite_t *setup,
+ 					const cairo_gl_operand_t *source)
+ {
+-    cairo_int_status_t status;
+-
+     _cairo_gl_operand_destroy (&setup->src);
+     _cairo_gl_operand_copy (&setup->src, source);
+-
+-    if (source->type == CAIRO_GL_OPERAND_TEXTURE)
+-	status = _cairo_gl_surface_resolve_multisampling (source->texture.surface);
+ }
+ 
+ void
+@@ -191,13 +99,9 @@
+ _cairo_gl_composite_set_mask_operand (cairo_gl_composite_t *setup,
+ 				      const cairo_gl_operand_t *mask)
+ {
+-    cairo_int_status_t status;
+     _cairo_gl_operand_destroy (&setup->mask);
+-    if (mask) {
++    if (mask)
+ 	_cairo_gl_operand_copy (&setup->mask, mask);
+-	if (mask->type == CAIRO_GL_OPERAND_TEXTURE)
+-	    status = _cairo_gl_surface_resolve_multisampling (mask->texture.surface);
+-    }
+ }
+ 
+ void
+@@ -270,8 +174,7 @@
+ 
+     switch (extend) {
+     case CAIRO_EXTEND_NONE:
+-	if (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES3 ||
+-	    ctx->gl_flavor == CAIRO_GL_FLAVOR_ES2)
++	if (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES2)
+ 	    wrap_mode = GL_CLAMP_TO_EDGE;
+ 	else
+ 	    wrap_mode = GL_CLAMP_TO_BORDER;
+@@ -1275,8 +1178,6 @@
+ {
+     cairo_status_t status;
+ 
+-    status = _blit_texture_to_renderbuffer (dst);
+-
+     memset (setup, 0, sizeof (cairo_gl_composite_t));
+ 
+     status = _cairo_gl_composite_set_operator (setup, op,
+diff -Naur a/src/cairo-gl-device.c b/src/cairo-gl-device.c
+--- a/src/cairo-gl-device.c	2019-10-14 22:47:37.000000000 -0600
++++ b/src/cairo-gl-device.c	2019-10-14 22:48:52.000000000 -0600
+@@ -171,8 +171,7 @@
+     if (gl_flavor == CAIRO_GL_FLAVOR_DESKTOP)
+ 	return TRUE;
+ 
+-    assert (gl_flavor == CAIRO_GL_FLAVOR_ES3 ||
+-	    gl_flavor == CAIRO_GL_FLAVOR_ES2);
++    assert (gl_flavor == CAIRO_GL_FLAVOR_ES2);
+ 
+    /* For OpenGL ES we have to look for the specific extension and BGRA only
+     * matches cairo's integer packed bytes on little-endian machines. */
+@@ -191,8 +190,7 @@
+     int n;
+ 
+     cairo_bool_t is_desktop = gl_flavor == CAIRO_GL_FLAVOR_DESKTOP;
+-    cairo_bool_t is_gles = (gl_flavor == CAIRO_GL_FLAVOR_ES3 ||
+-			    gl_flavor == CAIRO_GL_FLAVOR_ES2);
++    cairo_bool_t is_gles = gl_flavor == CAIRO_GL_FLAVOR_ES2;
+ 
+     _cairo_device_init (&ctx->base, &_cairo_gl_device_backend);
+ 
+@@ -265,31 +263,25 @@
+     }
+ #endif
+ 
+-#if CAIRO_HAS_GLESV3_SURFACE
+-    if (is_gles && ctx->has_packed_depth_stencil) {
+-	glGetIntegerv(GL_MAX_SAMPLES, &ctx->num_samples);
+-    }
+-
+-#elif CAIRO_HAS_GLESV2_SURFACE && defined(GL_MAX_SAMPLES_EXT)
++#if CAIRO_HAS_GLESV2_SURFACE && defined(GL_MAX_SAMPLES_EXT)
+     if (is_gles && ctx->has_packed_depth_stencil &&
+ 	_cairo_gl_has_extension ("GL_EXT_multisampled_render_to_texture")) {
+ 	glGetIntegerv(GL_MAX_SAMPLES_EXT, &ctx->num_samples);
+     }
++#endif
+ 
++#if CAIRO_HAS_GLESV2_SURFACE && defined(GL_MAX_SAMPLES_IMG)
+     if (is_gles && ctx->has_packed_depth_stencil &&
+ 	_cairo_gl_has_extension ("GL_IMG_multisampled_render_to_texture")) {
+ 	glGetIntegerv(GL_MAX_SAMPLES_IMG, &ctx->num_samples);
+     }
+ #endif
+ 
+-    /* we always use renderbuffer for rendering in glesv3 */
+-    if (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES3)
+-	ctx->supports_msaa = TRUE;
+-    else
+-	ctx->supports_msaa = ctx->num_samples > 1;
++    ctx->supports_msaa = ctx->num_samples > 1;
+     if (ctx->num_samples > MAX_MSAA_SAMPLES)
+ 	ctx->num_samples = MAX_MSAA_SAMPLES;
+ 
++
+     ctx->current_operator = -1;
+     ctx->gl_flavor = gl_flavor;
+ 
+@@ -357,15 +349,13 @@
+ 	return GL_DEPTH_STENCIL;
+ #endif
+ 
+-#if CAIRO_HAS_GLESV2_SURFACE && !CAIRO_HAS_GLESV3_SURFACE
++#if CAIRO_HAS_GLESV2_SURFACE
+     if (ctx->gl_flavor == CAIRO_GL_FLAVOR_DESKTOP)
+ 	return GL_DEPTH24_STENCIL8_OES;
+ #endif
+ 
+ #if CAIRO_HAS_GL_SURFACE
+     return GL_DEPTH_STENCIL;
+-#elif CAIRO_HAS_GLESV3_SURFACE
+-    return GL_DEPTH24_STENCIL8;
+ #elif CAIRO_HAS_GLESV2_SURFACE
+     return GL_DEPTH24_STENCIL8_OES;
+ #endif
+@@ -446,14 +436,13 @@
+ 		 str, status);
+     }
+ }
+-#if CAIRO_HAS_GL_SURFACE || CAIRO_HAS_GLESV3_SURFACE
++#if CAIRO_HAS_GL_SURFACE
+ static void
+ _cairo_gl_ensure_multisampling (cairo_gl_context_t *ctx,
+ 				cairo_gl_surface_t *surface)
+ {
+     assert (surface->supports_msaa);
+-    assert (ctx->gl_flavor == CAIRO_GL_FLAVOR_DESKTOP ||
+-	ctx->gl_flavor == CAIRO_GL_FLAVOR_ES3);
++    assert (ctx->gl_flavor == CAIRO_GL_FLAVOR_DESKTOP);
+ 
+     if (surface->msaa_fb)
+ 	return;
+@@ -471,11 +460,7 @@
+        this information. */
+     ctx->dispatch.RenderbufferStorageMultisample (GL_RENDERBUFFER,
+ 						  ctx->num_samples,
+-#if CAIRO_HAS_GLESV3_SURFACE
+-						  GL_RGBA8,
+-#else
+ 						  GL_RGBA,
+-#endif
+ 						  surface->width,
+ 						  surface->height);
+     ctx->dispatch.FramebufferRenderbuffer (GL_FRAMEBUFFER,
+@@ -487,11 +472,6 @@
+     glDisable (GL_SCISSOR_TEST);
+     glClearColor (0, 0, 0, 0);
+     glClear (GL_COLOR_BUFFER_BIT);
+-
+-    /* for glesv3 with multisample renderbuffer, we always render to
+-       this renderbuffer */
+-    if (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES3)
+-	surface->msaa_active = TRUE;
+ }
+ #endif
+ 
+@@ -504,9 +484,8 @@
+ 	return TRUE;
+ 
+     _cairo_gl_ensure_framebuffer (ctx, surface);
+-#if CAIRO_HAS_GL_SURFACE || CAIRO_HAS_GLESV3_SURFACE
+-    if (ctx->gl_flavor == CAIRO_GL_FLAVOR_DESKTOP ||
+-	ctx->gl_flavor == CAIRO_GL_FLAVOR_ES3)
++#if CAIRO_HAS_GL_SURFACE
++    if (ctx->gl_flavor == CAIRO_GL_FLAVOR_DESKTOP)
+ 	_cairo_gl_ensure_multisampling (ctx, surface);
+ #endif
+ 
+@@ -520,9 +499,8 @@
+ 					      surface->width,
+ 					      surface->height);
+ 
+-#if CAIRO_HAS_GL_SURFACE || CAIRO_HAS_GLESV3_SURFACE
+-    if (ctx->gl_flavor == CAIRO_GL_FLAVOR_DESKTOP ||
+-	ctx->gl_flavor == CAIRO_GL_FLAVOR_ES3) {
++#if CAIRO_HAS_GL_SURFACE
++    if (ctx->gl_flavor == CAIRO_GL_FLAVOR_DESKTOP) {
+ 	dispatch->FramebufferRenderbuffer (GL_FRAMEBUFFER,
+ 					   GL_DEPTH_STENCIL_ATTACHMENT,
+ 					   GL_RENDERBUFFER,
+@@ -637,7 +615,7 @@
+ #undef M
+ }
+ 
+-#if CAIRO_HAS_GL_SURFACE || CAIRO_HAS_GLESV3_SURFACE
++#if CAIRO_HAS_GL_SURFACE
+ static void
+ bind_multisample_framebuffer (cairo_gl_context_t *ctx,
+ 			       cairo_gl_surface_t *surface)
+@@ -646,19 +624,14 @@
+     cairo_bool_t scissor_test_enabled;
+ 
+     assert (surface->supports_msaa);
+-    assert (ctx->gl_flavor == CAIRO_GL_FLAVOR_DESKTOP ||
+-	ctx->gl_flavor == CAIRO_GL_FLAVOR_ES3);
++    assert (ctx->gl_flavor == CAIRO_GL_FLAVOR_DESKTOP);
+ 
+     _cairo_gl_ensure_framebuffer (ctx, surface);
+     _cairo_gl_ensure_multisampling (ctx, surface);
+ 
+     if (surface->msaa_active) {
+-#if CAIRO_HAS_GL_SURFACE
+ 	glEnable (GL_MULTISAMPLE);
+-#endif
+ 	ctx->dispatch.BindFramebuffer (GL_FRAMEBUFFER, surface->msaa_fb);
+-	if (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES3)
+-	    surface->content_in_texture = FALSE;
+ 	return;
+     }
+ 
+@@ -669,9 +642,7 @@
+     glDisable (GL_STENCIL_TEST);
+     glDisable (GL_SCISSOR_TEST);
+ 
+-#if CAIRO_HAS_GL_SURFACE
+     glEnable (GL_MULTISAMPLE);
+-#endif
+ 
+     /* The last time we drew to the surface, we were not using multisampling,
+        so we need to blit from the non-multisampling framebuffer into the
+@@ -680,24 +651,17 @@
+     ctx->dispatch.BindFramebuffer (GL_READ_FRAMEBUFFER, surface->fb);
+     ctx->dispatch.BlitFramebuffer (0, 0, surface->width, surface->height,
+ 				   0, 0, surface->width, surface->height,
+-				   GL_COLOR_BUFFER_BIT
+-#if CAIRO_HAS_GL_SURFACE
+-				   | GL_STENCIL_BUFFER_BIT
+-#endif
+-				   ,
+-				   GL_NEAREST);
++				   GL_COLOR_BUFFER_BIT, GL_NEAREST);
+     ctx->dispatch.BindFramebuffer (GL_FRAMEBUFFER, surface->msaa_fb);
+ 
+     if (stencil_test_enabled)
+ 	glEnable (GL_STENCIL_TEST);
+     if (scissor_test_enabled)
+ 	glEnable (GL_SCISSOR_TEST);
+-    if (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES3)
+-	surface->content_in_texture = FALSE;
+ }
+ #endif
+ 
+-#if CAIRO_HAS_GL_SURFACE || CAIRO_HAS_GLESV3_SURFACE
++#if CAIRO_HAS_GL_SURFACE
+ static void
+ bind_singlesample_framebuffer (cairo_gl_context_t *ctx,
+ 			       cairo_gl_surface_t *surface)
+@@ -705,15 +669,11 @@
+     cairo_bool_t stencil_test_enabled;
+     cairo_bool_t scissor_test_enabled;
+ 
+-    assert (ctx->gl_flavor == CAIRO_GL_FLAVOR_DESKTOP ||
+-	ctx->gl_flavor == CAIRO_GL_FLAVOR_ES3);
++    assert (ctx->gl_flavor == CAIRO_GL_FLAVOR_DESKTOP);
+     _cairo_gl_ensure_framebuffer (ctx, surface);
+ 
+     if (! surface->msaa_active) {
+-#if CAIRO_HAS_GL_SURFACE
+ 	glDisable (GL_MULTISAMPLE);
+-#endif
+-
+ 	ctx->dispatch.BindFramebuffer (GL_FRAMEBUFFER, surface->fb);
+ 	return;
+     }
+@@ -725,9 +685,7 @@
+     glDisable (GL_STENCIL_TEST);
+     glDisable (GL_SCISSOR_TEST);
+ 
+-#if CAIRO_HAS_GL_SURFACE
+     glDisable (GL_MULTISAMPLE);
+-#endif
+ 
+     /* The last time we drew to the surface, we were using multisampling,
+        so we need to blit from the multisampling framebuffer into the
+@@ -760,7 +718,7 @@
+ 	    return;
+ 	}
+ 
+-#if CAIRO_HAS_GL_SURFACE || CAIRO_HAS_GLESV3_SURFACE
++#if CAIRO_HAS_GL_SURFACE
+ 	if (multisampling)
+ 	    bind_multisample_framebuffer (ctx, surface);
+ 	else
+@@ -779,8 +737,7 @@
+ #endif
+     }
+ 
+-    if (ctx->gl_flavor == CAIRO_GL_FLAVOR_DESKTOP)
+-	surface->msaa_active = multisampling;
++    surface->msaa_active = multisampling;
+ }
+ 
+ void
+@@ -794,13 +751,9 @@
+      * we create an OpenGL ES surface, so we can never switch modes. */
+     if (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES2)
+ 	multisampling = surface->msaa_active;
+-    /* For GLESV3, we always use renderbuffer for drawing */
+-    else if (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES3)
+-	multisampling = TRUE;
+ 
+     changing_surface = ctx->current_target != surface || surface->needs_update;
+-    changing_sampling = (surface->msaa_active != multisampling ||
+-			 surface->content_in_texture);
++    changing_sampling = surface->msaa_active != multisampling;
+     if (! changing_surface && ! changing_sampling)
+ 	return;
+ 
+diff -Naur a/src/cairo-gl-dispatch.c b/src/cairo-gl-dispatch.c
+--- a/src/cairo-gl-dispatch.c	2019-10-14 22:45:33.000000000 -0600
++++ b/src/cairo-gl-dispatch.c	2019-10-14 22:48:52.000000000 -0600
+@@ -124,10 +124,6 @@
+ 	else
+ 	    return CAIRO_STATUS_DEVICE_ERROR;
+     }
+-    else if (gl_flavor == CAIRO_GL_FLAVOR_ES3)
+-    {
+-	dispatch_name = CAIRO_GL_DISPATCH_NAME_CORE;
+-    }
+     else if (gl_flavor == CAIRO_GL_FLAVOR_ES2 &&
+ 	     gl_version >= CAIRO_GL_VERSION_ENCODE (2, 0))
+     {
+@@ -160,10 +156,6 @@
+ 	else
+ 	    return CAIRO_STATUS_DEVICE_ERROR;
+     }
+-    else if (gl_flavor == CAIRO_GL_FLAVOR_ES3)
+-    {
+-	dispatch_name = CAIRO_GL_DISPATCH_NAME_CORE;
+-    }
+     else if (gl_flavor == CAIRO_GL_FLAVOR_ES2 &&
+ 	     gl_version >= CAIRO_GL_VERSION_ENCODE (2, 0))
+     {
+@@ -197,10 +189,6 @@
+ 	else
+ 	    return CAIRO_STATUS_DEVICE_ERROR;
+     }
+-    else if (gl_flavor == CAIRO_GL_FLAVOR_ES3)
+-    {
+-	dispatch_name = CAIRO_GL_DISPATCH_NAME_CORE;
+-    }
+     else if (gl_flavor == CAIRO_GL_FLAVOR_ES2 &&
+ 	     gl_version >= CAIRO_GL_VERSION_ENCODE (2, 0))
+     {
+diff -Naur a/src/cairo-gl-gradient.c b/src/cairo-gl-gradient.c
+--- a/src/cairo-gl-gradient.c	2019-10-14 22:45:33.000000000 -0600
++++ b/src/cairo-gl-gradient.c	2019-10-14 22:48:52.000000000 -0600
+@@ -282,8 +282,7 @@
+      * In OpenGL ES 2.0 no format conversion is allowed i.e. 'internalFormat'
+      * must match 'format' in glTexImage2D.
+      */
+-    if (_cairo_gl_get_flavor () == CAIRO_GL_FLAVOR_ES3 ||
+-	_cairo_gl_get_flavor () == CAIRO_GL_FLAVOR_ES2)
++    if (_cairo_gl_get_flavor () == CAIRO_GL_FLAVOR_ES2)
+ 	internal_format = GL_BGRA;
+     else
+ 	internal_format = GL_RGBA;
+diff -Naur a/src/cairo-gl-gradient-private.h b/src/cairo-gl-gradient-private.h
+--- a/src/cairo-gl-gradient-private.h	2019-10-14 22:45:33.000000000 -0600
++++ b/src/cairo-gl-gradient-private.h	2019-10-14 22:48:52.000000000 -0600
+@@ -51,15 +51,12 @@
+ 
+ #include "cairo-gl.h"
+ 
+-#if CAIRO_HAS_GLESV3_SURFACE
+-#include <GLES3/gl3.h>
+-#include <GLES3/gl3ext.h>
++#if CAIRO_HAS_GL_SURFACE
++#include <GL/gl.h>
++#include <GL/glext.h>
+ #elif CAIRO_HAS_GLESV2_SURFACE
+ #include <GLES2/gl2.h>
+ #include <GLES2/gl2ext.h>
+-#elif CAIRO_HAS_GL_SURFACE
+-#include <GL/gl.h>
+-#include <GL/glext.h>
+ #endif
+ 
+ #define CAIRO_GL_GRADIENT_CACHE_SIZE 4096
+diff -Naur a/src/cairo-gl.h b/src/cairo-gl.h
+--- a/src/cairo-gl.h	2019-10-14 22:45:33.000000000 -0600
++++ b/src/cairo-gl.h	2019-10-14 22:48:52.000000000 -0600
+@@ -62,7 +62,7 @@
+ 
+ #include "cairo.h"
+ 
+-#if CAIRO_HAS_GL_SURFACE || CAIRO_HAS_GLESV2_SURFACE || CAIRO_HAS_GLESV3_SURFACE
++#if CAIRO_HAS_GL_SURFACE || CAIRO_HAS_GLESV2_SURFACE
+ 
+ CAIRO_BEGIN_DECLS
+ 
+diff -Naur a/src/cairo-gl-info.c b/src/cairo-gl-info.c
+--- a/src/cairo-gl-info.c	2019-10-14 22:45:33.000000000 -0600
++++ b/src/cairo-gl-info.c	2019-10-14 22:48:52.000000000 -0600
+@@ -65,9 +65,7 @@
+ 
+     if (version == NULL)
+ 	flavor = CAIRO_GL_FLAVOR_NONE;
+-    else if (strstr (version, "OpenGL ES 3") != NULL)
+-	flavor = CAIRO_GL_FLAVOR_ES3;
+-    else if (strstr (version, "OpenGL ES 2") != NULL)
++    else if (strstr (version, "OpenGL ES") != NULL)
+ 	flavor = CAIRO_GL_FLAVOR_ES2;
+     else
+ 	flavor = CAIRO_GL_FLAVOR_DESKTOP;
+diff -Naur a/src/cairo-gl-msaa-compositor.c b/src/cairo-gl-msaa-compositor.c
+--- a/src/cairo-gl-msaa-compositor.c	2019-10-14 22:45:33.000000000 -0600
++++ b/src/cairo-gl-msaa-compositor.c	2019-10-14 22:48:52.000000000 -0600
+@@ -273,8 +273,6 @@
+ can_use_msaa_compositor (cairo_gl_surface_t *surface,
+ 			 cairo_antialias_t antialias)
+ {
+-    cairo_gl_flavor_t gl_flavor = ((cairo_gl_context_t *) surface->base.device)->gl_flavor;
+-
+     query_surface_capabilities (surface);
+     if (! surface->supports_stencil)
+ 	return FALSE;
+@@ -282,10 +280,8 @@
+     /* Multisampling OpenGL ES surfaces only maintain one multisampling
+        framebuffer and thus must use the spans compositor to do non-antialiased
+        rendering. */
+-    if ((gl_flavor == CAIRO_GL_FLAVOR_ES3 ||
+-	 gl_flavor == CAIRO_GL_FLAVOR_ES2)
++    if (((cairo_gl_context_t *) surface->base.device)->gl_flavor == CAIRO_GL_FLAVOR_ES2
+ 	 && surface->supports_msaa
+-	 && surface->num_samples > 1
+ 	 && antialias == CAIRO_ANTIALIAS_NONE)
+ 	return FALSE;
+ 
+@@ -382,9 +378,6 @@
+ 					   FALSE);
+     if (unlikely (status))
+ 	goto finish;
+-
+-    _cairo_gl_context_set_destination (ctx, dst, setup.multisample);
+-
+     status = _cairo_gl_set_operands_and_operator (&setup, ctx);
+     if (unlikely (status))
+ 	goto finish;
+@@ -641,7 +634,6 @@
+     glGetIntegerv(GL_STENCIL_BITS, &stencil_bits);
+     surface->supports_stencil = stencil_bits > 0;
+     surface->supports_msaa = samples > 1;
+-    surface->num_samples = samples;
+ 
+     status = _cairo_gl_context_release (ctx, status);
+ }
+diff -Naur a/src/cairo-gl-operand.c b/src/cairo-gl-operand.c
+--- a/src/cairo-gl-operand.c	2019-10-14 22:45:33.000000000 -0600
++++ b/src/cairo-gl-operand.c	2019-10-14 22:48:52.000000000 -0600
+@@ -658,8 +658,7 @@
+ 	 * with CAIRO_EXTEND_NONE). When bilinear filtering is enabled,
+ 	 * these shaders need the texture dimensions for their calculations.
+ 	 */
+-	if ((ctx->gl_flavor == CAIRO_GL_FLAVOR_ES3 ||
+-	     ctx->gl_flavor == CAIRO_GL_FLAVOR_ES2) &&
++	if (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES2 &&
+ 	    _cairo_gl_operand_get_extend (operand) == CAIRO_EXTEND_NONE &&
+ 	    _cairo_gl_operand_get_gl_filter (operand) == GL_LINEAR)
+ 	{
+diff -Naur a/src/cairo-gl-private.h b/src/cairo-gl-private.h
+--- a/src/cairo-gl-private.h	2019-10-14 22:45:33.000000000 -0600
++++ b/src/cairo-gl-private.h	2019-10-14 22:48:52.000000000 -0600
+@@ -60,15 +60,12 @@
+ 
+ #include <assert.h>
+ 
+-#if CAIRO_HAS_GLESV3_SURFACE
+-#include <GLES3/gl3.h>
+-#include <GLES3/gl3ext.h>
++#if CAIRO_HAS_GL_SURFACE
++#include <GL/gl.h>
++#include <GL/glext.h>
+ #elif CAIRO_HAS_GLESV2_SURFACE
+ #include <GLES2/gl2.h>
+ #include <GLES2/gl2ext.h>
+-#elif CAIRO_HAS_GL_SURFACE
+-#include <GL/gl.h>
+-#include <GL/glext.h>
+ #endif
+ 
+ #include "cairo-gl-ext-def-private.h"
+@@ -102,12 +99,11 @@
+ 
+ typedef struct _cairo_gl_surface cairo_gl_surface_t;
+ 
+-/* GL flavor is the type of GL supported by the underlying platform. */
++/* GL flavor */
+ typedef enum cairo_gl_flavor {
+     CAIRO_GL_FLAVOR_NONE = 0,
+     CAIRO_GL_FLAVOR_DESKTOP = 1,
+-    CAIRO_GL_FLAVOR_ES2 = 2,
+-    CAIRO_GL_FLAVOR_ES3 = 3
++    CAIRO_GL_FLAVOR_ES2 = 2
+ } cairo_gl_flavor_t;
+ 
+ /* Indices for vertex attributes used by BindAttribLocation, etc. */
+@@ -173,7 +169,7 @@
+     GLuint fb; /* GL framebuffer object wrapping our data. */
+     GLuint depth_stencil; /* GL renderbuffer object for holding stencil buffer clip. */
+ 
+-#if CAIRO_HAS_GL_SURFACE || CAIRO_HAS_GLESV3_SURFACE
++#if CAIRO_HAS_GL_SURFACE
+     GLuint msaa_rb; /* The ARB MSAA path uses a renderbuffer. */
+     GLuint msaa_fb;
+ #endif
+@@ -182,12 +178,8 @@
+     cairo_bool_t stencil_and_msaa_caps_initialized;
+     cairo_bool_t supports_stencil; /* Stencil support for for non-texture surfaces. */
+     cairo_bool_t supports_msaa;
+-    GLint        num_samples;
+     cairo_bool_t msaa_active; /* Whether the multisampling
+ 			         framebuffer is active or not. */
+-    cairo_bool_t content_in_texture; /* whether we just uploaded image
+-					to texture, used for certain
+-					gles2 extensions and glesv3 */
+     cairo_clip_t *clip_on_stencil_buffer;
+ 
+     int owns_tex;
+diff -Naur a/src/cairo-gl-shaders.c b/src/cairo-gl-shaders.c
+--- a/src/cairo-gl-shaders.c	2019-10-14 22:47:37.000000000 -0600
++++ b/src/cairo-gl-shaders.c	2019-10-14 22:48:52.000000000 -0600
+@@ -398,8 +398,7 @@
+ 	     "vec4 get_%s()\n"
+ 	     "{\n",
+ 	     rectstr, namestr, namestr, namestr, namestr);
+-	if ((ctx->gl_flavor == CAIRO_GL_FLAVOR_ES3 ||
+-	     ctx->gl_flavor == CAIRO_GL_FLAVOR_ES2) &&
++	if (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES2 &&
+ 	    _cairo_gl_shader_needs_border_fade (op))
+ 	{
+ 	    _cairo_output_stream_printf (stream,
+@@ -426,8 +425,7 @@
+ 	    "vec4 get_%s()\n"
+ 	    "{\n",
+ 	    namestr, namestr, rectstr, namestr, namestr);
+-	if ((ctx->gl_flavor == CAIRO_GL_FLAVOR_ES3 ||
+-	     ctx->gl_flavor == CAIRO_GL_FLAVOR_ES2) &&
++	if (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES2 &&
+ 	    _cairo_gl_shader_needs_border_fade (op))
+ 	{
+ 	    _cairo_output_stream_printf (stream,
+@@ -464,8 +462,7 @@
+ 	    "    float is_valid = step (-%s_radius_0, t * %s_circle_d.z);\n",
+ 	    namestr, namestr, rectstr, namestr, namestr, namestr, namestr,
+ 	    namestr, namestr, namestr, namestr, namestr);
+-	if ((ctx->gl_flavor == CAIRO_GL_FLAVOR_ES3 ||
+-	     ctx->gl_flavor == CAIRO_GL_FLAVOR_ES2) &&
++	if (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES2 &&
+ 	    _cairo_gl_shader_needs_border_fade (op))
+ 	{
+ 	    _cairo_output_stream_printf (stream,
+@@ -510,8 +507,7 @@
+ 	    "    float upper_t = mix (t.y, t.x, is_valid.x);\n",
+ 	    namestr, namestr, rectstr, namestr, namestr, namestr, namestr,
+ 	    namestr, namestr, namestr, namestr, namestr, namestr);
+-	if ((ctx->gl_flavor == CAIRO_GL_FLAVOR_ES3 ||
+-	     ctx->gl_flavor == CAIRO_GL_FLAVOR_ES2) &&
++	if (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES2 &&
+ 	    _cairo_gl_shader_needs_border_fade (op))
+ 	{
+ 	    _cairo_output_stream_printf (stream,
+@@ -678,8 +674,7 @@
+     _cairo_gl_shader_emit_wrap (ctx, stream, src, CAIRO_GL_TEX_SOURCE);
+     _cairo_gl_shader_emit_wrap (ctx, stream, mask, CAIRO_GL_TEX_MASK);
+ 
+-    if (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES3 ||
+-	ctx->gl_flavor == CAIRO_GL_FLAVOR_ES2) {
++    if (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES2) {
+ 	if (_cairo_gl_shader_needs_border_fade (src))
+ 	    _cairo_gl_shader_emit_border_fade (stream, src, CAIRO_GL_TEX_SOURCE);
+ 	if (_cairo_gl_shader_needs_border_fade (mask))
+diff -Naur a/src/cairo-gl-surface.c b/src/cairo-gl-surface.c
+--- a/src/cairo-gl-surface.c	2019-10-14 22:47:37.000000000 -0600
++++ b/src/cairo-gl-surface.c	2019-10-15 08:09:05.000000000 -0600
+@@ -395,7 +395,6 @@
+     surface->width = width;
+     surface->height = height;
+     surface->needs_update = FALSE;
+-    surface->content_in_texture = FALSE;
+ 
+     _cairo_gl_surface_embedded_operand_init (surface);
+ }
+@@ -434,7 +433,6 @@
+     _cairo_gl_surface_init (&ctx->base, surface, content, width, height);
+ 
+     surface->supports_msaa = ctx->supports_msaa;
+-    surface->num_samples = ctx->num_samples;
+     surface->supports_stencil = TRUE;
+ 
+     /* Create the texture used to store the surface's data. */
+@@ -877,8 +875,7 @@
+     if (unlikely (status))
+ 	return status;
+ 
+-    if (_cairo_gl_get_flavor () == CAIRO_GL_FLAVOR_ES3 ||
+-	_cairo_gl_get_flavor () == CAIRO_GL_FLAVOR_ES2) {
++    if (_cairo_gl_get_flavor () == CAIRO_GL_FLAVOR_ES2) {
+ 	pixman_format_code_t pixman_format;
+ 	cairo_surface_pattern_t pattern;
+ 	cairo_bool_t require_conversion = FALSE;
+@@ -982,8 +979,7 @@
+ 	else
+ 	{
+ 	    glPixelStorei (GL_UNPACK_ALIGNMENT, 4);
+-	    if (ctx->gl_flavor == CAIRO_GL_FLAVOR_DESKTOP ||
+-		ctx->gl_flavor == CAIRO_GL_FLAVOR_ES3)
++	    if (ctx->gl_flavor == CAIRO_GL_FLAVOR_DESKTOP)
+ 		glPixelStorei (GL_UNPACK_ROW_LENGTH, src->stride / cpp);
+ 	}
+ 
+@@ -1014,8 +1010,6 @@
+ 						  dst_x, dst_y,
+ 						  width, height);
+ 	}
+-	if (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES3)
+-	    dst->content_in_texture = TRUE;
+     } else {
+ 	cairo_surface_t *tmp;
+ 
+@@ -1055,15 +1049,13 @@
+ 	}
+ 
+ 	cairo_surface_destroy (tmp);
+-	if (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES3)
+-	    dst->content_in_texture = TRUE;
+     }
+ 
+ FAIL:
+     status = _cairo_gl_context_release (ctx, status);
+ 
+     if (clone)
+-	cairo_surface_destroy (&clone->base);
++        cairo_surface_destroy (&clone->base);
+ 
+     if (rgba_clone)
+ 	cairo_surface_destroy (&rgba_clone->base);
+@@ -1107,7 +1099,7 @@
+     if (surface->msaa_depth_stencil)
+ 	ctx->dispatch.DeleteRenderbuffers (1, &surface->msaa_depth_stencil);
+ 
+-#if CAIRO_HAS_GL_SURFACE || CAIRO_HAS_GLESV3_SURFACE
++#if CAIRO_HAS_GL_SURFACE
+     if (surface->msaa_fb)
+ 	ctx->dispatch.DeleteFramebuffers (1, &surface->msaa_fb);
+     if (surface->msaa_rb)
+@@ -1159,8 +1151,7 @@
+ 	return NULL;
+     }
+ 
+-    if (_cairo_gl_surface_flavor (surface) == CAIRO_GL_FLAVOR_ES3 ||
+-	_cairo_gl_surface_flavor (surface) == CAIRO_GL_FLAVOR_ES2) {
++    if (_cairo_gl_surface_flavor (surface) == CAIRO_GL_FLAVOR_ES2) {
+ 	/* If only RGBA is supported, we must download data in a compatible
+ 	 * format. This means that pixman will convert the data on the CPU when
+ 	 * interacting with other image surfaces. For ALPHA, GLES2 does not
+@@ -1209,29 +1200,13 @@
+      * fall back instead.
+      */
+     _cairo_gl_composite_flush (ctx);
+-
+-    if (ctx->gl_flavor != CAIRO_GL_FLAVOR_ES3) {
+-	_cairo_gl_context_set_destination (ctx, surface, FALSE);
+-    } else {
+-	if (surface->content_in_texture) {
+-	    _cairo_gl_ensure_framebuffer (ctx, surface);
+-	    ctx->dispatch.BindFramebuffer (GL_FRAMEBUFFER, surface->fb);
+-	} else {
+-	    status = _cairo_gl_surface_resolve_multisampling (surface);
+-	    if (unlikely (status)) {
+-		status = _cairo_gl_context_release (ctx, status);
+-		cairo_surface_destroy (&image->base);
+-		return _cairo_image_surface_create_in_error (status);
+-	    }
+-	}
+-    }
++    _cairo_gl_context_set_destination (ctx, surface, FALSE);
+ 
+     flipped = ! _cairo_gl_surface_is_texture (surface);
+     mesa_invert = flipped && ctx->has_mesa_pack_invert;
+ 
+     glPixelStorei (GL_PACK_ALIGNMENT, 4);
+-    if (ctx->gl_flavor == CAIRO_GL_FLAVOR_DESKTOP ||
+-	ctx->gl_flavor == CAIRO_GL_FLAVOR_ES3)
++    if (ctx->gl_flavor == CAIRO_GL_FLAVOR_DESKTOP)
+ 	glPixelStorei (GL_PACK_ROW_LENGTH, image->stride / cpp);
+     if (mesa_invert)
+ 	glPixelStorei (GL_PACK_INVERT_MESA, 1);
+@@ -1398,9 +1373,6 @@
+     /* GLES surfaces do not need explicit resolution. */
+     if (((cairo_gl_context_t *) surface->base.device)->gl_flavor == CAIRO_GL_FLAVOR_ES2)
+ 	return CAIRO_INT_STATUS_SUCCESS;
+-    else if (((cairo_gl_context_t *) surface->base.device)->gl_flavor == CAIRO_GL_FLAVOR_ES3 &&
+-	     surface->content_in_texture)
+-	return CAIRO_INT_STATUS_SUCCESS;
+ 
+     if (! _cairo_gl_surface_is_texture (surface))
+ 	return CAIRO_INT_STATUS_SUCCESS;
+@@ -1409,20 +1381,10 @@
+     if (unlikely (status))
+ 	return status;
+ 
+-#if CAIRO_HAS_GLESV3_SURFACE
+-    _cairo_gl_composite_flush (ctx);
+-    ctx->current_target = NULL;
+-    _cairo_gl_context_bind_framebuffer (ctx, surface, FALSE);
+-    if (ctx->gl_flavor == CAIRO_GL_FLAVOR_ES3)
+-	surface->content_in_texture = TRUE;
+-
+-#elif CAIRO_HAS_GL_SURFACE
+-    ctx->current_target = surface;
+-    _cairo_gl_context_bind_framebuffer (ctx, surface, FALSE);
+-
+-#else
+     ctx->current_target = surface;
+ 
++#if CAIRO_HAS_GL_SURFACE
++    _cairo_gl_context_bind_framebuffer (ctx, surface, FALSE);
+ #endif
+ 
+     status = _cairo_gl_context_release (ctx, status);
+diff -Naur a/src/Makefile.sources b/src/Makefile.sources
+--- a/src/Makefile.sources	2019-10-14 22:45:33.000000000 -0600
++++ b/src/Makefile.sources	2019-10-14 22:48:52.000000000 -0600
+@@ -408,10 +408,6 @@
+ cairo_glesv2_private = $(cairo_gl_private)
+ cairo_glesv2_sources = $(cairo_gl_sources)
+ 
+-cairo_glesv3_headers = $(cairo_gl_headers)
+-cairo_glesv3_private = $(cairo_gl_private)
+-cairo_glesv3_sources = $(cairo_gl_sources)
+-
+ cairo_egl_sources += cairo-egl-context.c
+ cairo_glx_sources += cairo-glx-context.c
+ cairo_wgl_sources += cairo-wgl-context.c
+diff -Naur a/src/Makefile.win32.features b/src/Makefile.win32.features
+--- a/src/Makefile.win32.features	2019-10-14 22:45:33.000000000 -0600
++++ b/src/Makefile.win32.features	2019-10-14 22:48:52.000000000 -0600
+@@ -309,22 +309,6 @@
+ enabled_cairo_pkgconf += cairo-glesv2.pc
+ endif
+ 
+-unsupported_cairo_headers += $(cairo_glesv3_headers)
+-all_cairo_headers += $(cairo_glesv3_headers)
+-all_cairo_private += $(cairo_glesv3_private)
+-all_cairo_cxx_sources += $(cairo_glesv3_cxx_sources)
+-all_cairo_sources += $(cairo_glesv3_sources)
+-ifeq ($(CAIRO_HAS_GLESV3_SURFACE),1)
+-enabled_cairo_headers += $(cairo_glesv3_headers)
+-enabled_cairo_private += $(cairo_glesv3_private)
+-enabled_cairo_cxx_sources += $(cairo_glesv3_cxx_sources)
+-enabled_cairo_sources += $(cairo_glesv3_sources)
+-endif
+-all_cairo_pkgconf += cairo-glesv3.pc
+-ifeq ($(CAIRO_HAS_GLESV3_SURFACE),1)
+-enabled_cairo_pkgconf += cairo-glesv3.pc
+-endif
+-
+ unsupported_cairo_headers += $(cairo_cogl_headers)
+ all_cairo_headers += $(cairo_cogl_headers)
+ all_cairo_private += $(cairo_cogl_private)
