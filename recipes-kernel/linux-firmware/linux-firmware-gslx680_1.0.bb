@@ -22,8 +22,8 @@ inherit allarch update-alternatives
 CLEANBROKEN = "1"
 
 do_install() {
-    mkdir -p ${D}/lib/firmware/
-    install -m 0644 ${WORKDIR}/gsl1680.fw ${D}/lib/firmware/
+    mkdir -p ${D}/lib/firmware/silead
+    install -m 0644 ${WORKDIR}/gsl1680.fw ${D}/lib/firmware/silead/
 }
 
 FILES_${PN} += "/lib/firmware/*"
