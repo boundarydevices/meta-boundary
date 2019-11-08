@@ -1,0 +1,14 @@
+[Unit]
+Description=Attaching uart to bluetooth
+Requires=bluetooth.target dev-bt\x2duart.device
+After=bluetooth.target dev-bt\x2duart.device
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /usr/share/silex-uart/silex-uart.sh start
+ExecStop=/bin/bash  /usr/share/silex-uart/silex-uart.sh stop
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+
