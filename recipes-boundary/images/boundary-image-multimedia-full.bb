@@ -14,4 +14,7 @@ CORE_IMAGE_EXTRA_INSTALL += " \
 	spitools \
 	networkmanager \
 	tslib-tests tslib-calibrate \
+	evtest \
+	silex-uart \
+	udev-rules-bt \
 "
