@@ -10,6 +10,5 @@ IMAGE_INSTALL += " \
 	mmc-utils \
 	openssh \
 	spitools \
-	networkmanager \
 	tslib-tests tslib-calibrate \
 "
