@@ -11,4 +11,7 @@ IMAGE_INSTALL += " \
 	openssh \
 	spitools \
 	tslib-tests tslib-calibrate \
+	evtest \
+	udev-rules-bt \
+	silex-uart \
 "
