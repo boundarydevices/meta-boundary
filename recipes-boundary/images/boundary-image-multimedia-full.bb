@@ -17,4 +17,5 @@ CORE_IMAGE_EXTRA_INSTALL += " \
 	evtest \
 	silex-uart \
 	udev-rules-bt \
+	can-utils \
 "
