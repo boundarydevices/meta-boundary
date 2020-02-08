@@ -1,11 +1,11 @@
 FILESEXTRAPATHS_prepend  := "${THISDIR}/weston:"
 
-SRC_URI_append = "${@bb.utils.contains('MACHINE', 'nitrogen8mm', " file://mx8mm/weston.ini", "", d)}"
-SRC_URI_append = "${@bb.utils.contains('MACHINE', 'nitrogen8m',  " file://mx8mq/weston.ini", "", d)}"
+SRC_URI_append = " file://weston.ini"
 
-do_install_append_mx8mm() {
+do_install_append_mx8() {
 
-	# install default weston.ini
-	install -D -m 0644 ${WORKDIR}/mx8mm/weston.ini ${D}${sysconfdir}/xdg/weston/weston.ini
+	install -D -m 0644 ${WORKDIR}/weston.ini ${D}${sysconfdir}/xdg/weston/weston.ini
 }
+
+
 
