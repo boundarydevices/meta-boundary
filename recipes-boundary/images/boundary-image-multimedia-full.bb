@@ -18,4 +18,5 @@ CORE_IMAGE_EXTRA_INSTALL += " \
 	silex-uart \
 	udev-rules-bt \
 	can-utils \
+	iproute2 \
 "
