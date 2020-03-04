@@ -1,0 +1,11 @@
+--- a/src/connman.service.in
++++ b/src/connman.service.in
+@@ -3,7 +3,7 @@
+ DefaultDependencies=false
+ Conflicts=shutdown.target
+ RequiresMountsFor=@localstatedir@/lib/connman
+-After=dbus.service network-pre.target systemd-sysusers.service
++After=dbus.service network-pre.target systemd-sysusers.service silex-uart.service
+ Before=network.target multi-user.target shutdown.target
+ Wants=network.target
+ 
