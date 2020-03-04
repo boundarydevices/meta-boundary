@@ -15,3 +15,5 @@ IMAGE_INSTALL += " \
 	udev-rules-bt \
 	silex-uart \
 "
+
+QBSP_IMAGE_TASK = "boundary-b2qt-embedded-qt5-image"
