@@ -8,7 +8,6 @@ IMAGE_INSTALL += " \
 	iperf3 \
 	imx-gpu-viv-demos \
 	mmc-utils \
-	openssh \
 	spitools \
 	tslib-tests tslib-calibrate \
 	evtest \
