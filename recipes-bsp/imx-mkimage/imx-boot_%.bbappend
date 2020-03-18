@@ -7,7 +7,9 @@ IMXBOOT_TARGETS  = "${@bb.utils.contains('MACHINE', 'nitrogen8mm', "u-boot-lpddr
 UBOOT_NAME = "u-boot-${MACHINE}.bin"
 BOOT_CONFIG_MACHINE = "${BOOT_NAME}-${MACHINE}.bin"
 
-compile_mx8m() {
+DEPENDS += " dtc"
+
+compile_mx8() {
     bbnote 8MQ/8MM boot binary build
     for ddr_firmware in ${DDR_FIRMWARE_NAME}; do
         bbnote "Copy ddr_firmware: ${ddr_firmware} from ${DEPLOY_DIR_IMAGE} -> ${BOOT_STAGING} "
@@ -33,7 +35,7 @@ do_compile() {
     done
 }
 
-deploy_mx8m() {
+deploy_mx8() {
     install -d ${DEPLOYDIR}/${BOOT_TOOLS}
     install -m 0644 ${DEPLOY_DIR_IMAGE}/u-boot-spl.bin-${MACHINE} ${DEPLOYDIR}/${BOOT_TOOLS}
     for ddr_firmware in ${DDR_FIRMWARE_NAME}; do
