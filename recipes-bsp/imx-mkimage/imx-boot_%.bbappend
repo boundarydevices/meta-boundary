@@ -6,6 +6,7 @@ PV = "1.0+git${SRCPV}"
 IMXBOOT_TARGETS  = "${@bb.utils.contains('MACHINE', 'nitrogen8mm', "u-boot-lpddr4-iMX8MM-2g.nohdmibin", "u-boot-lpddr4-iMX8MQ-2g.hdmibin", d)}"
 UBOOT_NAME = "u-boot-${MACHINE}.bin"
 BOOT_CONFIG_MACHINE = "${BOOT_NAME}-${MACHINE}.bin"
+IMX_EXTRA_FIRMWARE_mx8mm = "firmware-imx-8m"
 
 DEPENDS += " dtc"
 
