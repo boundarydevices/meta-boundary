@@ -8,7 +8,7 @@ UBOOT_NAME = "u-boot-${MACHINE}.bin"
 BOOT_CONFIG_MACHINE = "${BOOT_NAME}-${MACHINE}.bin"
 IMX_EXTRA_FIRMWARE_mx8mm = "firmware-imx-8m"
 
-DEPENDS += " dtc"
+DEPENDS += " dtc-native"
 
 compile_mx8() {
     bbnote 8MQ/8MM boot binary build
