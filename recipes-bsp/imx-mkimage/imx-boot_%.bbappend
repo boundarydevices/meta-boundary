@@ -7,10 +7,25 @@ IMXBOOT_TARGETS  = "${@bb.utils.contains('MACHINE', 'nitrogen8mm', "u-boot-lpddr
 UBOOT_NAME = "u-boot-${MACHINE}.bin"
 BOOT_CONFIG_MACHINE = "${BOOT_NAME}-${MACHINE}.bin"
 IMX_EXTRA_FIRMWARE_mx8mm = "firmware-imx-8m"
+SOC_FAMILY_mx8mm = "mx8mm"
 
 DEPENDS += " dtc-native"
 
-compile_mx8() {
+compile_mx8m() {
+    bbnote 8MQ/8MM boot binary build
+    for ddr_firmware in ${DDR_FIRMWARE_NAME}; do
+        bbnote "Copy ddr_firmware: ${ddr_firmware} from ${DEPLOY_DIR_IMAGE} -> ${BOOT_STAGING} "
+        cp ${DEPLOY_DIR_IMAGE}/${ddr_firmware}               ${BOOT_STAGING}
+    done
+    cp ${DEPLOY_DIR_IMAGE}/signed_*_imx8m.bin                ${BOOT_STAGING}
+    cp ${DEPLOY_DIR_IMAGE}/u-boot-spl.bin-${MACHINE}	     ${BOOT_STAGING}/u-boot-spl.bin
+    cp ${DEPLOY_DIR_IMAGE}/${BOOT_TOOLS}/${UBOOT_DTB_NAME}   ${BOOT_STAGING}
+    cp ${DEPLOY_DIR_IMAGE}/${BOOT_TOOLS}/u-boot-nodtb.bin    ${BOOT_STAGING}
+    cp ${DEPLOY_DIR_IMAGE}/${BOOT_TOOLS}/mkimage_uboot       ${BOOT_STAGING}
+    cp ${DEPLOY_DIR_IMAGE}/${UBOOT_NAME}                     ${BOOT_STAGING}/u-boot.bin
+}
+
+compile_mx8mm() {
     bbnote 8MQ/8MM boot binary build
     for ddr_firmware in ${DDR_FIRMWARE_NAME}; do
         bbnote "Copy ddr_firmware: ${ddr_firmware} from ${DEPLOY_DIR_IMAGE} -> ${BOOT_STAGING} "
@@ -36,7 +51,18 @@ do_compile() {
     done
 }
 
-deploy_mx8() {
+deploy_mx8m() {
+    install -d ${DEPLOYDIR}/${BOOT_TOOLS}
+    install -m 0644 ${DEPLOY_DIR_IMAGE}/u-boot-spl.bin-${MACHINE} ${DEPLOYDIR}/${BOOT_TOOLS}
+    for ddr_firmware in ${DDR_FIRMWARE_NAME}; do
+        install -m 0644 ${DEPLOY_DIR_IMAGE}/${ddr_firmware}  ${DEPLOYDIR}/${BOOT_TOOLS}
+    done
+    install -m 0644 ${DEPLOY_DIR_IMAGE}/signed_hdmi*.bin     ${DEPLOYDIR}/${BOOT_TOOLS}
+    install -m 0755 ${BOOT_STAGING}/${TOOLS_NAME}            ${DEPLOYDIR}/${BOOT_TOOLS}
+    install -m 0755 ${BOOT_STAGING}/mkimage_fit_atf.sh       ${DEPLOYDIR}/${BOOT_TOOLS}
+}
+
+deploy_mx8mm() {
     install -d ${DEPLOYDIR}/${BOOT_TOOLS}
     install -m 0644 ${DEPLOY_DIR_IMAGE}/u-boot-spl.bin-${MACHINE} ${DEPLOYDIR}/${BOOT_TOOLS}
     for ddr_firmware in ${DDR_FIRMWARE_NAME}; do
