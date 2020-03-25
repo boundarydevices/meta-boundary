@@ -11,6 +11,5 @@ IMAGE_INSTALL += " \
 	spitools \
 	tslib-tests tslib-calibrate \
 	evtest \
-	udev-rules-bt \
 	silex-uart \
 "
