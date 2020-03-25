@@ -1,17 +1,21 @@
 SUMMARY = "silex uart attach service"
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302"
-
 LICENSE = "MIT"
 
-
 SRC_URI = "file://silex-uart.service \
-	   file://silex.conf \
 	   file://silex-uart.sh \
 "
 
-inherit systemd
+SRC_URI_append_mx6   = "file://silex-imx6.conf"
+SRC_URI_append_mx8m  = "file://silex-imx8m.conf"
+SRC_URI_append_mx8mm = "file://silex-imx8mm.conf"
 
+SILEX_CONF_mx6   = "silex-imx6.conf"
+SILEX_CONF_mx8m  = "silex-imx8m.conf"
+SILEX_CONF_mx8mm = "silex-imx8mm.conf"
+
+inherit systemd
 
 do_install_append() {
 
@@ -21,7 +25,7 @@ do_install_append() {
     fi
 
 	install -d ${D}/${sysconfdir}/bluetooth/
-	install -m 0644 ${WORKDIR}/silex.conf ${D}/${sysconfdir}/bluetooth/
+	install -m 0644 ${WORKDIR}/${SILEX_CONF} ${D}/${sysconfdir}/bluetooth/silex.conf
 
 	install -d ${D}${datadir}/silex-uart/
 	install -m 755 ${WORKDIR}/silex-uart.sh ${D}${datadir}/silex-uart/
@@ -30,4 +34,4 @@ do_install_append() {
 FILES_${PN} += "/usr/share/silex-uart/*"
 
 SYSTEMD_SERVICE_${PN} = "silex-uart.service "
-SYSTEMD_AUTO_ENABLE = "enable"
+SYSTEMD_AUTO_ENABLE = "disable"
