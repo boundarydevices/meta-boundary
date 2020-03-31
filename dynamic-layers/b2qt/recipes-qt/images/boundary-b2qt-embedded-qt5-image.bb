@@ -13,3 +13,6 @@ IMAGE_INSTALL += " \
 	evtest \
 	silex-uart \
 "
+
+#imx-gpu-viv-demos are not compatible with i.MX7
+IMAGE_INSTALL_remove_mx7 += " imx-gpu-viv-demos"
