@@ -6,7 +6,7 @@ LIC_FILES_CHKSUM = "\
     file://bdwlan30.bin;md5=28be80feccd35ab4881d83680ba468a5 \
 "
 
-SRCREV = "${AUTOREV}"
+SRCREV = "ffca74bb3adf283cc78fb5ce5cde6b890b6e5abc"
 
 SRC_URI = "git://github.com/boundarydevices/qca6174-firmware.git;branch=${SRCBRANCH}"
 
