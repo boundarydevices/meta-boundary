@@ -5,7 +5,7 @@ LIC_FILES_CHKSUM = "file://${S}/CORE/HDD/src/wlan_hdd_main.c;md5=b322e2f438f07bf
 
 inherit module
 
-SRCREV = "${AUTOREV}"
+SRCREV = "913fda7537ab240ca5b1b143a81e9b36e50ad007"
 
 SRC_URI = "git://github.com/boundarydevices/qca6174a-lnx4_14-driver-source.git;branch=${SRCBRANCH}"
 
