@@ -66,12 +66,10 @@ case $1 in
   echo "Starting $DESC"
   if test "$BLUETOOTH_ENABLED" = 0 ; then
     echo "bluetooth disabled. see /etc/default/bluetooth"
-    echo 0
     exit 0
   fi
   pre_start
   start_silex
-  echo 0
   exit 0
   ;;
 
@@ -79,12 +77,10 @@ case $1 in
   echo "Stopping $DESC"
   if test "$BLUETOOTH_ENABLED" = 0 ; then
     echo "bluetooth disabled. see /etc/default/bluetooth"
-    echo 0
     exit 0
   fi
 
   stop_silex
-  echo 0
   exit 0
   ;;
 
