@@ -33,17 +33,15 @@ CORE_IMAGE_BASE_INSTALL += "\
 	minicom \
 	openssl \
 	cryptodev-module \
+	kernel-module-qcacld \
+	linux-firmware-bdsdmac \
+	silex-uart \
 "
 
-# For silex module support uncomment the line below and register your ssh key on our webserver to get access.
-# Silex requires some terms and conditions to be accepted before you can build
-# Please fill out the form located here for access: https://boundarydevices.com/private-git-access/
-#CORE_IMAGE_BASE_INSTALL += "kernel-module-silex linux-firmware-silex"
-
 # Video input demos only on nitrogen6x/sx/7 platform
-# Chromium not on nitrogen7
 CORE_IMAGE_BASE_INSTALL_append_nitrogen6x += "video-input-icon chromium-x11 qt5everywheredemo cinematicexperience"
 #CORE_IMAGE_BASE_INSTALL_append_nitrogen6x += "firefox"
 CORE_IMAGE_BASE_INSTALL_append_nitrogen6x-lite += "chromium-x11"
 CORE_IMAGE_BASE_INSTALL_append_nitrogen6sx += "video-input-icon chromium-x11"
+# Chromium not on nitrogen7
 CORE_IMAGE_BASE_INSTALL_append_nitrogen7 += "video-input-icon"
