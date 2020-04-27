@@ -9,7 +9,7 @@ IMAGE_FEATURES += "splash package-management x11-base x11-sato ssh-server-dropbe
 
 LICENSE = "MIT"
 
-inherit core-image distro_features_check
+inherit core-image features_check
 
 REQUIRED_DISTRO_FEATURES = "x11"
 CONFLICT_DISTRO_FEATURES = "wayland"
