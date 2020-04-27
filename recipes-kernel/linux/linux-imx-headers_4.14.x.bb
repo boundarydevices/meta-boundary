@@ -11,7 +11,6 @@ FILESEXTRAPATHS_append := "${THISDIR}/files:"
 
 LOCALVERSION = "-imx"
 SRC_URI = "git://github.com/boundarydevices/linux-imx6.git;branch=${SRCBRANCH} \
-	   file://0001-revert-update-mxc_asrc-uapi-for-iMX815.patch \
 "
 SRCBRANCH = "boundary-imx_4.14.x_2.0.0_ga"
 SRCREV = "47a070fb51bfafbce4dc6089be3a19d027d16b55"
