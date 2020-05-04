@@ -19,6 +19,7 @@ CORE_IMAGE_EXTRA_INSTALL += " \
 	udev-rules-bt \
 	can-utils \
 	iproute2 \
+	pciutils \
 "
 
 #imx-gpu-viv-demos are not compatible with i.MX7
