@@ -7,10 +7,10 @@ LIC_FILES_CHKSUM = "\
     file://LICENSE.qca_firmware;md5=e8b1e9e8ce377ca5b2c1098e5690f470 \
 "
 
-SRCREV = "5e4b71211ecbb79e7693d2ee07361847f5a0cb40"
+SRCREV = "7c849ee87c9b523820e25c3f6a8f3ecbd3b0fbe7"
 
 SRC_URI = "git://github.com/boundarydevices/qca-firmware.git;branch=${SRCBRANCH}"
-SRCBRANCH = "bd-sdmac-qcacld"
+SRCBRANCH = "bd-sdmac-qcacld-lea-2.0"
 
 S = "${WORKDIR}/git"
 
