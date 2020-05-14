@@ -21,6 +21,7 @@ CORE_IMAGE_EXTRA_INSTALL += " \
 	iproute2 \
 	pciutils \
 	e2fsprogs \
+	packagegroup-tools-bluetooth \
 "
 
 #imx-gpu-viv-demos are not compatible with i.MX7
