@@ -1,4 +1,4 @@
-FILESEXTRAPATHS_prepend  := "${THISDIR}/weston:"
+FILESEXTRAPATHS_prepend_mx6  := "${THISDIR}/weston:"
 
 SRC_URI_append_mx6 = " file://weston.ini"
 
