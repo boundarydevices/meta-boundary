@@ -22,6 +22,9 @@ CORE_IMAGE_EXTRA_INSTALL += " \
 	pciutils \
 	e2fsprogs \
 	packagegroup-tools-bluetooth \
+	libdrm-tests \
+	v4l-utils \
+	strace \
 "
 
 #imx-gpu-viv-demos are not compatible with i.MX7
