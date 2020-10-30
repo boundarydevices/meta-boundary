@@ -25,6 +25,8 @@ CORE_IMAGE_EXTRA_INSTALL += " \
 	libdrm-tests \
 	v4l-utils \
 	strace \
+	modemmanager \
+	screen \
 "
 
 #imx-gpu-viv-demos are not compatible with i.MX7
