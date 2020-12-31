@@ -1,4 +1,4 @@
-From 4a3b72829d4822301a228c1d89933ad330aabbcd Mon Sep 17 00:00:00 2001
+From 708f25cfe522df162c3e2c7c56cbe2f7000cb5e4 Mon Sep 17 00:00:00 2001
 From: Gary Bisson <gary.bisson@boundarydevices.com>
 Date: Mon, 14 Dec 2020 14:26:01 +0100
 Subject: [PATCH] start_isp.sh: fix test to be generic
@@ -7,32 +7,31 @@ So that it works on EVK and any other i.MX 8M Plus platform.
 
 Signed-off-by: Gary Bisson <gary.bisson@boundarydevices.com>
 ---
- opt/imx8-isp/bin/start_isp.sh | 14 +++++---------
- 1 file changed, 5 insertions(+), 9 deletions(-)
+ imx/start_isp.sh | 13 +++++--------
+ 1 file changed, 5 insertions(+), 8 deletions(-)
 
-diff --git a/opt/imx8-isp/bin/start_isp.sh b/opt/imx8-isp/bin/start_isp.sh
-index 559355f..302b6bf 100755
---- a/opt/imx8-isp/bin/start_isp.sh
-+++ b/opt/imx8-isp/bin/start_isp.sh
-@@ -4,22 +4,18 @@
+diff --git a/imx/start_isp.sh b/imx/start_isp.sh
+index 02ee7d3b5..fee0492ad 100755
+--- a/imx/start_isp.sh
++++ b/imx/start_isp.sh
+@@ -7,21 +7,18 @@
  #
  
  RUNTIME_DIR="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
--DEVICE_TREE_BASLER="/sys/firmware/devicetree/base/soc@0/bus@30800000/i2c@30a30000/basler_camera@36"
+-DEVICE_TREE_BASLER=$(grep basler-camera-vvcam /sys/firmware/devicetree/base/soc@0/*/i2c@*/*/compatible -l 2> /dev/null)
 -
 +BASLER=`dmesg | grep Basler`
  
  # check if the basler device has been enabled in the device tree
--if [ -d "$DEVICE_TREE_BASLER" ]; then
+-if [ -f "$DEVICE_TREE_BASLER" ]; then
 -
 +if [ ! -z "$BASLER" ]; then
  	echo "Starting isp_media_server for Basler daA3840-30mc"
 -
  	cd $RUNTIME_DIR
- 	# TODO: remove format below, when proper format interface is present in isp media control
- 	# uncomment corresponding line to enable 1080p60 ("-c basler_1080p60") or 4kp30 ("-c basler_4k")
--	#exec ./run.sh -c basler_4k -lm
--	exec ./run.sh -c basler_1080p60 -lm
+ 	# Default configuration for Basler daA3840-30mc: basler_4k
+ 	# Available configurations: basler_4k, basler_1080p60, basler_4khdr, basler_1080p60hdr
+-	exec ./run.sh -c basler_4k -lm
 -
 +	#exec ./run.sh -c basler_4k
 +	exec ./run.sh -c basler_1080p60
