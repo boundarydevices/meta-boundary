@@ -3,6 +3,19 @@
 
 require recipes-fsl/images/fsl-image-multimedia-full.bb
 
+ISP_PKGS       = ""
+ISP_PKGS_mx8mp = "packagegroup-freescale-isp"
+ML_PKGS       ?= ""
+ML_PKGS_mx8    = "packagegroup-freescale-ml"
+
+# Add opencv for i.MX GPU
+OPENCV_PKGS       ?= ""
+OPENCV_PKGS_imxgpu = " \
+    opencv-apps \
+    opencv-samples \
+    python3-opencv \
+"
+
 CORE_IMAGE_EXTRA_INSTALL += " \
 	i2c-tools \
 	iperf3 \
@@ -13,6 +26,7 @@ CORE_IMAGE_EXTRA_INSTALL += " \
 	openssh \
 	spitools \
 	networkmanager \
+	networkmanager-nmcli \
 	tslib-tests tslib-calibrate \
 	evtest \
 	silex-uart \
@@ -28,6 +42,9 @@ CORE_IMAGE_EXTRA_INSTALL += " \
 	modemmanager \
 	screen \
 	psplash \
+	${ISP_PKGS} \
+        ${OPENCV_PKGS} \
+        ${ML_PKGS} \
 "
 
 #imx-gpu-viv-demos are not compatible with i.MX7
