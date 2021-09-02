@@ -14,6 +14,21 @@ IMAGE_INSTALL += " \
 	tslib-tests tslib-calibrate \
 	evtest \
 	silex-uart \
+	udev-rules-bt \
+	can-utils \
+	iproute2 \
+	pciutils \
+	e2fsprogs \
+	packagegroup-tools-bluetooth \
+	libdrm-tests \
+	v4l-utils \
+	strace \
+	modemmanager \
+	screen \
+	psplash \
+	packagegroup-fsl-isp \
+	packagegroup-fsl-opencv-imx \
+	packagegroup-fsl-ml \
 "
 
 #imx-gpu-viv-demos are not compatible with i.MX7
