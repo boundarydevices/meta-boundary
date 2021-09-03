@@ -40,7 +40,7 @@ do_install() {
 	oe_runmake install
 }
 
-do_configure_prepend () {
+do_configure:prepend () {
 	# Fix for rebuilding
 	rm -rf ${B}/
 	mkdir -p ${B}/
