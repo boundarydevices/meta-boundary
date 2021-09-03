@@ -1,4 +1,0 @@
-#
-# For remote UDP logging use SYSLOGD="-r"
-#
-SYSLOGD="-r"
