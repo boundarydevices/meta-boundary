@@ -9,7 +9,7 @@ LIC_FILES_CHKSUM = "\
     file://${WORKDIR}/LICENSE.GPLv2+.txt;md5=b234ee4d69f5fce4486a80fdaf4a4263 \
 "
 
-SRC_URI_append = "\
+SRC_URI:append = "\
     http://linode.boundarydevices.com/gsl1680.fw;name=gsl1680 \
     http://linode.boundarydevices.com/LICENSE.GPLv2+.txt;name=license \
 "
