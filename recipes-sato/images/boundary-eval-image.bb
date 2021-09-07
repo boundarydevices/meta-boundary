@@ -39,9 +39,9 @@ CORE_IMAGE_BASE_INSTALL += "\
 "
 
 # Video input demos only on nitrogen6x/sx/7 platform
-CORE_IMAGE_BASE_INSTALL_append_nitrogen6x += "video-input-icon chromium-x11 qt5everywheredemo cinematicexperience"
-#CORE_IMAGE_BASE_INSTALL_append_nitrogen6x += "firefox"
-CORE_IMAGE_BASE_INSTALL_append_nitrogen6x-lite += "chromium-x11"
-CORE_IMAGE_BASE_INSTALL_append_nitrogen6sx += "video-input-icon chromium-x11"
+CORE_IMAGE_BASE_INSTALL:append:nitrogen6x += "video-input-icon chromium-x11 qt5everywheredemo cinematicexperience"
+#CORE_IMAGE_BASE_INSTALL:append:nitrogen6x += "firefox"
+CORE_IMAGE_BASE_INSTALL:append:nitrogen6x-lite += "chromium-x11"
+CORE_IMAGE_BASE_INSTALL:append:nitrogen6sx += "video-input-icon chromium-x11"
 # Chromium not on nitrogen7
-CORE_IMAGE_BASE_INSTALL_append_nitrogen7 += "video-input-icon"
+CORE_IMAGE_BASE_INSTALL:append:nitrogen7 += "video-input-icon"
