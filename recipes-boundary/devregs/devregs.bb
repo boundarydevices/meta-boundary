@@ -13,7 +13,7 @@ SRCREV = "8e2537cec400a4cedd1e37a9cc823cea458732e9"
 
 inherit autotools-brokensep
 
-do_install_append() {
+do_install:append() {
         cp -fv ${S}/dat/devregs_imx* ${D}${sysconfdir}/
 }
 
