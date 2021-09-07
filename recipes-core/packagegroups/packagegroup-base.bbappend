@@ -28,4 +28,4 @@
 ############################################################################
 
 # conflicts with wireless-regdb needed for linux-firmware-bdsdmac -> crda
-RDEPENDS_packagegroup-base-wifi_remove = "wireless-regdb-static"
+RDEPENDS:packagegroup-base-wifi_remove = "wireless-regdb-static"
