@@ -14,12 +14,12 @@ SRC_URI_append_mx8mp  = "file://silex-imx8mp.conf"
 SRC_URI_append_mx8mm = "file://silex-imx8mm.conf"
 SRC_URI_append_mx8mn = "file://silex-imx8mn.conf"
 
-SILEX_CONF_mx6   = "silex-imx6.conf"
-SILEX_CONF_mx7   = "silex-imx7.conf"
-SILEX_CONF_mx8mq  = "silex-imx8m.conf"
-SILEX_CONF_mx8mp  = "silex-imx8mp.conf"
-SILEX_CONF_mx8mm = "silex-imx8mm.conf"
-SILEX_CONF_mx8mn = "silex-imx8mn.conf"
+SILEX_CONF:mx6   = "silex-imx6.conf"
+SILEX_CONF:mx7   = "silex-imx7.conf"
+SILEX_CONF:mx8mq  = "silex-imx8m.conf"
+SILEX_CONF:mx8mp  = "silex-imx8mp.conf"
+SILEX_CONF:mx8mm = "silex-imx8mm.conf"
+SILEX_CONF:mx8mn = "silex-imx8mn.conf"
 
 inherit systemd
 
@@ -37,7 +37,7 @@ do_install_append() {
 	install -m 755 ${WORKDIR}/silex-uart.sh ${D}${datadir}/silex-uart/
 }
 
-FILES_${PN} += "/usr/share/silex-uart/*"
+FILES:${PN} += "/usr/share/silex-uart/*"
 
-SYSTEMD_SERVICE_${PN} = "silex-uart.service "
+SYSTEMD_SERVICE:${PN} = "silex-uart.service "
 SYSTEMD_AUTO_ENABLE = "disable"
