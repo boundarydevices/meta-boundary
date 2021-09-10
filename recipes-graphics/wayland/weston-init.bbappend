@@ -1,11 +1,12 @@
-FILESEXTRAPATHS_prepend_mx6  := "${THISDIR}/weston:"
-
-SRC_URI_append_mx6 = " file://weston.ini"
-
-do_install_append_mx6() {
-
-	install -D -m 0644 ${WORKDIR}/weston.ini ${D}${sysconfdir}/xdg/weston/weston.ini
+update_file() {
+    if ! grep -q "$1" $3; then
+        bbfatal $1 not found in $3
+    fi
+    sed -i -e "s,$1,$2," $3
 }
 
-#Disable weston init.d script, as this will cause two instances of weston to run
-INITSCRIPT_PARAMS = "stop 20 0 1 6 ."
+do_install_append() {
+    # FIXME: weston should be run as weston, not as root
+    update_file "User=weston" "User=root" ${D}${systemd_system_unitdir}/weston.service
+    update_file "Group=weston" "Group=root" ${D}${systemd_system_unitdir}/weston.service
+}
