@@ -29,6 +29,7 @@ CORE_IMAGE_EXTRA_INSTALL += " \
 	modemmanager \
 	screen \
 	psplash \
+	udev-rules-imx \
 	packagegroup-fsl-isp \
 	packagegroup-fsl-opencv-imx \
 	packagegroup-fsl-ml \
