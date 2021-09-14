@@ -1,0 +1,36 @@
+From c96d9d4fe4f5cab114a4dd5813a6819c6ccb8a19 Mon Sep 17 00:00:00 2001
+From: Gary Bisson <gary.bisson@boundarydevices.com>
+Date: Tue, 7 Sep 2021 17:30:57 +0200
+Subject: [PATCH] vvcam-video: add of match table
+
+Signed-off-by: Gary Bisson <gary.bisson@boundarydevices.com>
+---
+ vvcam/v4l2/video/video.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/video/video.c b/video/video.c
+index f6e6392..ec36fc3 100644
+--- a/video/video.c
++++ b/video/video.c
+@@ -2356,13 +2356,20 @@ static int viv_video_remove(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
++static const struct of_device_id viv_video_of_match[] = {
++	{ .compatible = "fsl,imx8mp-vvcam-video" },
++	{ /* sentinel */ },
++};
++MODULE_DEVICE_TABLE(of, viv_video_of_match);
++
+ static struct platform_driver viv_video_driver = {
+ 	.probe = viv_video_probe,
+ 	.remove = viv_video_remove,
+ 	.driver = {
+ 		   .name = "vvcam-video",
+ 		   .owner = THIS_MODULE,
+-		   },
++		   .of_match_table = viv_video_of_match,
++	},
+ };
+ 
+ static int __init viv_video_init_module(void)
