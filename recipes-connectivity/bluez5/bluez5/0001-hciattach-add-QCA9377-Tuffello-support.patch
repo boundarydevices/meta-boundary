@@ -1,10 +1,7 @@
-From 97c6fcba2a45533c4a00f85c235fcdccc5e87fb7 Mon Sep 17 00:00:00 2001
-From: Gary Bisson <gary.bisson@boundarydevices.com>
-Date: Wed, 17 Aug 2016 11:36:28 +0200
-Subject: [PATCH] hciattach: add QCA9377 Tuffello support
-
-From CodeAurora repository:
-https://source.codeaurora.org/quic/la/platform/external/bluetooth/bluez/
+From 373e0d5057124d76f3bfd9036b42b171b5646f0e Mon Sep 17 00:00:00 2001
+From: Chris Dimich <chris.dimich@boundarydevices.com>
+Date: Thu, 11 Nov 2021 09:33:39 -0800
+Subject: [PATCH 1/1] hciattach: add QCA9377 Tuffello support
 
 Modifications:
 - code indentation
@@ -18,22 +15,23 @@ hciattach_rome: force IBS to disabled in NVM
 hciattach_rome: display ROM and TLV info by default
 
 Signed-off-by: Gary Bisson <gary.bisson@boundarydevices.com>
+Signed-off-by: Chris Dimich <chris.dimich@boundarydevices.com>
 ---
  Makefile.tools         |    1 +
  android/Android.mk     |    1 +
  tools/hciattach.c      |   12 +
  tools/hciattach.h      |    1 +
- tools/hciattach_rome.c | 1872 ++++++++++++++++++++++++++++++++++++++++++++++++
- tools/hciattach_rome.h |  388 ++++++++++
- 6 files changed, 2275 insertions(+)
+ tools/hciattach_rome.c | 1884 ++++++++++++++++++++++++++++++++++++++++
+ tools/hciattach_rome.h |  388 +++++++++
+ 6 files changed, 2287 insertions(+)
  create mode 100644 tools/hciattach_rome.c
  create mode 100644 tools/hciattach_rome.h
 
 diff --git a/Makefile.tools b/Makefile.tools
-index 0fd6dec87..984d6d212 100644
+index d5fdf2d..206d62f 100644
 --- a/Makefile.tools
 +++ b/Makefile.tools
-@@ -281,6 +281,7 @@ tools_hciattach_SOURCES = tools/hciattach.c tools/hciattach.h \
+@@ -348,6 +348,7 @@ tools_hciattach_SOURCES = tools/hciattach.c tools/hciattach.h \
  						tools/hciattach_ti.c \
  						tools/hciattach_tialt.c \
  						tools/hciattach_ath3k.c \
@@ -42,10 +40,10 @@ index 0fd6dec87..984d6d212 100644
  						tools/hciattach_intel.c \
  						tools/hciattach_bcm43xx.c
 diff --git a/android/Android.mk b/android/Android.mk
-index 38ef4aa97..d5045dacd 100644
+index 8f842e7..b5ac625 100644
 --- a/android/Android.mk
 +++ b/android/Android.mk
-@@ -695,6 +695,7 @@ LOCAL_SRC_FILES := \
+@@ -697,6 +697,7 @@ LOCAL_SRC_FILES := \
  	bluez/tools/hciattach_ti.c \
  	bluez/tools/hciattach_tialt.c \
  	bluez/tools/hciattach_ath3k.c \
@@ -54,10 +52,10 @@ index 38ef4aa97..d5045dacd 100644
  	bluez/tools/hciattach_intel.c \
  	bluez/tools/hciattach_bcm43xx.c \
 diff --git a/tools/hciattach.c b/tools/hciattach.c
-index fad176c9b..02a65c692 100644
+index 276a4e5..0084cfc 100644
 --- a/tools/hciattach.c
 +++ b/tools/hciattach.c
-@@ -263,6 +263,11 @@ static int ath3k_pm(int fd, struct uart_t *u, struct termios *ti)
+@@ -251,6 +251,11 @@ static int ath3k_pm(int fd, struct uart_t *u, struct termios *ti)
  	return ath3k_post(fd, u->pm);
  }
  
@@ -69,7 +67,7 @@ index fad176c9b..02a65c692 100644
  static int qualcomm(int fd, struct uart_t *u, struct termios *ti)
  {
  	return qualcomm_init(fd, u->speed, ti, u->bdaddr);
-@@ -1093,6 +1098,10 @@ struct uart_t uart[] = {
+@@ -1081,6 +1086,10 @@ struct uart_t uart[] = {
  	{ "ath3k",    0x0000, 0x0000, HCI_UART_ATH3K, 115200, 115200,
  			FLOW_CTL, DISABLE_PM, NULL, ath3k_ps, ath3k_pm  },
  
@@ -80,7 +78,7 @@ index fad176c9b..02a65c692 100644
  	/* QUALCOMM BTS */
  	{ "qualcomm",   0x0000, 0x0000, HCI_UART_H4,   115200, 115200,
  			FLOW_CTL, DISABLE_PM, NULL, qualcomm, NULL },
-@@ -1145,6 +1154,9 @@ static int init_uart(char *dev, struct uart_t *u, int send_break, int raw)
+@@ -1133,6 +1142,9 @@ static int init_uart(char *dev, struct uart_t *u, int send_break, int raw)
  	if (u->flags & AMP_DEV)
  		flags |= 1 << HCI_UART_CREATE_AMP;
  
@@ -91,10 +89,10 @@ index fad176c9b..02a65c692 100644
  	if (fd < 0) {
  		perror("Can't open serial port");
 diff --git a/tools/hciattach.h b/tools/hciattach.h
-index 249aab49e..85c801ccf 100644
+index 26c0d54..a09340f 100644
 --- a/tools/hciattach.h
 +++ b/tools/hciattach.h
-@@ -65,6 +65,7 @@ int bgb2xx_init(int dd, bdaddr_t *bdaddr);
+@@ -52,6 +52,7 @@ int bgb2xx_init(int dd, bdaddr_t *bdaddr);
  int ath3k_init(int fd, int speed, int init_speed, char *bdaddr,
  						struct termios *ti);
  int ath3k_post(int fd, int pm);
@@ -104,10 +102,10 @@ index 249aab49e..85c801ccf 100644
  int bcm43xx_init(int fd, int def_speed, int speed, struct termios *ti,
 diff --git a/tools/hciattach_rome.c b/tools/hciattach_rome.c
 new file mode 100644
-index 000000000..9a7f222c4
+index 0000000..3f1a1c2
 --- /dev/null
 +++ b/tools/hciattach_rome.c
-@@ -0,0 +1,1872 @@
+@@ -0,0 +1,1884 @@
 +/*
 + *
 + *  Copyright (c) 2013-2015, The Linux Foundation. All rights reserved.
@@ -1190,6 +1188,10 @@ index 000000000..9a7f222c4
 +				nvm_byte_ptr -= nvm_size;
 +				readSize -= nvm_size;
 +				nvm_index -= nvm_size;
++				/* update tlv size in its header */
++				ptlv_header->tlv_length1 = (nvm_length & 0xFF);
++				ptlv_header->tlv_length2 = (nvm_length & 0xFF00) >> 8;
++				ptlv_header->tlv_length3 = (nvm_length & 0xFF0000) >> 16;
 +				continue;
 +			}
 +#endif
@@ -1942,6 +1944,14 @@ index 000000000..9a7f222c4
 +			goto error;
 +		}
 +
++		/* Changing the default baud rate value to speed up transfers */
++		err = rome_set_baudrate_req(fd, baud_rate);
++		if (err < 0) {
++			fprintf(stderr, "%s: Baud rate change failed!\n", __FUNCTION__);
++			ret = -1;
++			goto error;
++		}
++
 +		/* Donwload TLV files (rampatch, NVM) */
 +		err = rome_download_tlv_file(fd, baud_rate);
 +		if (err < 0) {
@@ -1982,7 +1992,7 @@ index 000000000..9a7f222c4
 +}
 diff --git a/tools/hciattach_rome.h b/tools/hciattach_rome.h
 new file mode 100644
-index 000000000..597743e0b
+index 0000000..597743e
 --- /dev/null
 +++ b/tools/hciattach_rome.h
 @@ -0,0 +1,388 @@
@@ -2375,5 +2385,5 @@ index 000000000..597743e0b
 +};
 +#endif /* HW_ROME_H */
 -- 
-2.15.0
+2.31.1
 
