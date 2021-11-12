@@ -39,5 +39,4 @@ do_install:append() {
 
 FILES:${PN} += "/usr/share/silex-uart/*"
 
-SYSTEMD_SERVICE:${PN} = "silex-uart.service "
-SYSTEMD_AUTO_ENABLE = "disable"
+SYSTEMD_SERVICE:${PN} = "silex-uart.service"
