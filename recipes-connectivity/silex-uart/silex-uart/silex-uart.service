@@ -1,7 +1,7 @@
 [Unit]
 Description=Attaching uart to bluetooth
-Requires=bluetooth.target dev-bt\x2duart.device
-After=bluetooth.target dev-bt\x2duart.device
+Requires=bluetooth.target
+After=bluetooth.target
 
 [Service]
 Type=oneshot

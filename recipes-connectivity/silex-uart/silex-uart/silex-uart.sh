@@ -70,6 +70,7 @@ case $1 in
   fi
   pre_start
   start_silex
+  hciconfig hci0 up
   exit 0
   ;;
 
