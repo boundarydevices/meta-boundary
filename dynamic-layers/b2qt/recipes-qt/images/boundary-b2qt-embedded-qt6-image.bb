@@ -31,5 +31,8 @@ IMAGE_INSTALL += " \
 	packagegroup-fsl-ml \
 "
 
+#FIX ME: build failing on 8mn, temporarily remove from image
+IMAGE_INSTALL:remove:mx8mn += " packagegroup-fsl-ml"
+
 #imx-gpu-viv-demos are not compatible with i.MX7
 IMAGE_INSTALL_remove_mx7 += " imx-gpu-viv-demos"
