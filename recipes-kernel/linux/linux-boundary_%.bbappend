@@ -2,7 +2,7 @@ FILESEXTRAPATHS_prepend_mx6 := "${THISDIR}/files/arm:"
 FILESEXTRAPATHS_prepend_mx7 := "${THISDIR}/files/arm:"
 FILESEXTRAPATHS_prepend_mx8 := "${THISDIR}/files/arm64:"
 
-SRC_URI = "git://github.com/boundarydevices/linux-imx6.git;branch=${SRCBRANCH} \
+SRC_URI = "git://github.com/boundarydevices/linux-imx6.git;protocol=https;branch=${SRCBRANCH} \
 "
 
 LOCALVERSION = "-2.0.0-ga+yocto"

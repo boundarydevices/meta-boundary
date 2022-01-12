@@ -1,4 +1,4 @@
-SRC_URI = "git://github.com/boundarydevices/tslib.git;branch=${SRCBRANCH} \
+SRC_URI = "git://github.com/boundarydevices/tslib.git;protocol=https;branch=${SRCBRANCH} \
 "
 SRCBRANCH = "boundary-kergoth"
 SRCREV = "${AUTOREV}"

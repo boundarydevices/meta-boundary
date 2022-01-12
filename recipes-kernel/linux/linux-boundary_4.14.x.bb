@@ -9,7 +9,7 @@ FILESEXTRAPATHS_prepend_mx6 := "${THISDIR}/${PN}-${PV}/arm:"
 FILESEXTRAPATHS_prepend_mx7 := "${THISDIR}/${PN}-${PV}/arm:"
 FILESEXTRAPATHS_prepend_mx8 := "${THISDIR}/${PN}-${PV}/arm64:"
 
-SRC_URI = "git://github.com/boundarydevices/linux-imx6.git;branch=${SRCBRANCH} \
+SRC_URI = "git://github.com/boundarydevices/linux-imx6.git;protocol=https;branch=${SRCBRANCH} \
            file://defconfig \
 "
 

@@ -7,7 +7,7 @@ inherit module
 
 SRCREV = "${AUTOREV}"
 
-SRC_URI = "git://github.com/boundarydevices/qcacld-2.0.git;branch=${SRCBRANCH} \
+SRC_URI = "git://github.com/boundarydevices/qcacld-2.0.git;protocol=https;branch=${SRCBRANCH} \
 "
 SRCBRANCH = "boundary-LNX.LEH.4.2.2.2"
 
