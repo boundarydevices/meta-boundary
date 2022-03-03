@@ -33,6 +33,7 @@ CORE_IMAGE_EXTRA_INSTALL += " \
 	packagegroup-fsl-isp \
 	packagegroup-fsl-opencv-imx \
 	packagegroup-fsl-ml \
+	u-boot-fw-utils \
 "
 
 #imx-gpu-viv-demos are not compatible with i.MX7
