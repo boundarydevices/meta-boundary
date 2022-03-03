@@ -7,7 +7,7 @@ inherit module
 
 SRCREV = "913fda7537ab240ca5b1b143a81e9b36e50ad007"
 
-SRC_URI = "git://github.com/boundarydevices/qca6174a-lnx4_14-driver-source.git;branch=${SRCBRANCH}"
+SRC_URI = "git://github.com/boundarydevices/qca6174a-lnx4_14-driver-source.git;protocol=https;branch=${SRCBRANCH}"
 
 SRCBRANCH = "master"
 

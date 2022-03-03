@@ -6,7 +6,7 @@ LIC_FILES_CHKSUM = "file://${S}/CORE/HDD/src/wlan_hdd_main.c;md5=27608ee1794ad84
 inherit module
 
 SRCREV = "99f0ed2a648facf2c1a3f8d484ed2593611d6b15"
-SRC_URI = "git://github.com/boundarydevices/qcacld-2.0.git;branch=${SRCBRANCH}"
+SRC_URI = "git://github.com/boundarydevices/qcacld-2.0.git;protocol=https;branch=${SRCBRANCH}"
 SRCBRANCH = "boundary-CNSS.LEA.NRT_3.1"
 
 S = "${WORKDIR}/git"
