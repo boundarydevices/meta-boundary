@@ -8,7 +8,7 @@ LIC_FILES_CHKSUM = "\
 
 SRCREV = "ffca74bb3adf283cc78fb5ce5cde6b890b6e5abc"
 
-SRC_URI = "git://github.com/boundarydevices/qca6174-firmware.git;branch=${SRCBRANCH}"
+SRC_URI = "git://github.com/boundarydevices/qca6174-firmware.git;protocol=https;branch=${SRCBRANCH}"
 
 SRCBRANCH = "master"
 

@@ -9,7 +9,7 @@ LIC_FILES_CHKSUM = "\
 
 SRCREV = "af26e1e5670bb9afa0691d260924adf86c37fea3"
 
-SRC_URI = "git://github.com/boundarydevices/qca-firmware.git;branch=${SRCBRANCH}"
+SRC_URI = "git://github.com/boundarydevices/qca-firmware.git;protocol=https;branch=${SRCBRANCH}"
 SRCBRANCH = "bd-sdmac-qcacld-lea-3.0"
 
 S = "${WORKDIR}/git"
