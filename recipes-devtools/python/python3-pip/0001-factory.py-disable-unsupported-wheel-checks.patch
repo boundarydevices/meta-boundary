@@ -1,0 +1,41 @@
+From e84284264d033384d8923b2640aac4f1f0d988e1 Mon Sep 17 00:00:00 2001
+From: Chris Dimich <chris.dimich@boundarydevices.com>
+Date: Wed, 2 Mar 2022 17:10:13 -0800
+Subject: [PATCH 1/1] factory.py: disable unsupported wheel checks
+
+In case of yocto recipes such as tensorflow-lite, pytorch or
+torchvision, this check will cause the error:
+
+.whl is not a supported wheel on this platform.
+
+which in this case is not valid, because these .whl's are in fact
+supported (python 3.9.9). Therefore, this commit will disable the check.
+
+Signed-off-by: Chris Dimich <chris.dimich@boundarydevices.com>
+---
+ src/pip/_internal/resolution/resolvelib/factory.py | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/src/pip/_internal/resolution/resolvelib/factory.py b/src/pip/_internal/resolution/resolvelib/factory.py
+index e7fd344aa..fca5fa70b 100644
+--- a/src/pip/_internal/resolution/resolvelib/factory.py
++++ b/src/pip/_internal/resolution/resolvelib/factory.py
+@@ -336,7 +336,6 @@ class Factory:
+         of what "should" be the template, but with original_link set to link.
+         """
+         for link in constraint.links:
+-            self._fail_if_link_is_unsupported_wheel(link)
+             candidate = self._make_candidate_from_link(
+                 link,
+                 extras=frozenset(),
+@@ -429,7 +428,6 @@ class Factory:
+             return None
+         if not ireq.link:
+             return SpecifierRequirement(ireq)
+-        self._fail_if_link_is_unsupported_wheel(ireq.link)
+         cand = self._make_candidate_from_link(
+             ireq.link,
+             extras=frozenset(ireq.extras),
+-- 
+2.31.1
+
