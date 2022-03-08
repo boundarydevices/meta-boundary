@@ -4,36 +4,37 @@
 require recipes-fsl/images/fsl-image-multimedia-full.bb
 
 CORE_IMAGE_EXTRA_INSTALL += " \
+	can-utils \
+	e2fsprogs \
+	evtest \
 	i2c-tools \
-	iperf3 \
 	imx-gpu-viv-demos \
+	iperf3 \
+	iproute2 \
 	kernel-module-qcacld \
+	libdrm-tests \
 	linux-firmware-bdsdmac \
 	mmc-utils \
-	openssh \
-	spitools \
+	modemmanager \
 	networkmanager \
 	networkmanager-nmcli \
-	tslib-tests tslib-calibrate \
-	evtest \
-	silex-uart \
-	udev-rules-bt \
-	can-utils \
-	iproute2 \
-	pciutils \
-	e2fsprogs \
-	packagegroup-tools-bluetooth \
-	libdrm-tests \
-	v4l-utils \
-	strace \
-	modemmanager \
-	screen \
-	psplash \
-	udev-rules-imx \
+	openssh \
 	packagegroup-fsl-isp \
-	packagegroup-fsl-opencv-imx \
 	packagegroup-fsl-ml \
+	packagegroup-fsl-opencv-imx \
+	packagegroup-tools-bluetooth \
+	pciutils \
+	psplash \
+	screen \
+	silex-uart \
+	spitools \
+	strace \
+	tslib-tests tslib-calibrate \
+	u-boot-boundary-env \
 	u-boot-fw-utils \
+	udev-rules-bt \
+	udev-rules-imx \
+	v4l-utils \
 "
 
 #imx-gpu-viv-demos are not compatible with i.MX7
