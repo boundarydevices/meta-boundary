@@ -35,4 +35,4 @@ IMAGE_INSTALL += " \
 IMAGE_INSTALL:remove:mx8mn += " packagegroup-fsl-ml"
 
 #imx-gpu-viv-demos are not compatible with i.MX7
-IMAGE_INSTALL_remove_mx7 += " imx-gpu-viv-demos"
+IMAGE_INSTALL:remove:mx7 += " imx-gpu-viv-demos"
