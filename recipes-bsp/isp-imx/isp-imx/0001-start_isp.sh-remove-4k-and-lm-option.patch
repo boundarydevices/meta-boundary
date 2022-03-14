@@ -1,6 +1,6 @@
-From 11a93604f21b0e7f95d6ed114779ccac91637fb9 Mon Sep 17 00:00:00 2001
+From 988231e2195a81410c2a1f1bdd4a579a8bd49772 Mon Sep 17 00:00:00 2001
 From: Chris Dimich <chris.dimich@boundarydevices.com>
-Date: Tue, 8 Mar 2022 19:05:07 -0800
+Date: Mon, 14 Mar 2022 09:27:08 -0700
 Subject: [PATCH 1/1] start_isp.sh: remove 4k and -lm option
 
 4k is not supported on boundary kernel and causes unexpected issues.
@@ -9,11 +9,11 @@ issues.
 
 Signed-off-by: Chris Dimich <chris.dimich@boundarydevices.com>
 ---
- imx/start_isp.sh | 17 +++--------------
- 1 file changed, 3 insertions(+), 14 deletions(-)
+ imx/start_isp.sh | 19 ++++---------------
+ 1 file changed, 4 insertions(+), 15 deletions(-)
 
 diff --git a/imx/start_isp.sh b/imx/start_isp.sh
-index 8a07acfed..962876115 100755
+index 8a07acfed..d9b8eeae2 100755
 --- a/imx/start_isp.sh
 +++ b/imx/start_isp.sh
 @@ -16,20 +16,9 @@ if [ $NR_DEVICE_TREE_BASLER -eq 1 ]; then
@@ -40,6 +40,15 @@ index 8a07acfed..962876115 100755
  
  elif [ $NR_DEVICE_TREE_BASLER -eq 2 ]; then
  
+@@ -38,7 +27,7 @@ elif [ $NR_DEVICE_TREE_BASLER -eq 2 ]; then
+ 	cd $RUNTIME_DIR
+ 	# Default configuration for Basler daA3840-30mc: dual_basler_1080p60
+ 	# Available configurations: dual_basler_1080p60, dual_basler_1080p60hdr, dual_basler_1080p25hdr
+-	exec ./run.sh -c dual_basler_1080p60 -lm
++	exec ./run.sh -c dual_basler_1080p60
+ 
+ else
+ 	# no device tree found exit with code no device or address
 -- 
 2.31.1
 
