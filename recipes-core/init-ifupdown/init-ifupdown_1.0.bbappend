@@ -1,3 +1,3 @@
-FILESEXTRAPATHS:prepend:mx6 := "${THISDIR}/boundary:"
-FILESEXTRAPATHS:prepend:mx7 := "${THISDIR}/boundary:"
-FILESEXTRAPATHS:prepend:mx8 := "${THISDIR}/boundary:"
+FILESEXTRAPATHS:prepend:mx6-nxp-bsp := "${THISDIR}/boundary:"
+FILESEXTRAPATHS:prepend:mx7-nxp-bsp := "${THISDIR}/boundary:"
+FILESEXTRAPATHS:prepend:mx8-nxp-bsp := "${THISDIR}/boundary:"

@@ -38,11 +38,11 @@ CORE_IMAGE_EXTRA_INSTALL += " \
 "
 
 #imx-gpu-viv-demos are not compatible with i.MX7
-IMAGE_INSTALL:remove:mx7 += " imx-gpu-viv-demos"
+IMAGE_INSTALL:remove:mx7-nxp-bsp += " imx-gpu-viv-demos"
 
 #Temporarily remove clutter demos, as there is a build error in cogl-1.0
 PACKAGE_IMX_TO_REMOVE_imxgpu2d = "clutter-1.0-examples clutter-1.0 clutter-gst-3.0 gtk+3-demo"
 PACKAGE_IMX_TO_REMOVE_imxgpu3d = "clutter-1.0-examples clutter-1.0 clutter-gst-3.0"
 
 #FIX ME: build failing on 8mn, temporarily remove from image
-IMAGE_INSTALL:remove:mx8mn += " packagegroup-fsl-ml"
+IMAGE_INSTALL:remove:mx8mn-nxp-bsp += " packagegroup-fsl-ml"

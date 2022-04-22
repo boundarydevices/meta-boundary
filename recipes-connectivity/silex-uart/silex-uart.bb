@@ -7,19 +7,19 @@ SRC_URI = "file://silex-uart.service \
 	   file://silex-uart.sh \
 "
 
-SRC_URI:append:mx6   = "file://silex-imx6.conf"
-SRC_URI:append:mx7   = "file://silex-imx7.conf"
-SRC_URI:append:mx8mq  = "file://silex-imx8m.conf"
-SRC_URI:append:mx8mp  = "file://silex-imx8mp.conf"
-SRC_URI:append:mx8mm = "file://silex-imx8mm.conf"
-SRC_URI:append:mx8mn = "file://silex-imx8mn.conf"
+SRC_URI:append:mx6-nxp-bsp   = "file://silex-imx6.conf"
+SRC_URI:append:mx7-nxp-bsp   = "file://silex-imx7.conf"
+SRC_URI:append:mx8mq-nxp-bsp  = "file://silex-imx8m.conf"
+SRC_URI:append:mx8mp-nxp-bsp  = "file://silex-imx8mp.conf"
+SRC_URI:append:mx8mm-nxp-bsp = "file://silex-imx8mm.conf"
+SRC_URI:append:mx8mn-nxp-bsp = "file://silex-imx8mn.conf"
 
-SILEX_CONF:mx6   = "silex-imx6.conf"
-SILEX_CONF:mx7   = "silex-imx7.conf"
-SILEX_CONF:mx8mq  = "silex-imx8m.conf"
-SILEX_CONF:mx8mp  = "silex-imx8mp.conf"
-SILEX_CONF:mx8mm = "silex-imx8mm.conf"
-SILEX_CONF:mx8mn = "silex-imx8mn.conf"
+SILEX_CONF:mx6-nxp-bsp   = "silex-imx6.conf"
+SILEX_CONF:mx7-nxp-bsp   = "silex-imx7.conf"
+SILEX_CONF:mx8mq-nxp-bsp  = "silex-imx8m.conf"
+SILEX_CONF:mx8mp-nxp-bsp  = "silex-imx8mp.conf"
+SILEX_CONF:mx8mm-nxp-bsp = "silex-imx8mm.conf"
+SILEX_CONF:mx8mn-nxp-bsp = "silex-imx8mn.conf"
 
 inherit systemd
 
