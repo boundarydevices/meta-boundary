@@ -37,7 +37,7 @@ CORE_IMAGE_EXTRA_INSTALL += " \
 	udev-rules-bt \
 	udev-rules-imx \
 	v4l-utils \
-	wireless-regdb \
+	wireless-regdb-static \
 "
 
 #imx-gpu-viv-demos are not compatible with i.MX7
