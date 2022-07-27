@@ -5,4 +5,4 @@ do_install:append(){
 	rm -rf ${D}${sysconfdir}/
 }
 
-FILES_${PN}:remove += "${sysconfdir}/xdg/autostart"
+FILES_${PN}:remove = "${sysconfdir}/xdg/autostart"
