@@ -22,6 +22,7 @@ CORE_IMAGE_EXTRA_INSTALL += " \
 	networkmanager-nmcli \
 	openssh \
 	packagegroup-fsl-isp \
+	packagegroup-fsl-ml \
 	packagegroup-fsl-opencv-imx \
 	packagegroup-tools-bluetooth \
 	pciutils \
