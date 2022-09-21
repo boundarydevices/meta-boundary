@@ -20,6 +20,9 @@ CORE_IMAGE_EXTRA_INSTALL += " \
 	modemmanager \
 	networkmanager \
 	networkmanager-nmcli \
+	nnstreamer-protobuf \
+	nnstreamer-python3 \
+	nnstreamer-tensorflow-lite \
 	openssh \
 	packagegroup-fsl-isp \
 	packagegroup-fsl-ml \
