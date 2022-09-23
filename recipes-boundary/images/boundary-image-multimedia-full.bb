@@ -34,6 +34,7 @@ CORE_IMAGE_EXTRA_INSTALL += " \
 	silex-uart \
 	spitools \
 	strace \
+	tensorflow-lite-vx-delegate \
 	tslib-tests tslib-calibrate \
 	u-boot-boundary-env \
 	u-boot-fw-utils \
