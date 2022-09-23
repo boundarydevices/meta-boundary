@@ -1,13 +1,13 @@
 # Copyright (C) 2016 Boundary Devices
 SUMMARY = "QCACLD driver for QCA9377-based BD-SDMAC module"
 LICENSE = "ISC"
-LIC_FILES_CHKSUM = "file://${S}/CORE/HDD/src/wlan_hdd_main.c;md5=5ad90c4733b61c5b2de65aed138c7a25"
+LIC_FILES_CHKSUM = "file://${S}/CORE/HDD/src/wlan_hdd_main.c;md5=068b1bd996d8acea0daa18111e303f5a"
 
 inherit module
 
-SRCREV = "e1a3e5f50d16a21a807b3d3fab77bb7dc6a57da2"
+SRCREV = "ebd547904655a3d8338c0c64571bf3b7e594ef6b"
 SRC_URI = "git://github.com/boundarydevices/qcacld-2.0.git;branch=${SRCBRANCH}"
-SRCBRANCH = "boundary-CNSS.LEA.NRT_2.0"
+SRCBRANCH = "boundary-CNSS.LEA.NRT_3.1"
 
 S = "${WORKDIR}/git"
 
