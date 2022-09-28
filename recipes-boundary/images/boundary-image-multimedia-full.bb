@@ -20,9 +20,6 @@ CORE_IMAGE_EXTRA_INSTALL += " \
 	modemmanager \
 	networkmanager \
 	networkmanager-nmcli \
-	nnstreamer-protobuf \
-	nnstreamer-python3 \
-	nnstreamer-tensorflow-lite \
 	openssh \
 	packagegroup-fsl-isp \
 	packagegroup-fsl-ml \
@@ -34,7 +31,6 @@ CORE_IMAGE_EXTRA_INSTALL += " \
 	silex-uart \
 	spitools \
 	strace \
-	tensorflow-lite-vx-delegate \
 	tslib-tests tslib-calibrate \
 	u-boot-boundary-env \
 	u-boot-fw-utils \
