@@ -1,0 +1,61 @@
+Index: bluez-5.49/tools/hciattach_rome.c
+===================================================================
+--- bluez-5.49.orig/tools/hciattach_rome.c
++++ bluez-5.49/tools/hciattach_rome.c
+@@ -29,7 +29,7 @@
+  *
+  ******************************************************************************/
+ 
+-#define MODULE_HAS_MAC_ADDR
++//#define MODULE_HAS_MAC_ADDR
+ #define LOG_TAG "bt_vendor"
+ #include <stdio.h>
+ #include <unistd.h>
+@@ -64,7 +64,7 @@ char *rampatch_file_path;
+ char *nvm_file_path;
+ vnd_userial_cb_t vnd_userial;
+ unsigned char wait_vsc_evt = TRUE;
+-
++static unsigned char gbdaddr[BD_ADDR_LEN];
+ /*****************************************************************************
+  **   Functions
+  *****************************************************************************/
+@@ -867,6 +867,14 @@ int read_bd_address(unsigned char *bdadd
+ 	int readPtr = 0;
+ 	unsigned char data[BD_ADDR_LEN];
+ 
++	memset(data, '\0', sizeof(data));
++
++	if ( memcmp(gbdaddr, data, sizeof(data)) != 0 )
++	{
++		memcpy(bdaddr, gbdaddr, BD_ADDR_LEN);
++
++		return 0;
++	}
+ 	/* Open the persist file for reading device address*/
+ 	fd = open("/etc/bluetooth/.bt_nv.bin", O_RDONLY);
+ 	if (fd < 0) {
+@@ -1739,10 +1747,23 @@ int qca_soc_init(int fd, int speed, char
+ 	int err = -1;
+ 	int ret = 0;
+ 	int size;
++	char *tok = NULL;
++	int i = 0;
+ 	unsigned char baud_rate = 0;
+ 
+ 	vnd_userial.fd = fd;
+ 
++	if ( bdaddr != NULL )
++	{
++		tok = strtok(bdaddr, ":");
++
++		while(tok != NULL && i < BD_ADDR_LEN)
++		{
++			gbdaddr[BD_ADDR_LEN - 1 - i] = strtoul(tok, NULL, 16);
++			tok = strtok(NULL, ":");
++			i++;
++		}
++	}
+ 	/* Get Rome version information */
+ 	if ((err = rome_patch_ver_req(fd)) < 0) {
+ 		fprintf(stderr, "%s: Fail to get Rome Version (0x%x)\n", __FUNCTION__, err);
