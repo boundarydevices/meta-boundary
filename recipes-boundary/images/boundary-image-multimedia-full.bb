@@ -5,7 +5,6 @@ require recipes-fsl/images/fsl-image-multimedia-full.bb
 
 CORE_IMAGE_EXTRA_INSTALL += " \
 	can-utils \
-	chromium-ozone-wayland \
 	crda \
 	e2fsprogs \
 	evtest \
