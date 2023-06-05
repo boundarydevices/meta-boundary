@@ -5,7 +5,6 @@ require recipes-fsl/images/fsl-image-multimedia-full.bb
 
 CORE_IMAGE_EXTRA_INSTALL += " \
 	can-utils \
-	crda \
 	e2fsprogs \
 	evtest \
 	i2c-tools \
