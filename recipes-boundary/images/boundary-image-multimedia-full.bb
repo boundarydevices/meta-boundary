@@ -15,6 +15,7 @@ CORE_IMAGE_EXTRA_INSTALL += " \
 	kernel-module-qcacld \
 	libdrm-tests \
 	linux-firmware-bdsdmac \
+	memtester \
 	minicom \
 	mmc-utils \
 	modemmanager \
