@@ -15,6 +15,7 @@ CORE_IMAGE_EXTRA_INSTALL += " \
 	kernel-module-qcacld \
 	libdrm-tests \
 	linux-firmware-bdsdmac \
+	linux-firmware-cypress \
 	memtester \
 	minicom \
 	mmc-utils \
