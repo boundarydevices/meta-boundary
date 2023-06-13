@@ -1,6 +1,3 @@
-FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
-
-SRC_URI:append = "\
-    file://0001-vvcam-video-add-of-match-table.patch \
-    file://0001-vvcam-video-remove-pdev-device.patch \
-"
+SRC_URI = "git://github.com/boundarydevices/isp-vvcam.git;protocol=https;branch=${SRCBRANCH}"
+SRCREV = "bd44aa8476abfd421a29ef4fa62b61635bcfb3ca"
+SRCBRANCH = "boundary-lf-5.15.71-2.2.0"
