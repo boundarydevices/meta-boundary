@@ -1,0 +1,2343 @@
+From d3d44a75aa7612d0a5438ca5ba65ca6137fd58ba Mon Sep 17 00:00:00 2001
+From: Gary Bisson <gary.bisson@boundarydevices.com>
+Date: Tue, 6 Jun 2023 13:28:58 +0200
+Subject: [PATCH 1/8] imx219: initial addition
+
+Signed-off-by: Gary Bisson <gary.bisson@boundarydevices.com>
+---
+ .../sensor_dwe_imx219_1080P_config.json       |   35 +
+ units/isi/CMakeLists.txt                      |    1 +
+ units/isi/drv/IMX219/CMakeLists.txt           |  105 ++
+ units/isi/drv/IMX219/Sensor0_Entry_imx219.cfg |   11 +
+ units/isi/drv/IMX219/Sensor1_Entry_imx219.cfg |   11 +
+ units/isi/drv/IMX219/calib/CMakeLists.txt     |   44 +
+ .../IMX219/IMX219_8M_02_1080p_linear.xml      |  736 +++++++++
+ units/isi/drv/IMX219/source/IMX219.c          | 1322 +++++++++++++++++
+ 8 files changed, 2265 insertions(+)
+ create mode 100644 dewarp/dewarp_config/sensor_dwe_imx219_1080P_config.json
+ create mode 100644 units/isi/drv/IMX219/CMakeLists.txt
+ create mode 100644 units/isi/drv/IMX219/Sensor0_Entry_imx219.cfg
+ create mode 100644 units/isi/drv/IMX219/Sensor1_Entry_imx219.cfg
+ create mode 100644 units/isi/drv/IMX219/calib/CMakeLists.txt
+ create mode 100644 units/isi/drv/IMX219/calib/IMX219/IMX219_8M_02_1080p_linear.xml
+ create mode 100644 units/isi/drv/IMX219/source/IMX219.c
+
+diff --git a/dewarp/dewarp_config/sensor_dwe_imx219_1080P_config.json b/dewarp/dewarp_config/sensor_dwe_imx219_1080P_config.json
+new file mode 100644
+index 000000000..a53d09935
+--- /dev/null
++++ b/dewarp/dewarp_config/sensor_dwe_imx219_1080P_config.json
+@@ -0,0 +1,35 @@
++{
++	"dewarpConfigArray" :[
++		{
++			"source_image":{
++				"width"  : 1920,
++				"height" : 1080
++			},
++
++			"?dewarpType": "LENS_CORRECTION, FISHEYE_EXPAND, SPLIT_SCREEN",
++			"dewarpType": "FISHEYE_DEWARP",
++
++			"scale": {
++				"roix"   : 0,
++				"roiy"   : 0,
++				"factor" : 1.0
++			},
++
++			"split": {
++				"horizon_line"      : 540,
++				"vertical_line_up"  : 960,
++				"vertical_line_down": 960
++			},
++
++			"bypass" : false,
++			"hflip"  : false,
++			"vflip"  : false,
++
++			"camera_matrix"   :[ 3.0022987437313564e+003, 0., 9.8824205797959212e+002, 0., 3.0022987437313564e+003, 6.2928156578904930e+002, 0., 0., 1. ],
++			"distortion_coeff": [ 6.9630543951305723e-001, -2.1644937552111827e+000, 3.7290916239141499e-002, 9.5937228205523681e-003, 1.6154212751224615e+000 ],
++			"perspective"     : [1.0, 0, 0, 0, 1, 0, 0, 0, 1]
++
++		}
++	]
++
++}
+diff --git a/units/isi/CMakeLists.txt b/units/isi/CMakeLists.txt
+index 0775d24ab..85dfedd42 100755
+--- a/units/isi/CMakeLists.txt
++++ b/units/isi/CMakeLists.txt
+@@ -78,4 +78,5 @@ include(${UNITS_TOP_DIRECTORY}/targets.cmake)
+ 
+ # add sensor driver modules here
+ add_subdirectory( drv/OS08a20 )
++add_subdirectory( drv/IMX219 )
+ 
+diff --git a/units/isi/drv/IMX219/CMakeLists.txt b/units/isi/drv/IMX219/CMakeLists.txt
+new file mode 100644
+index 000000000..ce07c7589
+--- /dev/null
++++ b/units/isi/drv/IMX219/CMakeLists.txt
+@@ -0,0 +1,105 @@
++cmake_minimum_required(VERSION 2.6)
++
++# define module name & interface version
++set (module imx219)
++
++# define interface version
++set (${module}_INTERFACE_CURRENT  1)
++set (${module}_INTERFACE_REVISION 0)
++set (${module}_INTERFACE_AGE      0)
++
++# we want to compile all .c files as default
++file(GLOB libsources source/IMX219.c )
++
++# set public headers, these get installed
++file(GLOB pub_headers include/*.h)
++
++# define include paths
++include_directories(
++    include
++    include_priv
++    ${LIB_ROOT}/${CMAKE_BUILD_TYPE}/include
++    )
++
++# module specific defines
++###add_definitions(-Wno-error=unused-function)
++
++# add lib to build env
++#add_library(${module}_static STATIC ${libsources})
++add_library(${module}_shared SHARED ${libsources})
++
++#SET_TARGET_PROPERTIES(${module}_static PROPERTIES OUTPUT_NAME     ${module})
++#SET_TARGET_PROPERTIES(${module}_static PROPERTIES LINK_FLAGS      -static)
++#SET_TARGET_PROPERTIES(${module}_static PROPERTIES FRAMEWORK       TRUE PUBLIC_HEADER "${pub_headers}")
++
++SET_TARGET_PROPERTIES(${module}_shared PROPERTIES OUTPUT_NAME     ${module})
++SET_TARGET_PROPERTIES(${module}_shared PROPERTIES LINK_FLAGS      -shared)
++SET_TARGET_PROPERTIES(${module}_shared PROPERTIES SOVERSION       ${${module}_INTERFACE_CURRENT})
++SET_TARGET_PROPERTIES(${module}_shared PROPERTIES VERSION         ${${module}_INTERFACE_CURRENT}.${${module}_INTERFACE_REVISION}.${${module}_INTERFACE_AGE})
++SET_TARGET_PROPERTIES(${module}_shared PROPERTIES FRAMEWORK       TRUE PUBLIC_HEADER "${pub_headers}")
++
++# add convenience target: put sensor driver into the 'bin' output dir as well
++if ( NOT ANDROID )
++add_custom_target(${module}.drv
++                  ALL
++                  COMMAND ${CMAKE_COMMAND} -E copy ${LIB_ROOT}/${CMAKE_BUILD_TYPE}/lib/lib${module}.so.${${module}_INTERFACE_CURRENT} ${LIB_ROOT}/${CMAKE_BUILD_TYPE}/bin/${module}.drv
++                  DEPENDS ${module}_shared
++                  COMMENT "Copying ${module} driver module"
++                  )
++endif()
++
++if(${APPMODE} STREQUAL NATIVE)
++add_custom_target(${module}.init
++                  ALL
++		  DEPENDS ${module}_shared
++                  COMMENT "Copying ${module} init files"
++                  )
++endif (${APPMODE} STREQUAL NATIVE)
++
++# define lib dependencies
++#target_link_libraries(${module}_static
++#                      ${platform_libs}
++#                      ${base_libs}
++#                      ${drv_libs}
++#                      isi_shared
++#                      )
++
++#target_link_libraries(${module}_shared
++#                      ${platform_libs}
++#                      ${base_libs}
++#                      ${drv_libs}
++#                      isi_shared
++#                      )
++
++# define stuff to install
++#install(TARGETS ${module}_static
++#        PUBLIC_HEADER   DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${module}
++#        ARCHIVE         DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
++#        )
++
++install(TARGETS ${module}_shared
++        PUBLIC_HEADER   DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${module}
++        ARCHIVE         DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/${module}
++        LIBRARY         DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/${module}
++        )
++
++# install the sensor driver as well, but to 'bin' location!
++install(FILES       ${LIB_ROOT}/${CMAKE_BUILD_TYPE}/lib/lib${module}.so.${${module}_INTERFACE_CURRENT}
++        DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
++        RENAME      ${module}.drv
++        )
++
++if( DEFINED APPSHELL_TOP_COMPILE)
++add_custom_target(copy_shell_libs_${module} ALL
++       COMMENT "##Copy libs to shell libs"
++       COMMAND ${CMAKE_COMMAND} -E copy ${LIB_ROOT}/${CMAKE_BUILD_TYPE}/lib/lib${module}.so ${CMAKE_HOME_DIRECTORY}/shell_libs/${APPMODE}/ispcore/${PLATFORM}/lib${module}.so
++       #COMMAND ${CMAKE_COMMAND} -E copy_directory ${LIB_ROOT}/${CMAKE_BUILD_TYPE}/include/${module} ${CMAKE_HOME_DIRECTORY}/shell_libs/include/units_headers/${module}
++)
++add_dependencies(copy_shell_libs_${module} ${module}_shared)
++endif( DEFINED APPSHELL_TOP_COMPILE)
++
++# create common targets for this module
++include(${UNITS_TOP_DIRECTORY}/targets.cmake)
++
++# create calib data targets
++add_subdirectory(calib)
+diff --git a/units/isi/drv/IMX219/Sensor0_Entry_imx219.cfg b/units/isi/drv/IMX219/Sensor0_Entry_imx219.cfg
+new file mode 100644
+index 000000000..818427fb8
+--- /dev/null
++++ b/units/isi/drv/IMX219/Sensor0_Entry_imx219.cfg
+@@ -0,0 +1,11 @@
++name="imx219"
++drv = "imx219.drv"
++mode= 0
++
++[mode.0]
++xml = "IMX219_8M_02_1080p_linear.xml"
++dwe = "dewarp_config/sensor_dwe_imx219_1080P_config.json"
++
++[mode.1]
++xml = "IMX219_8M_02_720p.xml"
++dwe = "dewarp_config/sensor_dwe_imx219_1080P_config.json"
+diff --git a/units/isi/drv/IMX219/Sensor1_Entry_imx219.cfg b/units/isi/drv/IMX219/Sensor1_Entry_imx219.cfg
+new file mode 100644
+index 000000000..818427fb8
+--- /dev/null
++++ b/units/isi/drv/IMX219/Sensor1_Entry_imx219.cfg
+@@ -0,0 +1,11 @@
++name="imx219"
++drv = "imx219.drv"
++mode= 0
++
++[mode.0]
++xml = "IMX219_8M_02_1080p_linear.xml"
++dwe = "dewarp_config/sensor_dwe_imx219_1080P_config.json"
++
++[mode.1]
++xml = "IMX219_8M_02_720p.xml"
++dwe = "dewarp_config/sensor_dwe_imx219_1080P_config.json"
+diff --git a/units/isi/drv/IMX219/calib/CMakeLists.txt b/units/isi/drv/IMX219/calib/CMakeLists.txt
+new file mode 100644
+index 000000000..9944bca1d
+--- /dev/null
++++ b/units/isi/drv/IMX219/calib/CMakeLists.txt
+@@ -0,0 +1,44 @@
++cmake_minimum_required(VERSION 2.6)
++
++# use upper level module name
++
++# get calib data filenames
++file(GLOB_RECURSE calib_files *.xml)
++list(SORT calib_files)
++
++# a nice helper function
++function(add_calib_target ${calib_file})
++    # get calib data file's base name
++    get_filename_component(base_name ${calib_file} NAME_WE)
++
++    # add target to put sensor driver calibration data file into the 'bin' output and create a similar named symlink to the driver as well
++    add_custom_target(${base_name}_calib
++                      ALL
++                      COMMAND ${CMAKE_COMMAND} -E copy ${calib_file} ${LIB_ROOT}/${CMAKE_BUILD_TYPE}/bin/${base_name}.xml
++                      #COMMAND ${CMAKE_COMMAND} -E create_symlink ${module}.drv ${LIB_ROOT}/${CMAKE_BUILD_TYPE}/bin/${base_name}.drv
++                      DEPENDS ${calib_file}
++                      COMMENT "Configuring ${base_name} calibration database"
++                      )
++
++#    add_dependencies(${module}_static
++#                     ${base_name}_calib
++#                     )
++
++    add_dependencies(${module}_shared
++                     ${base_name}_calib
++                     )
++
++    # install the sensor driver config & similar named driver symlink as well, but to 'bin' location!
++    install(FILES       ${calib_file}
++            DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
++            RENAME      ${base_name}.xml
++            )
++    install(CODE "${CMAKE_COMMAND} -E create_symlink ${module}.drv ${CMAKE_INSTALL_PREFIX}/bin/${base_name}.drv")
++endfunction(add_calib_target)
++
++# loop over all calib data files
++foreach(calib_file ${calib_files})
++    add_calib_target(calib_file)
++endforeach(calib_file)
++
++
+diff --git a/units/isi/drv/IMX219/calib/IMX219/IMX219_8M_02_1080p_linear.xml b/units/isi/drv/IMX219/calib/IMX219/IMX219_8M_02_1080p_linear.xml
+new file mode 100644
+index 000000000..48c912da9
+--- /dev/null
++++ b/units/isi/drv/IMX219/calib/IMX219/IMX219_8M_02_1080p_linear.xml
+@@ -0,0 +1,736 @@
++<?xml version="1.0" ?>
++<matfile>
++    <header type="struct" size="[1 1]">
++        <creation_date index="1" type="char" size="[1 11]">23-Dec-2022</creation_date>
++        <creator index="1" type="char" size="[1 4]">Alan</creator>
++        <sensor_name index="1" type="char" size="[1 6]">IMX219</sensor_name>
++        <sample_name index="1" type="char" size="[1 9]">8Mlens_02</sample_name>
++        <generator_version index="1" type="char" size="[1 6]">v2.1.1</generator_version>
++        <resolution index="1" type="cell" size="[1 1]">
++            <cell index="1" type="struct" size="[1 1]">
++                <name index="1" type="char" size="[1 9]">1920x1080</name>
++                <id index="1" type="char" size="[1 10]">0x00000001</id>
++                <width index="1" type="double" size="[1 1]">[ 1920]</width>
++                <height index="1" type="double" size="[1 1]">[ 1080]</height>
++                <framerate index="1" type="cell" size="[1 3]">
++                    <cell index="1" type="struct" size="[1 1]">
++                        <name index="1" type="char" size="[1 6]">FPS_15</name>
++                        <fps index="1" type="double" size="[1 1]">[ 14.9916]</fps>
++                    </cell>
++                    <cell index="2" type="struct" size="[1 1]">
++                        <name index="1" type="char" size="[1 6]">FPS_10</name>
++                        <fps index="1" type="double" size="[1 1]">[ 9.9944]</fps>
++                    </cell>
++                    <cell index="3" type="struct" size="[1 1]">
++                        <name index="1" type="char" size="[1 6]">FPS_05</name>
++                        <fps index="1" type="double" size="[1 1]">[ 4.9972]</fps>
++                    </cell>
++                </framerate>
++            </cell>
++        </resolution>
++    </header>
++    <sensor type="struct" size="[1 1]">
++        <AWB index="1" type="struct" size="[1 1]">
++            <globals index="1" type="cell" size="[1 1]">
++                <cell index="1" type="struct" size="[1 1]">
++                    <name index="1" type="char" size="[1 9]">1920x1080</name>
++                    <resolution index="1" type="char" size="[1 9]">1920x1080</resolution>
++                    <SVDMeanValue index="1" type="double" size="[1 3]">[0.389355 0.401151 0.20949]</SVDMeanValue>
++                    <PCAMatrix index="1" type="double" size="[3 2]">[-0.733195 0.0554413 0.677754 0.359292 -0.814612 0.45532]</PCAMatrix>
++                    <CenterLine index="1" type="double" size="[1 3]">[-0.907256 -0.420579 -2.0303]</CenterLine>
++                    <afRg2 index="1" type="double" size="[1 16]">[1.09027 1.16272 1.19665 1.22215 1.24723 1.27914 1.29711 1.32541 1.33998 1.34944 1.35012 1.35309 1.3759 1.43421 1.48122 1.62]</afRg2>
++                    <afMaxDist2 index="1" type="double" size="[1 16]">[0.0883394 0.0635315 0.0490034 0.0395411 0.0279873 0.0224576 0.0179033 0.018044 0.0299342 0.0542437 0.0916043 0.169654 0.151286 0.102261 0.091954 0.20704]</afMaxDist2>
++                    <afRg1 index="1" type="double" size="[1 16]">[1.09503 1.18918 1.22315 1.25439 1.28015 1.30632 1.33144 1.3652 1.39373 1.42311 1.44367 1.45962 1.49132 1.53512 1.58044 1.6549]</afRg1>
++                    <afMaxDist1 index="1" type="double" size="[1 16]">[0.0515931 0.0715103 0.0810001 0.0900158 0.0980836 0.10406 0.110575 0.130839 0.134342 0.148081 0.153806 0.149362 0.165666 0.168211 0.177505 0.18247]</afMaxDist1>
++                    <afGlobalFade2 index="1" type="double" size="[1 16]">[0.8 0.852402 0.904804 0.957206 1.00961 1.06201 1.11441 1.16681 1.21922 1.27162 1.30644 1.30981 1.37207 1.45763 1.52209 1.7038]</afGlobalFade2>
++                    <afGlobalGainDistance2 index="1" type="double" size="[1 16]">[0.281214 0.252108 0.22439 0.197332 0.17191 0.147576 0.124966 0.104752 0.0866715 0.0721124 0.143139 0.22328 0.194475 0.145052 0.180733 0.34386]</afGlobalGainDistance2>
++                    <afGlobalFade1 index="1" type="double" size="[1 16]">[0.8 0.852402 0.904804 0.957206 1.00961 1.06201 1.11441 1.16681 1.21922 1.27162 1.32579 1.37262 1.43619 1.50029 1.58631 1.7543]</afGlobalFade1>
++                    <afGlobalGainDistance1 index="1" type="double" size="[1 16]">[-0.081214 -0.0521084 -0.0243896 0.00266752 0.0280901 0.0524242 0.0750338 0.0952475 0.113329 0.127888 0.149238 0.16528 0.192152 0.201817 0.24411 0.33016]</afGlobalGainDistance1>
++                    <fRgProjIndoorMin index="1" type="double" size="[1 1]">[ 1.11]</fRgProjIndoorMin>
++                    <fRgProjMax index="1" type="double" size="[1 1]">[ 1.62]</fRgProjMax>
++                    <fRgProjMaxSky index="1" type="double" size="[1 1]">[ 1.7]</fRgProjMaxSky>
++                    <fRgProjOutdoorMin index="1" type="double" size="[1 1]">[ 1.3915]</fRgProjOutdoorMin>
++                    <awb_clip_outdoor index="1" type="char" size="[1 3]">D50</awb_clip_outdoor>
++                    <K_Factor index="1" type="double" size="[1 1]">[ 4.5676]</K_Factor>
++                    <afFade2 index="1" type="double" size="[1 6]">[0.75 1.28836 1.77672 2.164 2.6 3.0618]</afFade2>
++                    <afCbMinRegionMax index="1" type="double" size="[1 6]">[114 114 105 95 95 90]</afCbMinRegionMax>
++                    <afCrMinRegionMax index="1" type="double" size="[1 6]">[83 83 110 120 122 128]</afCrMinRegionMax>
++                    <afMaxCSumRegionMax index="1" type="double" size="[1 6]">[28 27 18 16 9 9]</afMaxCSumRegionMax>
++                    <afCbMinRegionMin index="1" type="double" size="[1 6]">[123 123 123 123 123 120]</afCbMinRegionMin>
++                    <afCrMinRegionMin index="1" type="double" size="[1 6]">[123 123 123 123 123 126]</afCrMinRegionMin>
++                    <afMaxCSumRegionMin index="1" type="double" size="[1 6]">[5 5 5 5 5 5]</afMaxCSumRegionMin>
++                    <RegionSize index="1" type="double" size="[1 1]">[ 1]</RegionSize>
++                    <RegionSizeInc index="1" type="double" size="[1 1]">[ 0.8]</RegionSizeInc>
++                    <RegionSizeDec index="1" type="double" size="[1 1]">[ 0.05]</RegionSizeDec>
++                    <IIR index="1" type="struct" size="[1 1]">
++                        <DampCoefAdd index="1" type="double" size="[1 1]">[ 0.05]</DampCoefAdd>
++                        <DampCoefSub index="1" type="double" size="[1 1]">[ 0.05]</DampCoefSub>
++                        <DampFilterThreshold index="1" type="double" size="[1 1]">[ 0.4]</DampFilterThreshold>
++                        <DampingCoefMin index="1" type="double" size="[1 1]">[ 0.5]</DampingCoefMin>
++                        <DampingCoefMax index="1" type="double" size="[1 1]">[ 0.9]</DampingCoefMax>
++                        <DampingCoefInit index="1" type="double" size="[1 1]">[ 0.5]</DampingCoefInit>
++                        <ExpPriorFilterSizeMax index="1" type="double" size="[1 1]">[ 50]</ExpPriorFilterSizeMax>
++                        <ExpPriorFilterSizeMin index="1" type="double" size="[1 1]">[ 1]</ExpPriorFilterSizeMin>
++                        <ExpPriorMiddle index="1" type="double" size="[1 1]">[ 0.5]</ExpPriorMiddle>
++                    </IIR>
++                </cell>
++            </globals>
++            <illumination index="1" type="cell" size="[1 5]">
++                <cell index="1" type="struct" size="[1 1]">
++                    <name index="1" type="char" size="[1 1]">A</name>
++                    <doorType index="1" type="char" size="[1 6]">Indoor</doorType>
++                    <GMM index="1" type="struct" size="[1 1]">
++                        <invCovMatrix index="1" type="double" size="[2 2]">[2918.67 3681.73 3681.73 6717.0733]</invCovMatrix>
++                        <GaussianScalingFactor index="1" type="double" size="[1 1]">[ 391.4622]</GaussianScalingFactor>
++                        <tau index="1" type="double" size="[1 2]">[1 1]</tau>
++                        <GaussianMeanValue index="1" type="double" size="[1 2]">[-0.0129865 -0.049746]</GaussianMeanValue>
++                    </GMM>
++                    <aLSC index="1" type="cell" size="[1 1]">
++                        <cell index="1" type="struct" size="[1 1]">
++                            <resolution index="1" type="char" size="[1 9]">1920x1080</resolution>
++                            <LSC_PROFILE_LIST index="1" type="char" size="[1 15]">1920x1080_A_100</LSC_PROFILE_LIST>
++                        </cell>
++                    </aLSC>
++                    <manualWB index="1" type="double" size="[1 4]">[1.15736 1 1 2.4767]</manualWB>
++                    <manualccMatrix index="1" type="double" size="[3 3]">[1.9912 -0.674808 -0.26111 -0.588858 2.14446 -0.508833 -0.0546477 -1.48422 2.5504]</manualccMatrix>
++                    <manualccOffsets index="1" type="double" size="[1 3]">[-43.9622 -35.5199 -47.3636]</manualccOffsets>
++                    <awbType index="1" type="char" size="[1 4]">AUTO</awbType>
++                    <sat_CT index="1" type="struct" size="[1 1]">
++                        <gains index="1" type="double" size="[1 4]">[1 15 30 60]</gains>
++                        <sat index="1" type="double" size="[1 4]">[100 95 90 74]</sat>
++                    </sat_CT>
++                    <vig_CT index="1" type="struct" size="[1 1]">
++                        <gains index="1" type="double" size="[1 4]">[1 15 30 60]</gains>
++                        <vig index="1" type="double" size="[1 4]">[100 95 90 70]</vig>
++                    </vig_CT>
++                    <aCC index="1" type="struct" size="[1 1]">
++                        <CC_PROFILE_LIST index="1" type="char" size="[1 5]">A_100</CC_PROFILE_LIST>
++                    </aCC>
++                </cell>
++                <cell index="2" type="struct" size="[1 1]">
++                    <name index="1" type="char" size="[1 3]">D50</name>
++                    <doorType index="1" type="char" size="[1 7]">Outdoor</doorType>
++                    <GMM index="1" type="struct" size="[1 1]">
++                        <invCovMatrix index="1" type="double" size="[2 2]">[498.415 451.137 451.137 2313.8639]</invCovMatrix>
++                        <GaussianScalingFactor index="1" type="double" size="[1 1]">[ 155.1037]</GaussianScalingFactor>
++                        <tau index="1" type="double" size="[1 2]">[1 1]</tau>
++                        <GaussianMeanValue index="1" type="double" size="[1 2]">[0.136681 -0.050346]</GaussianMeanValue>
++                    </GMM>
++                    <aLSC index="1" type="cell" size="[1 1]">
++                        <cell index="1" type="struct" size="[1 1]">
++                            <resolution index="1" type="char" size="[1 9]">1920x1080</resolution>
++                            <LSC_PROFILE_LIST index="1" type="char" size="[1 17]">1920x1080_D50_100</LSC_PROFILE_LIST>
++                        </cell>
++                    </aLSC>
++                    <manualWB index="1" type="double" size="[1 4]">[1.65926 1 1 1.6108]</manualWB>
++                    <manualccMatrix index="1" type="double" size="[3 3]">[2.24258 -1.13046 -0.0520165 -0.41689 1.97772 -0.535115 -0.0545565 -0.772387 1.8332]</manualccMatrix>
++                    <manualccOffsets index="1" type="double" size="[1 3]">[-39.682 -29.8889 -25.6222]</manualccOffsets>
++                    <awbType index="1" type="char" size="[1 4]">AUTO</awbType>
++                    <sat_CT index="1" type="struct" size="[1 1]">
++                        <gains index="1" type="double" size="[1 4]">[1 15 30 60]</gains>
++                        <sat index="1" type="double" size="[1 4]">[100 95 90 74]</sat>
++                    </sat_CT>
++                    <vig_CT index="1" type="struct" size="[1 1]">
++                        <gains index="1" type="double" size="[1 4]">[1 15 30 60]</gains>
++                        <vig index="1" type="double" size="[1 4]">[100 95 90 70]</vig>
++                    </vig_CT>
++                    <aCC index="1" type="struct" size="[1 1]">
++                        <CC_PROFILE_LIST index="1" type="char" size="[1 7]">D50_100</CC_PROFILE_LIST>
++                    </aCC>
++                </cell>
++                <cell index="3" type="struct" size="[1 1]">
++                    <name index="1" type="char" size="[1 3]">D65</name>
++                    <doorType index="1" type="char" size="[1 7]">Outdoor</doorType>
++                    <GMM index="1" type="struct" size="[1 1]">
++                        <invCovMatrix index="1" type="double" size="[2 2]">[360.418 88.692 88.692 1807.8353]</invCovMatrix>
++                        <GaussianScalingFactor index="1" type="double" size="[1 1]">[ 127.6925]</GaussianScalingFactor>
++                        <tau index="1" type="double" size="[1 2]">[1 1]</tau>
++                        <GaussianMeanValue index="1" type="double" size="[1 2]">[0.185419 -0.049746]</GaussianMeanValue>
++                    </GMM>
++                    <aLSC index="1" type="cell" size="[1 1]">
++                        <cell index="1" type="struct" size="[1 1]">
++                            <resolution index="1" type="char" size="[1 9]">1920x1080</resolution>
++                            <LSC_PROFILE_LIST index="1" type="char" size="[1 17]">1920x1080_D65_100</LSC_PROFILE_LIST>
++                        </cell>
++                    </aLSC>
++                    <manualWB index="1" type="double" size="[1 4]">[1.91884 1 1 1.4462]</manualWB>
++                    <manualccMatrix index="1" type="double" size="[3 3]">[2.21853 -1.1811 0.0236566 -0.415086 1.96419 -0.530888 -0.0641701 -0.679306 1.7499]</manualccMatrix>
++                    <manualccOffsets index="1" type="double" size="[1 3]">[-43.0116 -29.6102 -26.2114]</manualccOffsets>
++                    <awbType index="1" type="char" size="[1 4]">AUTO</awbType>
++                    <sat_CT index="1" type="struct" size="[1 1]">
++                        <gains index="1" type="double" size="[1 4]">[1 15 30 60]</gains>
++                        <sat index="1" type="double" size="[1 4]">[100 95 90 74]</sat>
++                    </sat_CT>
++                    <vig_CT index="1" type="struct" size="[1 1]">
++                        <gains index="1" type="double" size="[1 4]">[1 15 30 60]</gains>
++                        <vig index="1" type="double" size="[1 4]">[100 95 90 70]</vig>
++                    </vig_CT>
++                    <aCC index="1" type="struct" size="[1 1]">
++                        <CC_PROFILE_LIST index="1" type="char" size="[1 7]">D65_100</CC_PROFILE_LIST>
++                    </aCC>
++                </cell>
++                <cell index="4" type="struct" size="[1 1]">
++                    <name index="1" type="char" size="[1 8]">F2 (CWF)</name>
++                    <doorType index="1" type="char" size="[1 6]">Indoor</doorType>
++                    <GMM index="1" type="struct" size="[1 1]">
++                        <invCovMatrix index="1" type="double" size="[2 2]">[482.6 -5.92692 -5.92692 1726.8168]</invCovMatrix>
++                        <GaussianScalingFactor index="1" type="double" size="[1 1]">[ 145.2873]</GaussianScalingFactor>
++                        <tau index="1" type="double" size="[1 2]">[1 1]</tau>
++                        <GaussianMeanValue index="1" type="double" size="[1 2]">[0.0807675 -0.065428]</GaussianMeanValue>
++                    </GMM>
++                    <aLSC index="1" type="cell" size="[1 1]">
++                        <cell index="1" type="struct" size="[1 1]">
++                            <resolution index="1" type="char" size="[1 9]">1920x1080</resolution>
++                            <LSC_PROFILE_LIST index="1" type="char" size="[1 16]">1920x1080_F2_100</LSC_PROFILE_LIST>
++                        </cell>
++                    </aLSC>
++                    <manualWB index="1" type="double" size="[1 4]">[1.49669 1 1 1.9575]</manualWB>
++                    <manualccMatrix index="1" type="double" size="[3 3]">[2.55426 -1.43986 -0.0896157 -0.539316 1.86357 -0.280783 -0.0559572 -0.786905 1.9287]</manualccMatrix>
++                    <manualccOffsets index="1" type="double" size="[1 3]">[-101.435 -85.6439 -106.6876]</manualccOffsets>
++                    <awbType index="1" type="char" size="[1 4]">AUTO</awbType>
++                    <sat_CT index="1" type="struct" size="[1 1]">
++                        <gains index="1" type="double" size="[1 4]">[1 15 30 60]</gains>
++                        <sat index="1" type="double" size="[1 4]">[100 95 90 74]</sat>
++                    </sat_CT>
++                    <vig_CT index="1" type="struct" size="[1 1]">
++                        <gains index="1" type="double" size="[1 4]">[1 15 30 60]</gains>
++                        <vig index="1" type="double" size="[1 4]">[100 95 90 70]</vig>
++                    </vig_CT>
++                    <aCC index="1" type="struct" size="[1 1]">
++                        <CC_PROFILE_LIST index="1" type="char" size="[1 6]">F2_100</CC_PROFILE_LIST>
++                    </aCC>
++                </cell>
++                <cell index="5" type="struct" size="[1 1]">
++                    <name index="1" type="char" size="[1 10]">F11 (TL84)</name>
++                    <doorType index="1" type="char" size="[1 6]">Indoor</doorType>
++                    <GMM index="1" type="struct" size="[1 1]">
++                        <invCovMatrix index="1" type="double" size="[2 2]">[487.098 279.552 279.552 1563.779]</invCovMatrix>
++                        <GaussianScalingFactor index="1" type="double" size="[1 1]">[ 131.5861]</GaussianScalingFactor>
++                        <tau index="1" type="double" size="[1 2]">[1 1]</tau>
++                        <GaussianMeanValue index="1" type="double" size="[1 2]">[0.09282 -0.049829]</GaussianMeanValue>
++                    </GMM>
++                    <aLSC index="1" type="cell" size="[1 1]">
++                        <cell index="1" type="struct" size="[1 1]">
++                            <resolution index="1" type="char" size="[1 9]">1920x1080</resolution>
++                            <LSC_PROFILE_LIST index="1" type="char" size="[1 17]">1920x1080_F11_100</LSC_PROFILE_LIST>
++                        </cell>
++                    </aLSC>
++                    <manualWB index="1" type="double" size="[1 4]">[1.47294 1 1 1.7896]</manualWB>
++                    <manualccMatrix index="1" type="double" size="[3 3]">[2.05623 -0.938265 -0.0739814 -0.483733 2.014 -0.513252 -0.0419837 -0.9078 1.959]</manualccMatrix>
++                    <manualccOffsets index="1" type="double" size="[1 3]">[-46.0954 -36.6104 -37.6683]</manualccOffsets>
++                    <awbType index="1" type="char" size="[1 4]">AUTO</awbType>
++                    <sat_CT index="1" type="struct" size="[1 1]">
++                        <gains index="1" type="double" size="[1 4]">[1 15 30 60]</gains>
++                        <sat index="1" type="double" size="[1 4]">[100 95 90 74]</sat>
++                    </sat_CT>
++                    <vig_CT index="1" type="struct" size="[1 1]">
++                        <gains index="1" type="double" size="[1 4]">[1 15 30 60]</gains>
++                        <vig index="1" type="double" size="[1 4]">[100 95 90 70]</vig>
++                    </vig_CT>
++                    <aCC index="1" type="struct" size="[1 1]">
++                        <CC_PROFILE_LIST index="1" type="char" size="[1 7]">F11_100</CC_PROFILE_LIST>
++                    </aCC>
++                </cell>
++            </illumination>
++        </AWB>
++        <LSC index="1" type="cell" size="[1 5]">
++            <cell index="1" type="struct" size="[1 1]">
++                <name index="1" type="char" size="[1 15]">1920x1080_A_100</name>
++                <resolution index="1" type="char" size="[1 9]">1920x1080</resolution>
++                <illumination index="1" type="char" size="[1 1]">A</illumination>
++                <LSC_sectors index="1" type="double" size="[1 1]">[ 16]</LSC_sectors>
++                <LSC_No index="1" type="double" size="[1 1]">[ 10]</LSC_No>
++                <LSC_Xo index="1" type="double" size="[1 1]">[ 15]</LSC_Xo>
++                <LSC_Yo index="1" type="double" size="[1 1]">[ 15]</LSC_Yo>
++                <LSC_SECT_SIZE_X index="1" type="double" size="[1 8]">[80 89 98 111 124 141 159 158]</LSC_SECT_SIZE_X>
++                <LSC_SECT_SIZE_Y index="1" type="double" size="[1 8]">[61 62 65 67 68 72 74 71]</LSC_SECT_SIZE_Y>
++                <vignetting index="1" type="double" size="[1 1]">[ 100]</vignetting>
++                <LSC_SAMPLES_red index="1" type="double" size="[17 17]">[1928 1793 1674 1551 1453 1353 1275 1225 1208 1221 1273 1341 1420 1519 1599 1695 1778 1864 1756 1618 1520 1401 1308 1235 1182 1166 1175 1217 1294 1389 1470 1566 1656 1751 1824 1709 1582 1476 1365 1275 1195 1148 1127 1149 1188 1253 1347 1438 1521 1619 1708 1785 1675 1547 1444 1327 1245 1163 1122 1097 1110 1151 1229 1303 1406 1494 1589 1669 1753 1640 1515 1412 1312 1216 1140 1087 1076 1081 1122 1191 1282 1371 1473 1564 1650 1737 1622 1500 1396 1284 1200 1116 1069 1050 1062 1101 1175 1247 1354 1445 1541 1624 1707 1597 1487 1369 1268 1180 1102 1059 1036 1042 1085 1151 1243 1332 1428 1525 1636 1720 1589 1470 1369 1267 1169 1098 1047 1024 1029 1074 1144 1225 1319 1420 1517 1604 1704 1587 1470 1356 1257 1167 1092 1036 1024 1029 1067 1137 1222 1319 1412 1523 1593 1700 1597 1475 1355 1267 1165 1094 1038 1026 1027 1069 1140 1228 1321 1425 1517 1621 1725 1591 1482 1380 1265 1179 1100 1044 1035 1035 1074 1152 1236 1337 1433 1534 1627 1735 1614 1498 1385 1284 1191 1118 1060 1040 1048 1088 1165 1256 1346 1451 1549 1644 1750 1628 1517 1408 1303 1217 1135 1076 1057 1063 1115 1183 1276 1378 1475 1573 1681 1776 1667 1553 1441 1339 1239 1163 1111 1084 1090 1140 1212 1303 1405 1505 1601 1704 1820 1706 1579 1475 1370 1277 1197 1139 1117 1123 1169 1250 1337 1443 1543 1638 1728 1853 1735 1616 1517 1410 1312 1237 1175 1156 1160 1210 1279 1376 1477 1586 1684 1765 1882 1780 1653 1552 1456 1362 1273 1223 1185 1210 1257 1331 1420 1530 1633 1729 1811]</LSC_SAMPLES_red>
++                <LSC_SAMPLES_greenR index="1" type="double" size="[17 17]">[2031 1932 1798 1648 1530 1413 1330 1285 1257 1272 1332 1420 1520 1638 1749 1875 2007 2032 1869 1733 1595 1468 1366 1278 1217 1205 1221 1270 1366 1475 1577 1709 1811 1932 1981 1823 1681 1544 1424 1311 1231 1182 1154 1175 1228 1321 1419 1544 1659 1773 1897 1919 1788 1636 1500 1376 1278 1184 1141 1120 1133 1180 1271 1376 1497 1615 1734 1853 1900 1734 1598 1470 1356 1241 1159 1103 1082 1097 1150 1238 1340 1458 1583 1715 1818 1868 1708 1576 1447 1319 1215 1132 1075 1061 1067 1120 1206 1305 1431 1553 1688 1790 1830 1695 1547 1415 1302 1193 1111 1060 1038 1048 1096 1185 1290 1416 1530 1673 1788 1817 1682 1544 1413 1292 1185 1102 1047 1026 1039 1086 1173 1283 1392 1527 1654 1774 1811 1683 1533 1403 1287 1176 1099 1039 1024 1034 1082 1163 1269 1397 1514 1660 1766 1812 1681 1545 1409 1288 1188 1102 1042 1031 1032 1075 1171 1277 1395 1529 1662 1790 1838 1698 1557 1428 1300 1198 1109 1051 1038 1046 1091 1184 1287 1415 1535 1670 1798 1861 1712 1581 1447 1327 1217 1127 1072 1049 1059 1111 1201 1313 1443 1565 1689 1830 1888 1743 1600 1476 1352 1245 1159 1092 1074 1089 1137 1229 1336 1467 1598 1730 1864 1936 1765 1660 1522 1391 1282 1194 1139 1109 1120 1178 1267 1382 1497 1639 1765 1880 1964 1833 1676 1566 1434 1329 1237 1169 1148 1157 1218 1306 1420 1550 1679 1809 1907 2007 1878 1730 1606 1487 1376 1282 1224 1196 1207 1263 1349 1465 1588 1715 1850 1958 2074 1917 1794 1661 1539 1444 1331 1274 1250 1269 1326 1406 1523 1665 1790 1892 2036]</LSC_SAMPLES_greenR>
++                <LSC_SAMPLES_greenB index="1" type="double" size="[17 17]">[2146 1987 1838 1676 1540 1426 1333 1260 1243 1261 1335 1437 1542 1670 1799 1932 2071 2120 1955 1779 1635 1491 1374 1276 1218 1197 1213 1273 1378 1500 1624 1765 1881 2016 2062 1895 1740 1588 1453 1328 1232 1176 1152 1173 1237 1331 1449 1582 1708 1848 1992 1999 1855 1694 1547 1408 1299 1195 1139 1121 1126 1193 1294 1409 1551 1677 1823 1944 1980 1828 1663 1511 1378 1258 1167 1099 1088 1101 1164 1253 1378 1501 1650 1783 1922 1964 1789 1631 1491 1349 1236 1144 1079 1061 1071 1131 1228 1344 1480 1629 1753 1894 1938 1770 1618 1466 1329 1219 1119 1063 1039 1058 1107 1208 1325 1462 1607 1752 1880 1906 1762 1601 1454 1319 1206 1110 1051 1031 1041 1100 1195 1314 1454 1592 1738 1889 1913 1757 1597 1444 1320 1199 1107 1041 1024 1038 1093 1184 1315 1442 1581 1729 1874 1920 1761 1604 1458 1323 1204 1107 1042 1032 1037 1089 1193 1308 1447 1591 1743 1886 1918 1771 1613 1467 1328 1214 1122 1050 1036 1048 1101 1198 1325 1461 1609 1752 1881 1943 1782 1630 1490 1357 1231 1133 1067 1049 1060 1118 1213 1340 1481 1621 1777 1923 1968 1809 1659 1512 1365 1257 1153 1091 1065 1081 1132 1239 1371 1503 1651 1797 1927 1991 1845 1700 1548 1408 1284 1190 1125 1103 1109 1171 1276 1393 1538 1689 1824 1949 2045 1875 1723 1582 1442 1326 1226 1159 1131 1147 1213 1307 1436 1574 1724 1865 1991 2074 1930 1768 1623 1496 1368 1273 1200 1175 1182 1252 1350 1474 1624 1755 1901 2037 2135 1960 1827 1670 1543 1423 1319 1240 1232 1247 1297 1406 1530 1672 1815 1940 2096]</LSC_SAMPLES_greenB>
++                <LSC_SAMPLES_blue index="1" type="double" size="[17 17]">[1660 1600 1483 1395 1300 1228 1186 1154 1147 1149 1171 1235 1298 1354 1417 1512 1549 1657 1547 1447 1352 1280 1205 1170 1132 1116 1120 1142 1192 1262 1329 1396 1461 1553 1606 1523 1416 1340 1247 1191 1138 1116 1095 1096 1120 1169 1237 1301 1374 1431 1512 1599 1492 1399 1306 1238 1159 1133 1091 1078 1079 1103 1152 1205 1283 1345 1426 1488 1554 1467 1371 1299 1215 1157 1110 1081 1057 1059 1085 1122 1188 1260 1330 1408 1474 1560 1446 1363 1278 1198 1144 1099 1070 1049 1052 1063 1115 1169 1243 1325 1396 1444 1526 1448 1352 1265 1196 1137 1090 1058 1032 1039 1056 1102 1161 1223 1305 1380 1453 1524 1430 1343 1271 1193 1136 1080 1055 1029 1030 1052 1091 1160 1236 1308 1372 1444 1520 1446 1331 1268 1195 1131 1085 1048 1030 1024 1051 1088 1151 1219 1295 1386 1435 1531 1430 1350 1268 1205 1140 1080 1052 1035 1028 1042 1099 1154 1226 1302 1367 1448 1515 1443 1350 1277 1204 1139 1098 1052 1037 1028 1054 1102 1163 1231 1303 1379 1457 1553 1458 1366 1283 1208 1152 1093 1054 1034 1035 1051 1106 1170 1237 1322 1391 1470 1569 1456 1384 1296 1227 1158 1109 1076 1044 1048 1061 1120 1184 1255 1337 1410 1492 1570 1493 1412 1329 1244 1181 1118 1082 1058 1060 1085 1132 1210 1275 1368 1424 1527 1636 1504 1433 1346 1262 1197 1147 1108 1083 1075 1107 1150 1219 1297 1384 1453 1541 1602 1550 1444 1375 1294 1220 1161 1122 1105 1104 1120 1185 1249 1321 1407 1477 1553 1665 1580 1469 1387 1310 1255 1198 1155 1126 1136 1167 1208 1272 1362 1434 1528 1608]</LSC_SAMPLES_blue>
++            </cell>
++            <cell index="2" type="struct" size="[1 1]">
++                <name index="1" type="char" size="[1 17]">1920x1080_D50_100</name>
++                <resolution index="1" type="char" size="[1 9]">1920x1080</resolution>
++                <illumination index="1" type="char" size="[1 3]">D50</illumination>
++                <LSC_sectors index="1" type="double" size="[1 1]">[ 16]</LSC_sectors>
++                <LSC_No index="1" type="double" size="[1 1]">[ 10]</LSC_No>
++                <LSC_Xo index="1" type="double" size="[1 1]">[ 15]</LSC_Xo>
++                <LSC_Yo index="1" type="double" size="[1 1]">[ 15]</LSC_Yo>
++                <LSC_SECT_SIZE_X index="1" type="double" size="[1 8]">[79 91 100 112 128 142 150 158]</LSC_SECT_SIZE_X>
++                <LSC_SECT_SIZE_Y index="1" type="double" size="[1 8]">[58 64 64 68 71 70 72 73]</LSC_SECT_SIZE_Y>
++                <vignetting index="1" type="double" size="[1 1]">[ 100]</vignetting>
++                <LSC_SAMPLES_red index="1" type="double" size="[17 17]">[1782 1684 1581 1466 1386 1297 1244 1201 1187 1189 1220 1292 1343 1422 1497 1583 1656 1748 1657 1536 1444 1346 1270 1207 1183 1156 1161 1188 1234 1319 1389 1467 1540 1624 1712 1619 1514 1416 1320 1240 1181 1155 1126 1128 1156 1216 1276 1364 1434 1501 1577 1703 1590 1474 1381 1295 1220 1155 1130 1108 1105 1126 1176 1252 1324 1397 1477 1554 1661 1556 1454 1363 1275 1189 1140 1102 1084 1082 1104 1156 1223 1295 1378 1449 1513 1639 1538 1424 1334 1244 1176 1113 1077 1064 1056 1086 1131 1196 1275 1354 1427 1510 1606 1525 1418 1318 1233 1156 1099 1067 1043 1045 1067 1120 1186 1260 1342 1424 1498 1608 1500 1402 1317 1224 1144 1090 1054 1031 1036 1061 1116 1179 1255 1332 1402 1478 1590 1505 1397 1305 1221 1139 1079 1041 1024 1027 1055 1103 1180 1248 1324 1411 1482 1597 1511 1393 1309 1221 1141 1080 1038 1032 1032 1058 1112 1185 1259 1334 1414 1486 1615 1513 1424 1311 1230 1150 1086 1045 1035 1037 1065 1125 1199 1276 1339 1433 1497 1623 1532 1419 1328 1239 1159 1100 1054 1037 1047 1077 1134 1214 1291 1364 1442 1528 1650 1545 1441 1347 1257 1183 1117 1075 1059 1057 1096 1151 1235 1307 1392 1471 1544 1674 1576 1473 1382 1294 1209 1140 1102 1079 1090 1126 1182 1260 1335 1425 1500 1573 1691 1614 1506 1412 1315 1239 1168 1127 1106 1113 1151 1205 1290 1363 1452 1533 1595 1748 1635 1537 1444 1353 1272 1202 1160 1136 1150 1188 1242 1318 1399 1481 1564 1639 1806 1674 1562 1479 1392 1310 1241 1189 1180 1178 1223 1279 1354 1446 1524 1600 1684]</LSC_SAMPLES_red>
++                <LSC_SAMPLES_greenR index="1" type="double" size="[17 17]">[2132 1981 1819 1676 1526 1416 1332 1278 1253 1270 1316 1416 1541 1668 1764 1924 2031 2090 1929 1766 1628 1487 1367 1281 1235 1207 1223 1274 1368 1485 1606 1752 1859 2005 2047 1894 1718 1573 1436 1326 1239 1195 1169 1180 1229 1321 1441 1570 1700 1822 1952 1993 1856 1674 1534 1405 1281 1198 1154 1133 1141 1186 1274 1393 1522 1652 1795 1912 1963 1810 1649 1499 1363 1254 1170 1119 1098 1105 1150 1240 1354 1482 1616 1751 1874 1928 1773 1616 1467 1335 1219 1136 1090 1066 1074 1119 1208 1322 1451 1586 1736 1854 1895 1742 1585 1446 1310 1199 1113 1066 1042 1049 1097 1189 1300 1441 1567 1707 1837 1882 1732 1577 1433 1298 1182 1097 1050 1029 1043 1086 1175 1292 1419 1557 1706 1821 1879 1731 1567 1421 1295 1174 1092 1043 1024 1033 1082 1170 1290 1419 1550 1694 1827 1873 1729 1577 1427 1295 1179 1094 1035 1031 1034 1084 1175 1297 1428 1564 1705 1824 1911 1751 1584 1445 1313 1188 1099 1048 1029 1049 1097 1190 1314 1443 1579 1714 1852 1918 1760 1620 1462 1328 1215 1118 1064 1049 1064 1115 1212 1335 1469 1600 1752 1874 1961 1795 1636 1502 1359 1239 1148 1092 1071 1088 1141 1245 1367 1503 1641 1772 1899 1989 1835 1688 1537 1408 1275 1184 1130 1102 1123 1187 1280 1402 1539 1668 1806 1942 2032 1879 1729 1584 1439 1328 1226 1169 1144 1166 1228 1322 1442 1584 1719 1849 1969 2073 1923 1777 1623 1506 1374 1276 1216 1194 1218 1276 1369 1493 1628 1766 1902 2016 2127 1983 1818 1682 1545 1428 1333 1271 1250 1267 1334 1433 1547 1689 1814 1944 2096]</LSC_SAMPLES_greenR>
++                <LSC_SAMPLES_greenB index="1" type="double" size="[17 17]">[2113 2008 1827 1686 1547 1443 1348 1303 1272 1293 1337 1438 1547 1667 1772 1914 2012 2090 1939 1792 1634 1501 1389 1304 1257 1231 1234 1293 1380 1496 1614 1744 1850 2001 2029 1886 1728 1587 1455 1337 1260 1210 1186 1193 1242 1331 1444 1567 1687 1806 1926 1996 1844 1680 1539 1408 1303 1212 1167 1147 1152 1195 1287 1397 1522 1638 1772 1894 1948 1796 1649 1503 1374 1262 1178 1131 1105 1112 1159 1239 1356 1476 1603 1726 1837 1917 1764 1610 1475 1338 1231 1145 1098 1073 1081 1127 1208 1318 1441 1575 1701 1827 1890 1740 1591 1443 1320 1206 1118 1069 1050 1057 1104 1186 1294 1421 1553 1682 1794 1866 1712 1565 1432 1301 1187 1103 1056 1038 1042 1090 1174 1292 1408 1535 1672 1784 1856 1711 1564 1419 1292 1180 1093 1044 1024 1038 1079 1170 1282 1409 1539 1666 1787 1859 1709 1566 1425 1296 1180 1095 1042 1032 1042 1084 1172 1287 1411 1535 1670 1791 1868 1721 1579 1438 1310 1192 1106 1048 1034 1046 1096 1189 1304 1428 1559 1680 1807 1891 1749 1602 1448 1326 1212 1122 1063 1050 1062 1114 1205 1327 1450 1573 1707 1829 1924 1782 1623 1498 1349 1238 1146 1093 1071 1086 1142 1239 1349 1480 1615 1744 1853 1962 1812 1681 1522 1400 1279 1179 1129 1104 1124 1177 1277 1390 1523 1649 1769 1895 2009 1856 1714 1579 1437 1328 1223 1168 1145 1164 1225 1314 1432 1558 1692 1818 1925 2055 1912 1752 1625 1495 1373 1274 1217 1198 1209 1270 1360 1482 1619 1737 1868 1982 2094 1963 1812 1681 1537 1443 1331 1268 1253 1278 1333 1416 1543 1676 1797 1909 2040]</LSC_SAMPLES_greenB>
++                <LSC_SAMPLES_blue index="1" type="double" size="[17 17]">[1905 1768 1657 1533 1405 1333 1263 1225 1202 1204 1244 1319 1416 1501 1604 1716 1821 1881 1754 1607 1490 1378 1286 1224 1192 1173 1176 1210 1278 1372 1473 1567 1665 1766 1828 1704 1566 1451 1343 1253 1196 1158 1138 1144 1170 1241 1325 1435 1530 1643 1722 1793 1671 1524 1417 1313 1229 1156 1136 1112 1113 1141 1209 1299 1393 1499 1600 1703 1759 1630 1505 1388 1281 1202 1138 1105 1083 1085 1115 1177 1264 1370 1453 1577 1661 1732 1599 1475 1360 1264 1176 1110 1082 1060 1059 1092 1149 1237 1332 1448 1539 1649 1711 1593 1455 1340 1240 1152 1093 1059 1041 1044 1070 1138 1225 1329 1423 1544 1634 1694 1567 1443 1332 1228 1140 1082 1050 1029 1034 1065 1129 1214 1315 1418 1522 1615 1687 1563 1444 1328 1226 1136 1074 1037 1025 1024 1061 1120 1214 1309 1418 1525 1608 1681 1566 1442 1337 1225 1140 1076 1042 1031 1032 1060 1132 1220 1322 1417 1527 1624 1693 1577 1464 1336 1238 1149 1087 1041 1031 1039 1067 1139 1228 1330 1431 1531 1626 1727 1588 1475 1359 1249 1166 1094 1059 1037 1048 1082 1158 1250 1340 1450 1559 1661 1742 1620 1500 1379 1272 1184 1118 1072 1055 1063 1106 1176 1271 1369 1475 1580 1662 1775 1649 1531 1418 1303 1219 1141 1107 1079 1088 1137 1205 1299 1392 1497 1605 1698 1790 1682 1562 1448 1337 1249 1169 1135 1108 1120 1169 1235 1332 1434 1542 1638 1751 1839 1726 1590 1493 1384 1289 1218 1164 1149 1161 1202 1276 1366 1473 1577 1676 1784 1891 1746 1657 1507 1423 1326 1258 1209 1199 1210 1254 1314 1415 1504 1615 1744 1803]</LSC_SAMPLES_blue>
++            </cell>
++            <cell index="3" type="struct" size="[1 1]">
++                <name index="1" type="char" size="[1 17]">1920x1080_D65_100</name>
++                <resolution index="1" type="char" size="[1 9]">1920x1080</resolution>
++                <illumination index="1" type="char" size="[1 3]">D65</illumination>
++                <LSC_sectors index="1" type="double" size="[1 1]">[ 16]</LSC_sectors>
++                <LSC_No index="1" type="double" size="[1 1]">[ 10]</LSC_No>
++                <LSC_Xo index="1" type="double" size="[1 1]">[ 15]</LSC_Xo>
++                <LSC_Yo index="1" type="double" size="[1 1]">[ 15]</LSC_Yo>
++                <LSC_SECT_SIZE_X index="1" type="double" size="[1 8]">[80 90 99 112 128 138 153 160]</LSC_SECT_SIZE_X>
++                <LSC_SECT_SIZE_Y index="1" type="double" size="[1 8]">[58 62 65 67 71 73 72 72]</LSC_SECT_SIZE_Y>
++                <vignetting index="1" type="double" size="[1 1]">[ 100]</vignetting>
++                <LSC_SAMPLES_red index="1" type="double" size="[17 17]">[1739 1656 1550 1449 1354 1280 1237 1201 1174 1174 1195 1260 1325 1391 1458 1523 1603 1703 1615 1508 1414 1324 1253 1198 1178 1147 1159 1169 1232 1283 1352 1424 1494 1574 1686 1576 1474 1378 1307 1227 1179 1145 1132 1124 1150 1194 1252 1334 1397 1461 1535 1651 1571 1449 1363 1274 1206 1155 1130 1107 1106 1116 1168 1226 1301 1361 1431 1511 1619 1519 1425 1334 1251 1186 1138 1107 1082 1078 1098 1141 1207 1268 1346 1408 1467 1587 1506 1406 1314 1232 1168 1112 1084 1064 1058 1076 1124 1176 1252 1314 1386 1452 1574 1488 1386 1298 1217 1150 1095 1066 1044 1043 1063 1105 1164 1236 1301 1382 1451 1568 1471 1376 1289 1208 1137 1087 1052 1031 1034 1055 1103 1165 1224 1294 1366 1434 1563 1470 1371 1283 1208 1132 1077 1043 1026 1024 1050 1099 1157 1227 1288 1372 1431 1547 1469 1374 1289 1202 1126 1076 1036 1030 1027 1052 1099 1172 1235 1297 1374 1434 1573 1476 1380 1293 1211 1141 1083 1042 1032 1030 1057 1113 1181 1252 1305 1383 1442 1593 1488 1403 1305 1225 1150 1090 1055 1037 1047 1074 1126 1192 1268 1336 1402 1470 1607 1508 1418 1327 1238 1170 1110 1070 1049 1061 1084 1145 1215 1289 1349 1429 1489 1636 1542 1448 1352 1268 1193 1131 1096 1080 1082 1123 1165 1242 1314 1382 1445 1521 1669 1567 1475 1387 1298 1223 1159 1118 1100 1107 1146 1200 1265 1333 1411 1488 1532 1709 1607 1505 1414 1333 1255 1193 1148 1133 1140 1171 1225 1285 1375 1434 1512 1586 1730 1646 1545 1445 1368 1291 1226 1175 1172 1181 1213 1261 1335 1405 1490 1548 1630]</LSC_SAMPLES_red>
++                <LSC_SAMPLES_greenR index="1" type="double" size="[17 17]">[2154 1979 1828 1679 1529 1413 1341 1276 1248 1268 1317 1415 1538 1666 1794 1928 2045 2105 1940 1791 1624 1492 1372 1274 1236 1213 1220 1273 1368 1491 1620 1748 1865 2028 2062 1913 1732 1582 1443 1325 1252 1196 1172 1177 1233 1323 1443 1576 1703 1846 1947 2028 1856 1684 1542 1406 1287 1204 1162 1133 1139 1190 1279 1395 1529 1658 1803 1928 1964 1824 1655 1512 1373 1257 1170 1123 1102 1106 1156 1244 1358 1487 1628 1762 1884 1948 1792 1621 1479 1335 1223 1140 1093 1069 1077 1124 1210 1323 1465 1591 1742 1874 1921 1758 1602 1449 1311 1195 1114 1064 1042 1054 1103 1188 1304 1433 1579 1717 1843 1899 1747 1576 1439 1299 1187 1098 1050 1024 1039 1086 1179 1293 1430 1563 1705 1841 1894 1738 1576 1428 1295 1171 1094 1036 1025 1032 1085 1173 1292 1428 1561 1712 1824 1871 1742 1577 1435 1299 1175 1093 1034 1027 1037 1086 1176 1303 1431 1568 1710 1847 1916 1748 1605 1451 1309 1191 1103 1043 1032 1047 1097 1192 1322 1448 1580 1723 1852 1933 1775 1619 1468 1331 1208 1123 1060 1050 1064 1118 1217 1340 1477 1613 1752 1883 1964 1803 1647 1505 1359 1242 1147 1090 1068 1093 1148 1246 1373 1506 1647 1782 1904 2007 1844 1695 1539 1401 1275 1182 1127 1102 1124 1189 1284 1407 1547 1678 1825 1947 2033 1893 1733 1587 1442 1326 1227 1163 1149 1165 1231 1327 1453 1590 1722 1857 1982 2093 1935 1779 1629 1506 1374 1278 1213 1193 1216 1279 1373 1499 1639 1770 1911 2030 2144 1978 1838 1682 1549 1427 1334 1266 1247 1270 1333 1429 1555 1690 1826 1954 2099]</LSC_SAMPLES_greenR>
++                <LSC_SAMPLES_greenB index="1" type="double" size="[17 17]">[2127 1964 1817 1686 1547 1441 1354 1306 1273 1300 1336 1437 1544 1652 1759 1900 1998 2077 1924 1781 1632 1489 1384 1305 1254 1236 1243 1292 1378 1490 1608 1728 1831 1970 2023 1885 1719 1578 1457 1338 1261 1214 1185 1191 1239 1331 1439 1559 1678 1792 1906 1973 1834 1665 1536 1404 1298 1216 1173 1148 1151 1197 1278 1387 1505 1626 1750 1858 1931 1781 1636 1493 1369 1255 1180 1134 1108 1113 1154 1237 1344 1463 1595 1706 1823 1900 1746 1592 1463 1333 1225 1142 1099 1073 1075 1122 1201 1309 1432 1551 1672 1788 1866 1718 1568 1431 1304 1197 1114 1067 1045 1054 1100 1176 1289 1404 1533 1653 1768 1836 1695 1546 1415 1293 1179 1100 1052 1027 1036 1084 1167 1279 1393 1512 1644 1749 1837 1683 1541 1406 1280 1169 1087 1035 1025 1028 1079 1157 1271 1388 1510 1641 1761 1833 1692 1544 1404 1284 1171 1089 1033 1024 1032 1077 1165 1277 1400 1515 1650 1753 1847 1702 1559 1428 1291 1179 1097 1043 1029 1042 1087 1180 1296 1415 1531 1656 1778 1868 1725 1585 1445 1318 1201 1119 1059 1044 1058 1111 1201 1316 1441 1555 1676 1798 1904 1757 1610 1479 1345 1228 1143 1086 1066 1085 1141 1232 1348 1469 1592 1707 1835 1949 1785 1661 1515 1395 1275 1178 1123 1103 1121 1181 1265 1382 1509 1629 1743 1865 1996 1832 1701 1561 1431 1318 1226 1165 1145 1165 1221 1318 1428 1548 1680 1792 1908 2036 1902 1746 1617 1488 1370 1275 1213 1196 1214 1276 1363 1476 1606 1724 1840 1949 2082 1940 1797 1656 1531 1432 1326 1268 1254 1271 1333 1415 1538 1657 1792 1898 2020]</LSC_SAMPLES_greenB>
++                <LSC_SAMPLES_blue index="1" type="double" size="[17 17]">[1959 1810 1674 1552 1431 1346 1270 1229 1217 1220 1261 1338 1431 1540 1621 1756 1838 1917 1775 1647 1514 1399 1308 1242 1206 1181 1182 1225 1302 1400 1496 1602 1697 1822 1869 1737 1603 1481 1363 1268 1200 1170 1148 1155 1189 1263 1348 1462 1570 1677 1754 1834 1698 1561 1441 1324 1238 1179 1139 1120 1119 1152 1220 1318 1421 1526 1626 1742 1792 1665 1525 1405 1299 1205 1146 1109 1089 1094 1124 1187 1277 1387 1491 1600 1704 1768 1629 1500 1379 1269 1181 1117 1083 1062 1066 1094 1164 1253 1363 1464 1573 1685 1746 1601 1477 1352 1248 1157 1097 1064 1039 1044 1077 1147 1233 1341 1453 1563 1666 1724 1597 1455 1344 1239 1141 1081 1048 1027 1034 1072 1133 1229 1327 1444 1547 1647 1716 1578 1453 1336 1232 1139 1078 1036 1024 1027 1061 1131 1226 1327 1438 1547 1650 1719 1589 1466 1340 1234 1139 1076 1039 1027 1034 1063 1136 1230 1339 1440 1543 1663 1734 1592 1473 1355 1246 1152 1085 1040 1032 1039 1074 1147 1245 1350 1443 1565 1658 1740 1620 1496 1366 1260 1169 1100 1054 1045 1045 1089 1162 1261 1363 1470 1579 1682 1780 1632 1515 1397 1284 1187 1123 1074 1058 1069 1112 1189 1288 1390 1506 1607 1711 1820 1681 1557 1435 1315 1224 1145 1105 1082 1099 1146 1216 1319 1421 1517 1636 1732 1837 1714 1581 1464 1352 1260 1180 1135 1121 1134 1177 1251 1350 1456 1568 1668 1791 1882 1747 1629 1505 1400 1303 1224 1174 1163 1171 1221 1291 1393 1495 1607 1710 1815 1938 1790 1665 1546 1433 1350 1266 1221 1206 1220 1272 1334 1437 1546 1646 1760 1870]</LSC_SAMPLES_blue>
++            </cell>
++            <cell index="4" type="struct" size="[1 1]">
++                <name index="1" type="char" size="[1 17]">1920x1080_F11_100</name>
++                <resolution index="1" type="char" size="[1 9]">1920x1080</resolution>
++                <illumination index="1" type="char" size="[1 3]">F11</illumination>
++                <LSC_sectors index="1" type="double" size="[1 1]">[ 16]</LSC_sectors>
++                <LSC_No index="1" type="double" size="[1 1]">[ 10]</LSC_No>
++                <LSC_Xo index="1" type="double" size="[1 1]">[ 15]</LSC_Xo>
++                <LSC_Yo index="1" type="double" size="[1 1]">[ 15]</LSC_Yo>
++                <LSC_SECT_SIZE_X index="1" type="double" size="[1 8]">[80 88 98 112 129 143 154 156]</LSC_SECT_SIZE_X>
++                <LSC_SECT_SIZE_Y index="1" type="double" size="[1 8]">[60 62 64 68 71 71 73 71]</LSC_SECT_SIZE_Y>
++                <vignetting index="1" type="double" size="[1 1]">[ 100]</vignetting>
++                <LSC_SAMPLES_red index="1" type="double" size="[17 17]">[1813 1714 1613 1507 1396 1313 1250 1204 1193 1193 1237 1292 1383 1442 1530 1598 1706 1789 1686 1558 1468 1364 1279 1214 1181 1150 1168 1195 1256 1336 1420 1493 1577 1659 1749 1648 1523 1431 1329 1246 1189 1148 1131 1129 1162 1229 1299 1383 1454 1545 1607 1720 1603 1503 1400 1306 1221 1159 1124 1101 1108 1130 1191 1267 1351 1436 1506 1586 1684 1583 1474 1376 1281 1201 1139 1099 1076 1078 1109 1168 1241 1324 1400 1490 1563 1664 1555 1446 1357 1263 1175 1116 1073 1057 1059 1083 1146 1214 1299 1379 1461 1547 1656 1540 1438 1342 1242 1158 1096 1063 1039 1045 1072 1129 1200 1285 1370 1456 1528 1635 1540 1421 1328 1238 1153 1088 1048 1025 1032 1061 1122 1199 1274 1354 1440 1519 1630 1530 1416 1324 1234 1147 1081 1038 1024 1028 1057 1115 1195 1270 1356 1440 1517 1635 1520 1422 1330 1235 1146 1083 1038 1028 1026 1059 1119 1200 1280 1362 1451 1521 1648 1544 1440 1331 1242 1160 1093 1042 1032 1034 1065 1135 1208 1294 1377 1454 1530 1663 1556 1444 1350 1249 1167 1106 1057 1039 1045 1079 1145 1223 1315 1398 1477 1561 1681 1572 1466 1371 1276 1194 1119 1072 1057 1067 1097 1165 1244 1337 1420 1503 1585 1707 1599 1505 1399 1301 1216 1145 1104 1079 1080 1127 1192 1279 1360 1448 1532 1608 1734 1629 1529 1439 1331 1249 1178 1130 1109 1117 1154 1221 1298 1394 1483 1562 1641 1775 1670 1569 1462 1379 1281 1212 1161 1144 1153 1191 1247 1344 1433 1519 1599 1669 1797 1711 1602 1504 1411 1332 1247 1205 1180 1192 1227 1295 1369 1470 1552 1642 1725]</LSC_SAMPLES_red>
++                <LSC_SAMPLES_greenR index="1" type="double" size="[17 17]">[2122 1959 1824 1668 1527 1422 1329 1279 1250 1270 1315 1420 1541 1648 1764 1905 2017 2063 1918 1765 1620 1481 1367 1279 1229 1204 1219 1276 1363 1488 1610 1732 1844 1982 2028 1866 1721 1571 1439 1321 1238 1190 1162 1176 1223 1322 1430 1567 1683 1816 1928 1973 1834 1662 1526 1395 1285 1198 1153 1129 1138 1185 1273 1387 1525 1647 1768 1907 1946 1781 1632 1496 1367 1249 1168 1117 1096 1098 1153 1238 1357 1472 1606 1740 1867 1910 1750 1607 1462 1334 1216 1134 1084 1064 1071 1120 1205 1317 1453 1579 1711 1834 1872 1734 1583 1446 1311 1198 1111 1066 1041 1053 1098 1187 1302 1431 1569 1687 1831 1878 1719 1569 1431 1295 1186 1096 1049 1028 1036 1086 1172 1294 1420 1551 1694 1815 1847 1716 1560 1425 1293 1179 1094 1037 1024 1034 1083 1171 1289 1415 1549 1675 1808 1870 1719 1573 1427 1298 1177 1094 1037 1029 1034 1078 1173 1291 1430 1552 1689 1824 1884 1727 1583 1446 1311 1195 1104 1044 1036 1045 1098 1186 1311 1436 1573 1700 1840 1914 1745 1605 1467 1328 1215 1124 1066 1052 1062 1114 1208 1330 1471 1595 1727 1858 1933 1782 1636 1495 1362 1241 1150 1093 1069 1087 1142 1244 1364 1501 1628 1761 1889 1976 1812 1680 1535 1400 1288 1185 1130 1106 1125 1183 1272 1404 1531 1668 1792 1916 2010 1860 1723 1579 1447 1321 1234 1166 1149 1165 1224 1321 1446 1580 1709 1836 1965 2048 1914 1763 1632 1496 1379 1275 1212 1191 1214 1273 1365 1483 1628 1758 1890 1995 2134 1950 1822 1673 1546 1430 1335 1272 1252 1270 1333 1420 1550 1679 1807 1948 2060]</LSC_SAMPLES_greenR>
++                <LSC_SAMPLES_greenB index="1" type="double" size="[17 17]">[2123 1982 1829 1688 1538 1425 1338 1286 1261 1274 1332 1429 1547 1666 1789 1904 2027 2058 1944 1769 1629 1495 1382 1286 1238 1214 1229 1280 1373 1495 1609 1740 1850 1985 2050 1868 1725 1580 1443 1333 1245 1194 1169 1183 1228 1332 1443 1578 1682 1813 1927 1977 1849 1680 1541 1406 1291 1201 1153 1132 1138 1192 1280 1393 1520 1642 1771 1882 1930 1800 1639 1505 1372 1259 1170 1114 1098 1108 1152 1241 1354 1482 1609 1738 1861 1919 1760 1616 1463 1343 1225 1139 1088 1067 1070 1120 1207 1319 1451 1581 1697 1824 1882 1742 1584 1451 1319 1200 1116 1063 1040 1053 1101 1185 1303 1428 1557 1690 1815 1865 1714 1570 1430 1307 1187 1098 1048 1026 1036 1084 1175 1290 1421 1544 1677 1806 1855 1711 1569 1418 1297 1177 1089 1036 1024 1033 1078 1169 1285 1413 1544 1667 1801 1865 1718 1571 1431 1301 1181 1096 1035 1026 1031 1079 1170 1291 1424 1546 1689 1799 1876 1721 1588 1442 1311 1191 1100 1045 1030 1042 1088 1186 1304 1439 1562 1690 1811 1900 1746 1603 1464 1329 1210 1118 1061 1044 1057 1109 1205 1331 1455 1581 1720 1836 1928 1767 1629 1491 1356 1238 1146 1085 1062 1081 1133 1233 1358 1480 1618 1753 1862 1958 1817 1679 1527 1396 1273 1180 1122 1099 1111 1174 1267 1391 1533 1656 1774 1900 2001 1860 1705 1574 1438 1321 1217 1160 1135 1152 1213 1308 1431 1563 1701 1817 1949 2051 1903 1754 1617 1490 1367 1272 1201 1186 1200 1264 1351 1477 1612 1743 1864 1992 2077 1943 1820 1663 1537 1424 1319 1264 1240 1255 1313 1416 1531 1662 1787 1916 2034]</LSC_SAMPLES_greenB>
++                <LSC_SAMPLES_blue index="1" type="double" size="[17 17]">[1842 1736 1619 1489 1389 1304 1240 1207 1183 1191 1223 1297 1392 1473 1559 1665 1735 1821 1706 1566 1460 1359 1267 1205 1177 1152 1158 1194 1253 1348 1440 1525 1616 1710 1786 1661 1539 1433 1321 1242 1178 1148 1128 1130 1163 1226 1311 1404 1490 1595 1673 1747 1621 1500 1402 1292 1212 1151 1123 1102 1105 1129 1190 1276 1380 1458 1553 1652 1719 1589 1476 1365 1270 1182 1135 1097 1077 1076 1109 1168 1247 1343 1443 1530 1625 1689 1563 1449 1343 1245 1170 1107 1074 1056 1057 1079 1140 1226 1320 1411 1509 1588 1664 1550 1433 1320 1234 1149 1090 1054 1039 1032 1070 1127 1207 1302 1405 1505 1583 1648 1538 1427 1321 1218 1143 1080 1045 1024 1028 1057 1121 1203 1294 1394 1482 1577 1649 1534 1410 1314 1223 1132 1073 1038 1026 1025 1053 1117 1196 1295 1391 1495 1577 1645 1531 1427 1320 1220 1136 1074 1034 1024 1031 1052 1120 1208 1292 1389 1476 1581 1662 1542 1435 1324 1233 1143 1084 1040 1034 1031 1065 1125 1216 1311 1406 1507 1578 1671 1568 1450 1347 1236 1160 1091 1050 1034 1047 1073 1144 1227 1326 1416 1511 1607 1695 1578 1476 1356 1270 1175 1111 1071 1052 1057 1092 1163 1250 1348 1443 1549 1620 1728 1610 1501 1402 1290 1208 1135 1095 1075 1083 1122 1189 1275 1369 1468 1557 1665 1767 1637 1526 1424 1324 1240 1164 1119 1104 1109 1151 1218 1303 1400 1505 1602 1678 1810 1683 1576 1459 1361 1270 1195 1156 1133 1151 1180 1250 1340 1441 1544 1643 1729 1828 1710 1594 1492 1397 1318 1237 1196 1177 1187 1231 1294 1393 1481 1575 1681 1777]</LSC_SAMPLES_blue>
++            </cell>
++            <cell index="5" type="struct" size="[1 1]">
++                <name index="1" type="char" size="[1 16]">1920x1080_F2_100</name>
++                <resolution index="1" type="char" size="[1 9]">1920x1080</resolution>
++                <illumination index="1" type="char" size="[1 2]">F2</illumination>
++                <LSC_sectors index="1" type="double" size="[1 1]">[ 16]</LSC_sectors>
++                <LSC_No index="1" type="double" size="[1 1]">[ 10]</LSC_No>
++                <LSC_Xo index="1" type="double" size="[1 1]">[ 15]</LSC_Xo>
++                <LSC_Yo index="1" type="double" size="[1 1]">[ 15]</LSC_Yo>
++                <LSC_SECT_SIZE_X index="1" type="double" size="[1 8]">[80 89 98 114 127 141 153 158]</LSC_SECT_SIZE_X>
++                <LSC_SECT_SIZE_Y index="1" type="double" size="[1 8]">[60 61 64 68 71 72 72 72]</LSC_SECT_SIZE_Y>
++                <vignetting index="1" type="double" size="[1 1]">[ 100]</vignetting>
++                <LSC_SAMPLES_red index="1" type="double" size="[17 17]">[1823 1725 1603 1510 1402 1312 1246 1220 1187 1193 1240 1295 1373 1461 1535 1624 1699 1799 1693 1586 1470 1365 1280 1214 1177 1158 1167 1192 1262 1340 1414 1499 1580 1679 1757 1653 1533 1434 1344 1247 1192 1148 1127 1135 1169 1231 1307 1389 1462 1546 1636 1730 1617 1498 1408 1302 1226 1158 1129 1102 1104 1135 1192 1267 1365 1441 1519 1595 1686 1586 1473 1376 1284 1200 1136 1091 1082 1080 1111 1167 1238 1329 1409 1499 1565 1672 1562 1452 1362 1263 1180 1118 1076 1055 1060 1090 1144 1221 1301 1385 1480 1538 1651 1547 1436 1339 1245 1163 1101 1059 1039 1043 1072 1131 1195 1293 1373 1460 1546 1651 1533 1424 1333 1237 1154 1088 1049 1024 1034 1065 1122 1201 1277 1363 1448 1524 1649 1533 1426 1320 1233 1148 1084 1038 1024 1027 1059 1116 1193 1275 1364 1440 1523 1621 1533 1421 1333 1232 1149 1087 1038 1029 1030 1055 1123 1199 1284 1365 1455 1533 1647 1542 1444 1331 1245 1156 1087 1047 1032 1033 1070 1133 1212 1297 1377 1467 1554 1661 1552 1451 1353 1255 1176 1108 1054 1039 1045 1079 1147 1227 1319 1404 1473 1564 1684 1574 1472 1376 1274 1190 1124 1075 1055 1064 1100 1166 1252 1333 1430 1511 1598 1713 1615 1508 1395 1309 1222 1147 1107 1086 1092 1124 1195 1275 1364 1457 1531 1627 1746 1638 1536 1438 1336 1248 1180 1135 1106 1120 1157 1220 1312 1401 1490 1565 1658 1770 1675 1570 1469 1379 1284 1218 1164 1144 1150 1193 1253 1341 1429 1527 1603 1699 1823 1719 1601 1512 1408 1322 1251 1196 1187 1191 1231 1297 1376 1473 1564 1641 1732]</LSC_SAMPLES_red>
++                <LSC_SAMPLES_greenR index="1" type="double" size="[17 17]">[2071 1983 1819 1662 1527 1422 1322 1277 1246 1271 1319 1419 1531 1653 1763 1889 2032 2076 1908 1755 1616 1480 1362 1279 1229 1212 1214 1274 1358 1488 1602 1735 1842 1975 2016 1862 1713 1576 1427 1326 1239 1191 1162 1179 1229 1317 1433 1565 1683 1808 1931 1976 1837 1663 1528 1395 1280 1196 1151 1131 1136 1182 1280 1389 1521 1644 1768 1901 1941 1786 1634 1493 1361 1253 1166 1111 1092 1102 1151 1232 1351 1478 1599 1740 1857 1906 1748 1596 1463 1334 1212 1139 1086 1063 1074 1119 1203 1319 1452 1578 1710 1833 1889 1734 1574 1443 1301 1199 1110 1066 1042 1049 1099 1185 1294 1431 1552 1702 1821 1866 1717 1561 1432 1299 1184 1101 1048 1025 1037 1084 1174 1287 1414 1548 1684 1804 1860 1711 1559 1423 1288 1174 1090 1040 1024 1033 1080 1171 1281 1415 1543 1686 1803 1847 1724 1567 1427 1294 1182 1095 1035 1028 1034 1080 1173 1294 1422 1549 1693 1805 1886 1719 1579 1440 1311 1187 1105 1047 1037 1045 1098 1182 1307 1436 1563 1709 1831 1896 1740 1606 1465 1323 1212 1123 1065 1049 1061 1110 1211 1327 1463 1595 1722 1855 1939 1780 1631 1491 1353 1245 1152 1093 1072 1088 1142 1239 1362 1494 1623 1759 1879 1965 1812 1679 1540 1404 1278 1186 1130 1105 1121 1182 1272 1394 1525 1660 1796 1930 2001 1868 1714 1579 1440 1328 1232 1170 1147 1168 1223 1320 1436 1572 1712 1838 1944 2061 1911 1753 1624 1494 1378 1281 1216 1193 1214 1270 1365 1486 1624 1750 1881 2003 2091 1964 1807 1671 1536 1441 1328 1274 1247 1270 1327 1419 1544 1673 1807 1941 2066]</LSC_SAMPLES_greenR>
++                <LSC_SAMPLES_greenB index="1" type="double" size="[17 17]">[2124 1979 1819 1685 1544 1433 1339 1289 1264 1278 1337 1431 1546 1654 1790 1905 2039 2084 1942 1779 1633 1492 1381 1286 1236 1215 1225 1279 1366 1496 1620 1748 1852 1984 2038 1887 1727 1589 1447 1332 1247 1195 1173 1188 1234 1331 1442 1572 1693 1811 1933 1995 1849 1681 1543 1411 1294 1204 1158 1133 1146 1190 1283 1395 1524 1649 1779 1895 1954 1800 1649 1507 1375 1258 1170 1119 1100 1106 1157 1246 1358 1486 1625 1736 1865 1924 1771 1611 1478 1338 1230 1141 1092 1068 1076 1124 1209 1320 1454 1584 1716 1832 1882 1744 1591 1450 1319 1204 1116 1066 1045 1052 1102 1191 1305 1434 1566 1704 1815 1876 1732 1574 1440 1303 1191 1103 1053 1030 1042 1087 1180 1293 1422 1549 1681 1812 1873 1716 1572 1430 1296 1184 1095 1040 1024 1034 1081 1170 1283 1424 1548 1684 1810 1860 1725 1576 1433 1305 1185 1101 1036 1028 1036 1081 1176 1292 1423 1554 1683 1808 1900 1730 1592 1445 1314 1195 1101 1049 1033 1045 1094 1191 1309 1440 1561 1705 1820 1881 1754 1597 1466 1333 1214 1124 1064 1044 1062 1111 1205 1332 1454 1591 1720 1857 1940 1780 1639 1496 1355 1242 1148 1089 1068 1080 1138 1238 1357 1490 1623 1760 1870 1972 1820 1678 1536 1396 1280 1181 1126 1102 1117 1172 1273 1391 1532 1657 1783 1908 1999 1865 1711 1573 1445 1318 1224 1161 1135 1156 1217 1310 1429 1561 1703 1829 1943 2059 1914 1768 1614 1488 1370 1276 1204 1186 1200 1268 1356 1478 1619 1745 1876 1985 2091 1956 1809 1677 1539 1427 1319 1260 1242 1255 1320 1407 1533 1665 1806 1919 2054]</LSC_SAMPLES_greenB>
++                <LSC_SAMPLES_blue index="1" type="double" size="[17 17]">[1841 1715 1603 1486 1373 1301 1238 1195 1182 1187 1215 1292 1371 1462 1549 1642 1739 1811 1690 1557 1450 1344 1258 1201 1168 1149 1155 1190 1249 1335 1431 1508 1598 1702 1771 1641 1524 1414 1313 1231 1175 1143 1125 1130 1152 1221 1299 1396 1482 1583 1670 1739 1614 1487 1386 1288 1205 1150 1120 1099 1098 1128 1186 1268 1359 1444 1549 1640 1681 1584 1461 1358 1259 1185 1126 1089 1076 1074 1106 1165 1239 1338 1430 1521 1595 1682 1550 1445 1338 1242 1164 1106 1072 1051 1056 1077 1135 1217 1312 1401 1497 1587 1640 1538 1425 1320 1222 1144 1090 1052 1036 1033 1065 1122 1204 1295 1391 1496 1577 1644 1518 1413 1318 1209 1139 1080 1044 1024 1028 1059 1110 1200 1282 1388 1481 1560 1638 1533 1402 1307 1212 1123 1073 1035 1024 1024 1050 1116 1194 1284 1383 1476 1569 1621 1529 1416 1309 1215 1135 1075 1031 1026 1027 1050 1113 1198 1287 1387 1479 1562 1663 1539 1424 1324 1225 1142 1082 1037 1029 1028 1065 1127 1201 1300 1392 1490 1577 1665 1544 1444 1328 1237 1156 1092 1048 1036 1043 1067 1143 1225 1315 1410 1504 1598 1692 1572 1460 1364 1256 1177 1107 1069 1048 1054 1091 1155 1237 1339 1440 1532 1619 1714 1608 1493 1392 1283 1197 1136 1092 1073 1081 1118 1184 1271 1367 1458 1550 1652 1746 1633 1517 1423 1318 1236 1157 1122 1100 1105 1142 1213 1294 1399 1492 1589 1669 1771 1663 1560 1446 1354 1270 1194 1151 1134 1142 1180 1241 1336 1429 1525 1624 1715 1824 1709 1594 1487 1387 1311 1235 1184 1176 1182 1227 1282 1366 1480 1566 1664 1767]</LSC_SAMPLES_blue>
++            </cell>
++        </LSC>
++        <CC index="1" type="cell" size="[1 5]">
++            <cell index="1" type="struct" size="[1 1]">
++                <name index="1" type="char" size="[1 5]">A_100</name>
++                <saturation index="1" type="double" size="[1 1]">[ 100]</saturation>
++                <ccMatrix index="1" type="double" size="[3 3]">[1.9912 -0.674808 -0.26111 -0.588858 2.14446 -0.508833 -0.0546477 -1.48422 2.5504]</ccMatrix>
++                <ccOffsets index="1" type="double" size="[1 3]">[-43.9622 -35.5199 -47.3636]</ccOffsets>
++                <wb index="1" type="double" size="[1 4]">[1.15736 1 1 2.4767]</wb>
++            </cell>
++            <cell index="2" type="struct" size="[1 1]">
++                <name index="1" type="char" size="[1 7]">D50_100</name>
++                <saturation index="1" type="double" size="[1 1]">[ 100]</saturation>
++                <ccMatrix index="1" type="double" size="[3 3]">[2.24258 -1.13046 -0.0520165 -0.41689 1.97772 -0.535115 -0.0545565 -0.772387 1.8332]</ccMatrix>
++                <ccOffsets index="1" type="double" size="[1 3]">[-39.682 -29.8889 -25.6222]</ccOffsets>
++                <wb index="1" type="double" size="[1 4]">[1.65926 1 1 1.6108]</wb>
++            </cell>
++            <cell index="3" type="struct" size="[1 1]">
++                <name index="1" type="char" size="[1 7]">D65_100</name>
++                <saturation index="1" type="double" size="[1 1]">[ 100]</saturation>
++                <ccMatrix index="1" type="double" size="[3 3]">[2.21853 -1.1811 0.0236566 -0.415086 1.96419 -0.530888 -0.0641701 -0.679306 1.7499]</ccMatrix>
++                <ccOffsets index="1" type="double" size="[1 3]">[-43.0116 -29.6102 -26.2114]</ccOffsets>
++                <wb index="1" type="double" size="[1 4]">[1.91884 1 1 1.4462]</wb>
++            </cell>
++            <cell index="4" type="struct" size="[1 1]">
++                <name index="1" type="char" size="[1 7]">F11_100</name>
++                <saturation index="1" type="double" size="[1 1]">[ 100]</saturation>
++                <ccMatrix index="1" type="double" size="[3 3]">[2.05623 -0.938265 -0.0739814 -0.483733 2.014 -0.513252 -0.0419837 -0.9078 1.959]</ccMatrix>
++                <ccOffsets index="1" type="double" size="[1 3]">[-46.0954 -36.6104 -37.6683]</ccOffsets>
++                <wb index="1" type="double" size="[1 4]">[1.47294 1 1 1.7896]</wb>
++            </cell>
++            <cell index="5" type="struct" size="[1 1]">
++                <name index="1" type="char" size="[1 6]">F2_100</name>
++                <saturation index="1" type="double" size="[1 1]">[ 100]</saturation>
++                <ccMatrix index="1" type="double" size="[3 3]">[2.55426 -1.43986 -0.0896157 -0.539316 1.86357 -0.280783 -0.0559572 -0.786905 1.9287]</ccMatrix>
++                <ccOffsets index="1" type="double" size="[1 3]">[-101.435 -85.6439 -106.6876]</ccOffsets>
++                <wb index="1" type="double" size="[1 4]">[1.49669 1 1 1.9575]</wb>
++            </cell>
++        </CC>
++        <AF index="1" type="struct" size="[1 1]">
++            <tbd index="1" type="double" size="[1 1]">[ -1]</tbd>
++        </AF>
++        <AEC index="1" type="struct" size="[1 1]">
++            <SetPoint index="1" type="double" size="[1 1]">[ 80]</SetPoint>
++            <ClmTolerance index="1" type="double" size="[1 1]">[ 20]</ClmTolerance>
++            <DampOver index="1" type="double" size="[1 1]">[ 0.2]</DampOver>
++            <DampUnder index="1" type="double" size="[1 1]">[ 0.3]</DampUnder>
++            <DampOverVideo index="1" type="double" size="[1 1]">[ 0.7]</DampOverVideo>
++            <DampUnderVideo index="1" type="double" size="[1 1]">[ 0.9]</DampUnderVideo>
++            <ECM index="1" type="cell" size="[1 3]">
++                <cell index="1" type="struct" size="[1 1]">
++                    <name index="1" type="char" size="[1 16]">1920x1080_FPS_15</name>
++                    <PrioritySchemes index="1" type="cell" size="[1 3]">
++                        <cell index="1" type="struct" size="[1 1]">
++                            <name index="1" type="char" size="[1 4]">fast</name>
++                            <OffsetT0Fac index="1" type="double" size="[1 1]">[ 1]</OffsetT0Fac>
++                            <SlopeA0 index="1" type="double" size="[1 1]">[ 2]</SlopeA0>
++                        </cell>
++                        <cell index="2" type="struct" size="[1 1]">
++                            <name index="1" type="char" size="[1 6]">normal</name>
++                            <OffsetT0Fac index="1" type="double" size="[1 1]">[ 1]</OffsetT0Fac>
++                            <SlopeA0 index="1" type="double" size="[1 1]">[ 1]</SlopeA0>
++                        </cell>
++                        <cell index="3" type="struct" size="[1 1]">
++                            <name index="1" type="char" size="[1 4]">slow</name>
++                            <OffsetT0Fac index="1" type="double" size="[1 1]">[ 2]</OffsetT0Fac>
++                            <SlopeA0 index="1" type="double" size="[1 1]">[ 1]</SlopeA0>
++                        </cell>
++                    </PrioritySchemes>
++                </cell>
++                <cell index="2" type="struct" size="[1 1]">
++                    <name index="1" type="char" size="[1 16]">1920x1080_FPS_10</name>
++                    <PrioritySchemes index="1" type="cell" size="[1 3]">
++                        <cell index="1" type="struct" size="[1 1]">
++                            <name index="1" type="char" size="[1 4]">fast</name>
++                            <OffsetT0Fac index="1" type="double" size="[1 1]">[ 1]</OffsetT0Fac>
++                            <SlopeA0 index="1" type="double" size="[1 1]">[ 2]</SlopeA0>
++                        </cell>
++                        <cell index="2" type="struct" size="[1 1]">
++                            <name index="1" type="char" size="[1 6]">normal</name>
++                            <OffsetT0Fac index="1" type="double" size="[1 1]">[ 1]</OffsetT0Fac>
++                            <SlopeA0 index="1" type="double" size="[1 1]">[ 1]</SlopeA0>
++                        </cell>
++                        <cell index="3" type="struct" size="[1 1]">
++                            <name index="1" type="char" size="[1 4]">slow</name>
++                            <OffsetT0Fac index="1" type="double" size="[1 1]">[ 2]</OffsetT0Fac>
++                            <SlopeA0 index="1" type="double" size="[1 1]">[ 1]</SlopeA0>
++                        </cell>
++                    </PrioritySchemes>
++                </cell>
++                <cell index="3" type="struct" size="[1 1]">
++                    <name index="1" type="char" size="[1 16]">1920x1080_FPS_05</name>
++                    <PrioritySchemes index="1" type="cell" size="[1 3]">
++                        <cell index="1" type="struct" size="[1 1]">
++                            <name index="1" type="char" size="[1 4]">fast</name>
++                            <OffsetT0Fac index="1" type="double" size="[1 1]">[ 1]</OffsetT0Fac>
++                            <SlopeA0 index="1" type="double" size="[1 1]">[ 1]</SlopeA0>
++                        </cell>
++                        <cell index="2" type="struct" size="[1 1]">
++                            <name index="1" type="char" size="[1 6]">normal</name>
++                            <OffsetT0Fac index="1" type="double" size="[1 1]">[ 2]</OffsetT0Fac>
++                            <SlopeA0 index="1" type="double" size="[1 1]">[ 0.9]</SlopeA0>
++                        </cell>
++                        <cell index="3" type="struct" size="[1 1]">
++                            <name index="1" type="char" size="[1 4]">slow</name>
++                            <OffsetT0Fac index="1" type="double" size="[1 1]">[ 4]</OffsetT0Fac>
++                            <SlopeA0 index="1" type="double" size="[1 1]">[ 0.9]</SlopeA0>
++                        </cell>
++                    </PrioritySchemes>
++                </cell>
++            </ECM>
++            <aFpsMaxGain index="1" type="double" size="[1 1]">[ 8]</aFpsMaxGain>
++        </AEC>
++        <BLS index="1" type="cell" size="[1 1]">
++            <cell index="1" type="struct" size="[1 1]">
++                <name index="1" type="char" size="[1 9]">1920x1080</name>
++                <resolution index="1" type="char" size="[1 9]">1920x1080</resolution>
++                <blsData index="1" type="double" size="[1 4]">[64 64 64 64]</blsData>
++            </cell>
++        </BLS>
++        <DEGAMMA index="1" type="cell" size="[1 1]">
++            <cell index="1" type="struct" size="[1 1]">
++                <name index="1" type="char" size="[1 6]">linear</name>
++                <degamma_dx index="1" type="double" size="[1 16]">[256 512 768 1024 1280 1536 1792 2048 2304 2560 2816 3072 3328 3584 3840 4096]</degamma_dx>
++                <degamma_y index="1" type="double" size="[1 17]">[0 256 512 768 1024 1280 1536 1792 2048 2304 2560 2816 3072 3328 3584 3840 4095]</degamma_y>
++            </cell>
++        </DEGAMMA>
++        <WDR index="1" type="struct" size="[1 1]">
++            <tbd index="1" type="double" size="[1 1]">[ -1]</tbd>
++            <curve1 index="1" type="struct" size="[1 1]">
++                <xval index="1" type="double" size="[1 33]">[-1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1]</xval>
++                <yval index="1" type="double" size="[1 33]">[-1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1]</yval>
++            </curve1>
++            <curve2 index="1" type="struct" size="[1 1]">
++                <xval index="1" type="double" size="[1 33]">[-1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1]</xval>
++                <yval index="1" type="double" size="[1 33]">[-1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1]</yval>
++            </curve2>
++        </WDR>
++        <CAC index="1" type="cell" size="[1 1]">
++            <cell index="1" type="struct" size="[1 1]">
++                <name index="1" type="char" size="[1 9]">1920x1080</name>
++                <resolution index="1" type="char" size="[1 9]">1920x1080</resolution>
++                <x_normshift index="1" type="double" size="[1 1]">[ 6]</x_normshift>
++                <x_normfactor index="1" type="double" size="[1 1]">[ 29]</x_normfactor>
++                <y_normshift index="1" type="double" size="[1 1]">[ 6]</y_normshift>
++                <y_normfactor index="1" type="double" size="[1 1]">[ 29]</y_normfactor>
++                <x_offset index="1" type="double" size="[1 1]">[ 0]</x_offset>
++                <y_offset index="1" type="double" size="[1 1]">[ 0]</y_offset>
++                <red_parameters index="1" type="double" size="[1 3]">[1.5 -2.8125 2]</red_parameters>
++                <blue_parameters index="1" type="double" size="[1 3]">[-0.625 -3.0625 4.4375]</blue_parameters>
++            </cell>
++        </CAC>
++        <DPF index="1" type="cell" size="[1 1]">
++            <cell index="1" type="struct" size="[1 1]">
++                <name index="1" type="char" size="[1 9]">1920x1080</name>
++                <resolution index="1" type="char" size="[1 9]">1920x1080</resolution>
++                <NLL_SEGMENTATION index="1" type="double" size="[1 1]">[ 1]</NLL_SEGMENTATION>
++                <nll_coeff_n index="1" type="double" size="[1 17]">[749 317 235 195 170 140 122 109 100 87 78 71 62 55 50 47 44]</nll_coeff_n>
++                <SigmaGreen index="1" type="double" size="[1 1]">[ 4]</SigmaGreen>
++                <SigmaRedBlue index="1" type="double" size="[1 1]">[ 4]</SigmaRedBlue>
++                <Gradient index="1" type="double" size="[1 1]">[ 0.15]</Gradient>
++                <Offset index="1" type="double" size="[1 1]">[ 0]</Offset>
++                <NlGains index="1" type="double" size="[1 4]">[1 1 1 1]</NlGains>
++            </cell>
++        </DPF>
++        <DPCC index="1" type="cell" size="[1 1]">
++            <cell index="1" type="struct" size="[1 1]">
++                <name index="1" type="char" size="[1 9]">1920x1080</name>
++                <resolution index="1" type="char" size="[1 9]">1920x1080</resolution>
++                <register index="1" type="cell" size="[1 23]">
++                    <cell index="1" type="struct" size="[1 1]">
++                        <name index="1" type="char" size="[1 13]">ISP_DPCC_MODE</name>
++                        <value index="1" type="char" size="[1 6]">0x0004</value>
++                    </cell>
++                    <cell index="2" type="struct" size="[1 1]">
++                        <name index="1" type="char" size="[1 17]">ISP_DPCC_OUT_MODE</name>
++                        <value index="1" type="char" size="[1 6]">0x0003</value>
++                    </cell>
++                    <cell index="3" type="struct" size="[1 1]">
++                        <name index="1" type="char" size="[1 16]">ISP_DPCC_SET_USE</name>
++                        <value index="1" type="char" size="[1 6]">0x0007</value>
++                    </cell>
++                    <cell index="4" type="struct" size="[1 1]">
++                        <name index="1" type="char" size="[1 21]">ISP_DPCC_METHODS_SET1</name>
++                        <value index="1" type="char" size="[1 6]">0x1D1D</value>
++                    </cell>
++                    <cell index="5" type="struct" size="[1 1]">
++                        <name index="1" type="char" size="[1 21]">ISP_DPCC_METHODS_SET2</name>
++                        <value index="1" type="char" size="[1 6]">0x0707</value>
++                    </cell>
++                    <cell index="6" type="struct" size="[1 1]">
++                        <name index="1" type="char" size="[1 21]">ISP_DPCC_METHODS_SET3</name>
++                        <value index="1" type="char" size="[1 6]">0x1F1F</value>
++                    </cell>
++                    <cell index="7" type="struct" size="[1 1]">
++                        <name index="1" type="char" size="[1 22]">ISP_DPCC_LINE_THRESH_1</name>
++                        <value index="1" type="char" size="[1 6]">0x0808</value>
++                    </cell>
++                    <cell index="8" type="struct" size="[1 1]">
++                        <name index="1" type="char" size="[1 23]">ISP_DPCC_LINE_MAD_FAC_1</name>
++                        <value index="1" type="char" size="[1 6]">0x0404</value>
++                    </cell>
++                    <cell index="9" type="struct" size="[1 1]">
++                        <name index="1" type="char" size="[1 17]">ISP_DPCC_PG_FAC_1</name>
++                        <value index="1" type="char" size="[1 6]">0x0403</value>
++                    </cell>
++                    <cell index="10" type="struct" size="[1 1]">
++                        <name index="1" type="char" size="[1 21]">ISP_DPCC_RND_THRESH_1</name>
++                        <value index="1" type="char" size="[1 6]">0x0A0A</value>
++                    </cell>
++                    <cell index="11" type="struct" size="[1 1]">
++                        <name index="1" type="char" size="[1 17]">ISP_DPCC_RG_FAC_1</name>
++                        <value index="1" type="char" size="[1 6]">0x2020</value>
++                    </cell>
++                    <cell index="12" type="struct" size="[1 1]">
++                        <name index="1" type="char" size="[1 22]">ISP_DPCC_LINE_THRESH_2</name>
++                        <value index="1" type="char" size="[1 6]">0x100C</value>
++                    </cell>
++                    <cell index="13" type="struct" size="[1 1]">
++                        <name index="1" type="char" size="[1 23]">ISP_DPCC_LINE_MAD_FAC_2</name>
++                        <value index="1" type="char" size="[1 6]">0x1810</value>
++                    </cell>
++                    <cell index="14" type="struct" size="[1 1]">
++                        <name index="1" type="char" size="[1 17]">ISP_DPCC_PG_FAC_2</name>
++                        <value index="1" type="char" size="[1 6]">0x0403</value>
++                    </cell>
++                    <cell index="15" type="struct" size="[1 1]">
++                        <name index="1" type="char" size="[1 21]">ISP_DPCC_RND_THRESH_2</name>
++                        <value index="1" type="char" size="[1 6]">0x0808</value>
++                    </cell>
++                    <cell index="16" type="struct" size="[1 1]">
++                        <name index="1" type="char" size="[1 17]">ISP_DPCC_RG_FAC_2</name>
++                        <value index="1" type="char" size="[1 6]">0x0808</value>
++                    </cell>
++                    <cell index="17" type="struct" size="[1 1]">
++                        <name index="1" type="char" size="[1 22]">ISP_DPCC_LINE_THRESH_3</name>
++                        <value index="1" type="char" size="[1 6]">0x2020</value>
++                    </cell>
++                    <cell index="18" type="struct" size="[1 1]">
++                        <name index="1" type="char" size="[1 23]">ISP_DPCC_LINE_MAD_FAC_3</name>
++                        <value index="1" type="char" size="[1 6]">0x0404</value>
++                    </cell>
++                    <cell index="19" type="struct" size="[1 1]">
++                        <name index="1" type="char" size="[1 17]">ISP_DPCC_PG_FAC_3</name>
++                        <value index="1" type="char" size="[1 6]">0x0403</value>
++                    </cell>
++                    <cell index="20" type="struct" size="[1 1]">
++                        <name index="1" type="char" size="[1 21]">ISP_DPCC_RND_THRESH_3</name>
++                        <value index="1" type="char" size="[1 6]">0x0806</value>
++                    </cell>
++                    <cell index="21" type="struct" size="[1 1]">
++                        <name index="1" type="char" size="[1 17]">ISP_DPCC_RG_FAC_3</name>
++                        <value index="1" type="char" size="[1 6]">0x0404</value>
++                    </cell>
++                    <cell index="22" type="struct" size="[1 1]">
++                        <name index="1" type="char" size="[1 18]">ISP_DPCC_RO_LIMITS</name>
++                        <value index="1" type="char" size="[1 6]">0x0A0A</value>
++                    </cell>
++                    <cell index="23" type="struct" size="[1 1]">
++                        <name index="1" type="char" size="[1 17]">ISP_DPCC_RND_OFFS</name>
++                        <value index="1" type="char" size="[1 6]">0x0FFF</value>
++                    </cell>
++                </register>
++            </cell>
++        </DPCC>
++    </sensor>
++    <system type="struct" size="[1 1]">
++        <AFPS index="1" type="struct" size="[1 1]">
++            <aFpsDefault index="1" type="char" size="[1 2]">on</aFpsDefault>
++        </AFPS>
++    </system>
++    <tuning>
++        <ae enable="true" bypass="false">
++            <afps>false</afps>
++            <flicker.period>1</flicker.period>
++            <damping.over>0.2</damping.over>
++            <damping.under>0.30000001</damping.under>
++            <set.point>80.199997</set.point>
++            <tolerance>20.1</tolerance>
++            <weight>[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]</weight>
++        </ae>
++        <af enable="true">
++            <algorithm oneshot="false">2</algorithm>
++            <position>0</position>
++            <mode>2</mode>
++        </af>
++        <avs/>
++        <awb enable="true">
++            <damping>true</damping>
++            <index>4</index>
++            <mode>2</mode>
++        </awb>
++        <bls bypass="true">
++            <red>64</red>
++            <green.b>64</green.b>
++            <green.r>64</green.r>
++            <blue>64</blue>
++        </bls>
++        <cac enable="true"/>
++        <cnr enable="false">
++            <threshold.tc.1>0</threshold.tc.1>
++            <threshold.tc.2>0</threshold.tc.2>
++        </cnr>
++        <cproc enable="true">
++            <config>AQAAAAEAAAABAAAAAACNP+sAAAAAAIA/AAAAAA==</config>
++        </cproc>
++        <dehaze/>
++        <demosaic enable="true">
++            <threshold>0</threshold>
++        </demosaic>
++        <dewarp enable="false"/>
++        <dnr2/>
++        <dnr3/>
++        <dpcc enable="true"/>
++        <dpf enable="true" adaptive="true">
++            <division.factor>64</division.factor>
++            <gradient>0.15000001</gradient>
++            <minimum.bound>2</minimum.bound>
++            <offset>0</offset>
++            <sigma.green>1</sigma.green>
++            <sigma.red.blue>1</sigma.red.blue>
++        </dpf>
++        <ee/>
++        <filter enable="true" auto="false">
++            <denoise>0</denoise>
++            <sharpen>3</sharpen>
++            <table>{"columns":["HDR","Gain","Integration Time","Denoising","Sharpening"],"rows":[]}</table>
++        </filter>
++        <gc enable="true">
++            <curve>AQAAAAAASQCJALcA3wAfAVQBgwGtAfYBNQJvAtMCKgN4A78D/wMAAA==</curve>
++        </gc>
++        <hdr enable="false">
++            <exposure.ratio>16</exposure.ratio>
++            <extension.bit>3</extension.bit>
++        </hdr>
++        <ie/>
++        <images>
++            <image>
++                <file.name></file.name>
++            </image>
++        </images>
++        <inputs>
++            <input>
++                <type>1</type>
++            </input>
++            <index>0</index>
++        </inputs>
++        <lsc enable="true" adaptive="false"/>
++        <paths>
++            <path index="0">
++                <height>1080</height>
++                <layout>2</layout>
++                <mode>4</mode>
++                <width>1920</width>
++            </path>
++            <path index="1">
++                <height>0</height>
++                <layout>2</layout>
++                <mode>1</mode>
++                <width>0</width>
++            </path>
++            <path index="2">
++                <height>0</height>
++                <layout>2</layout>
++                <mode>1</mode>
++                <width>0</width>
++            </path>
++            <path index="3">
++                <height>0</height>
++                <layout>2</layout>
++                <mode>1</mode>
++                <width>0</width>
++            </path>
++            <path index="4">
++                <height>0</height>
++                <layout>2</layout>
++                <mode>1</mode>
++                <width>0</width>
++            </path>
++        </paths>
++        <sensors>
++            <sensor>
++                <driver.file>imx219.drv</driver.file>
++                <ec>
++                    <gain>2.9169922</gain>
++                    <integration.time>0.029998019</integration.time>
++                </ec>
++                <test.pattern>false</test.pattern>
++            </sensor>
++        </sensors>
++        <simp enable="true"/>
++        <wb>
++            <cc.matrix>[2.2265625,-1.1484375,-0.0234375,-0.4296875,1.96875,-0.515625,-0.0546875,-0.75,1.8125]</cc.matrix>
++            <cc.offset>
++                <blue>-32</blue>
++                <green>-34</green>
++                <red>-46</red>
++            </cc.offset>
++            <wb.gains>
++                <blue>1.4648438</blue>
++                <green.b>1</green.b>
++                <green.r>1</green.r>
++                <red>1.7578125</red>
++            </wb.gains>
++        </wb>
++        <wdr>
++            <v1 enable="true">
++                <d.y>[0,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]</d.y>
++                <y.m>[0,124,248,372,496,620,744,868,992,1117,1241,1365,1489,1613,1737,1861,1985,2110,2234,2358,2482,2606,2730,2854,2978,3103,3227,3351,3475,3599,3723,3847,3971]</y.m>
++            </v1>
++            <v3 enable="true" auto="true">
++                <auto.level>0</auto.level>
++                <gain.max>2</gain.max>
++                <strength>100</strength>
++                <strength.global>0</strength.global>
++                <table>{"columns":["HDR","Gain","Integration Time","Strength","Max Gain","Global Curve"],"rows":[]}</table>
++            </v3>
++        </wdr>
++    </tuning>
++</matfile>
++
+diff --git a/units/isi/drv/IMX219/source/IMX219.c b/units/isi/drv/IMX219/source/IMX219.c
+new file mode 100644
+index 000000000..252436f58
+--- /dev/null
++++ b/units/isi/drv/IMX219/source/IMX219.c
+@@ -0,0 +1,1322 @@
++/******************************************************************************\
++|* Copyright (c) 2020 by VeriSilicon Holdings Co., Ltd. ("VeriSilicon")       *|
++|* All Rights Reserved.                                                       *|
++|*                                                                            *|
++|* The material in this file is confidential and contains trade secrets of    *|
++|* of VeriSilicon.  This is proprietary information owned or licensed by      *|
++|* VeriSilicon.  No part of this work may be disclosed, reproduced, copied,   *|
++|* transmitted, or used in any way for any purpose, without the express       *|
++|* written permission of VeriSilicon.                                         *|
++|*                                                                            *|
++\******************************************************************************/
++//#undef NDEBUG
++
++#include <ebase/types.h>
++#include <ebase/trace.h>
++#include <ebase/builtins.h>
++#include <common/return_codes.h>
++#include <common/misc.h>
++#include <sys/ioctl.h>
++#include <fcntl.h>
++#include "isi.h"
++#include "isi_iss.h"
++#include "isi_priv.h"
++#include "vvsensor.h"
++
++CREATE_TRACER( IMX219_INFO , "IMX219: ", INFO,    0);
++CREATE_TRACER( IMX219_WARN , "IMX219: ", WARNING, 0);
++CREATE_TRACER( IMX219_ERROR, "IMX219: ", ERROR,   1);
++
++#ifdef SUBDEV_V4L2
++#include <sys/ioctl.h>
++#include <sys/mman.h>
++#include <fcntl.h>
++#include <linux/videodev2.h>
++#include <linux/v4l2-subdev.h>
++//#undef TRACE
++//#define TRACE(x, ...)
++//#define TRACE(a,...) (printf(__VA_ARGS__))
++
++#endif
++
++static const char SensorName[16] = "imx219";
++
++typedef struct IMX219_Context_s
++{
++    IsiSensorContext_t  IsiCtx;
++    struct vvcam_mode_info_s CurMode;
++    IsiSensorAeInfo_t AeInfo;
++    IsiSensorIntTime_t IntTime;
++    uint32_t LongIntLine;
++    uint32_t IntLine;
++    uint32_t ShortIntLine;
++    IsiSensorGain_t SensorGain;
++    uint32_t minAfps;
++    uint64_t AEStartExposure;
++} IMX219_Context_t;
++
++static RESULT IMX219_IsiSensorSetPowerIss(IsiSensorHandle_t handle, bool_t on)
++{
++    int ret = 0;
++
++    TRACE( IMX219_INFO, "%s: (enter)\n", __func__);
++    TRACE( IMX219_INFO, "%s: set power %d\n", __func__,on);
++
++    IMX219_Context_t *pIMX219Ctx = (IMX219_Context_t *) handle;
++    HalContext_t *pHalCtx = (HalContext_t *) pIMX219Ctx->IsiCtx.HalHandle;
++
++    int32_t power = on;
++    ret = ioctl(pHalCtx->sensor_fd, VVSENSORIOC_S_POWER, &power);
++    if (ret != 0){
++        TRACE(IMX219_ERROR, "%s set power %d error\n", __func__,power);
++        return RET_FAILURE;
++    }
++
++    TRACE( IMX219_INFO, "%s: (exit)\n", __func__);
++
++    return RET_SUCCESS;
++}
++
++static RESULT IMX219_IsiSensorGetClkIss(IsiSensorHandle_t handle,
++                                        struct vvcam_clk_s *pclk)
++{
++    int ret = 0;
++
++    TRACE( IMX219_INFO, "%s: (enter)\n", __func__);
++
++    IMX219_Context_t *pIMX219Ctx = (IMX219_Context_t *) handle;
++    HalContext_t *pHalCtx = (HalContext_t *) pIMX219Ctx->IsiCtx.HalHandle;
++
++    if (!pclk)
++        return RET_NULL_POINTER;
++
++    ret = ioctl(pHalCtx->sensor_fd, VVSENSORIOC_G_CLK, pclk);
++    if (ret != 0) {
++        TRACE(IMX219_ERROR, "%s get clock error\n", __func__);
++        return RET_FAILURE;
++    } 
++    
++    TRACE( IMX219_INFO, "%s: status:%d sensor_mclk:%ld csi_max_pixel_clk:%ld\n",
++        __func__, pclk->status, pclk->sensor_mclk, pclk->csi_max_pixel_clk);
++    TRACE( IMX219_INFO, "%s: (exit)\n", __func__);
++
++    return RET_SUCCESS;
++}
++
++static RESULT IMX219_IsiSensorSetClkIss(IsiSensorHandle_t handle,
++                                        struct vvcam_clk_s *pclk)
++{
++    int ret = 0;
++
++    TRACE( IMX219_INFO, "%s: (enter)\n", __func__);
++
++    IMX219_Context_t *pIMX219Ctx = (IMX219_Context_t *) handle;
++    HalContext_t *pHalCtx = (HalContext_t *) pIMX219Ctx->IsiCtx.HalHandle;
++
++    if (pclk == NULL)
++        return RET_NULL_POINTER;
++    
++    ret = ioctl(pHalCtx->sensor_fd, VVSENSORIOC_S_CLK, &pclk);
++    if (ret != 0) {
++        TRACE(IMX219_ERROR, "%s set clk error\n", __func__);
++        return RET_FAILURE;
++    }
++
++    TRACE( IMX219_INFO, "%s: status:%d sensor_mclk:%ld csi_max_pixel_clk:%ld\n",
++        __func__, pclk->status, pclk->sensor_mclk, pclk->csi_max_pixel_clk);
++
++    TRACE( IMX219_INFO, "%s: (exit)\n", __func__);
++
++    return RET_SUCCESS;
++}
++
++static RESULT IMX219_IsiResetSensorIss(IsiSensorHandle_t handle)
++{
++    int ret = 0;
++
++    TRACE( IMX219_INFO, "%s: (enter)\n", __func__);
++
++    IMX219_Context_t *pIMX219Ctx = (IMX219_Context_t *) handle;
++    HalContext_t *pHalCtx = (HalContext_t *) pIMX219Ctx->IsiCtx.HalHandle;
++
++    ret = ioctl(pHalCtx->sensor_fd, VVSENSORIOC_RESET, NULL);
++    if (ret != 0) {
++        TRACE(IMX219_ERROR, "%s set reset error\n", __func__);
++        return RET_FAILURE;
++    }
++
++    TRACE( IMX219_INFO, "%s: (exit)\n", __func__);
++
++    return RET_SUCCESS;
++}
++
++static RESULT IMX219_IsiRegisterReadIss(IsiSensorHandle_t handle,
++                                        const uint32_t address,
++                                        uint32_t * pValue)
++{
++    int32_t ret = 0;
++
++    TRACE(IMX219_INFO, "%s (enter)\n", __func__);
++
++    IMX219_Context_t *pIMX219Ctx = (IMX219_Context_t *) handle;
++    HalContext_t *pHalCtx = (HalContext_t *) pIMX219Ctx->IsiCtx.HalHandle;
++
++    struct vvcam_sccb_data_s sccb_data;
++    sccb_data.addr = address;
++    sccb_data.data = 0;
++    ret = ioctl(pHalCtx->sensor_fd, VVSENSORIOC_READ_REG, &sccb_data);
++    if (ret != 0) {
++        TRACE(IMX219_ERROR, "%s: read sensor register error!\n", __func__);
++        return (RET_FAILURE);
++    }
++
++    *pValue = sccb_data.data;
++
++    TRACE(IMX219_INFO, "%s (exit) \n", __func__);
++
++    return RET_SUCCESS;
++}
++
++static RESULT IMX219_IsiRegisterWriteIss(IsiSensorHandle_t handle,
++                                        const uint32_t address,
++                                        const uint32_t value)
++{
++    int ret = 0;
++
++    TRACE(IMX219_INFO, "%s (enter)\n", __func__);
++
++    IMX219_Context_t *pIMX219Ctx = (IMX219_Context_t *) handle;
++    HalContext_t *pHalCtx = (HalContext_t *) pIMX219Ctx->IsiCtx.HalHandle;
++
++    struct vvcam_sccb_data_s sccb_data;
++    sccb_data.addr = address;
++    sccb_data.data = value;
++
++    ret = ioctl(pHalCtx->sensor_fd, VVSENSORIOC_WRITE_REG, &sccb_data);
++    if (ret != 0) {
++        TRACE(IMX219_ERROR, "%s: write sensor register error!\n", __func__);
++        return (RET_FAILURE);
++    }
++
++    TRACE(IMX219_INFO, "%s (exit) \n", __func__);
++
++    return RET_SUCCESS;
++}
++
++static RESULT IMX219_UpdateIsiAEInfo(IsiSensorHandle_t handle)
++{
++    IMX219_Context_t *pIMX219Ctx = (IMX219_Context_t *) handle;
++
++    uint32_t exp_line_time = pIMX219Ctx->CurMode.ae_info.one_line_exp_time_ns;
++
++    IsiSensorAeInfo_t *pAeInfo = &pIMX219Ctx->AeInfo;
++    pAeInfo->oneLineExpTime = (exp_line_time << ISI_EXPO_PARAS_FIX_FRACBITS) / 1000;
++
++    if (pIMX219Ctx->CurMode.hdr_mode == SENSOR_MODE_LINEAR) {
++        pAeInfo->maxIntTime.linearInt =
++            pIMX219Ctx->CurMode.ae_info.max_integration_line * pAeInfo->oneLineExpTime;
++        pAeInfo->minIntTime.linearInt =
++            pIMX219Ctx->CurMode.ae_info.min_integration_line * pAeInfo->oneLineExpTime;
++        pAeInfo->maxAGain.linearGainParas = pIMX219Ctx->CurMode.ae_info.max_again;
++        pAeInfo->minAGain.linearGainParas = pIMX219Ctx->CurMode.ae_info.min_again;
++        pAeInfo->maxDGain.linearGainParas = pIMX219Ctx->CurMode.ae_info.max_dgain;
++        pAeInfo->minDGain.linearGainParas = pIMX219Ctx->CurMode.ae_info.min_dgain;
++    } else {
++        switch (pIMX219Ctx->CurMode.stitching_mode) {
++            case SENSOR_STITCHING_DUAL_DCG:
++            case SENSOR_STITCHING_3DOL:
++            case SENSOR_STITCHING_LINEBYLINE:
++                pAeInfo->maxIntTime.triInt.triSIntTime =
++                    pIMX219Ctx->CurMode.ae_info.max_vsintegration_line * pAeInfo->oneLineExpTime;
++                pAeInfo->minIntTime.triInt.triSIntTime =
++                    pIMX219Ctx->CurMode.ae_info.min_vsintegration_line * pAeInfo->oneLineExpTime;
++                
++                pAeInfo->maxIntTime.triInt.triIntTime =
++                    pIMX219Ctx->CurMode.ae_info.max_integration_line * pAeInfo->oneLineExpTime;
++                pAeInfo->minIntTime.triInt.triIntTime =
++                    pIMX219Ctx->CurMode.ae_info.min_integration_line * pAeInfo->oneLineExpTime;
++
++                if (pIMX219Ctx->CurMode.stitching_mode == SENSOR_STITCHING_DUAL_DCG) {
++                    pAeInfo->maxIntTime.triInt.triLIntTime = pAeInfo->maxIntTime.triInt.triIntTime;
++                    pAeInfo->minIntTime.triInt.triLIntTime = pAeInfo->minIntTime.triInt.triIntTime;
++                } else {
++                    pAeInfo->maxIntTime.triInt.triLIntTime =
++                        pIMX219Ctx->CurMode.ae_info.max_longintegration_line * pAeInfo->oneLineExpTime;
++                    pAeInfo->minIntTime.triInt.triLIntTime =
++                        pIMX219Ctx->CurMode.ae_info.min_longintegration_line * pAeInfo->oneLineExpTime;
++                }
++
++                pAeInfo->maxAGain.triGainParas.triSGain = pIMX219Ctx->CurMode.ae_info.max_short_again;
++                pAeInfo->minAGain.triGainParas.triSGain = pIMX219Ctx->CurMode.ae_info.min_short_again;
++                pAeInfo->maxDGain.triGainParas.triSGain = pIMX219Ctx->CurMode.ae_info.max_short_dgain;
++                pAeInfo->minDGain.triGainParas.triSGain = pIMX219Ctx->CurMode.ae_info.min_short_dgain;
++
++                pAeInfo->maxAGain.triGainParas.triGain = pIMX219Ctx->CurMode.ae_info.max_again;
++                pAeInfo->minAGain.triGainParas.triGain = pIMX219Ctx->CurMode.ae_info.min_again;
++                pAeInfo->maxDGain.triGainParas.triGain = pIMX219Ctx->CurMode.ae_info.max_dgain;
++                pAeInfo->minDGain.triGainParas.triGain = pIMX219Ctx->CurMode.ae_info.min_dgain;
++
++                pAeInfo->maxAGain.triGainParas.triLGain = pIMX219Ctx->CurMode.ae_info.max_long_again;
++                pAeInfo->minAGain.triGainParas.triLGain = pIMX219Ctx->CurMode.ae_info.min_long_again;
++                pAeInfo->maxDGain.triGainParas.triLGain = pIMX219Ctx->CurMode.ae_info.max_long_dgain;
++                pAeInfo->minDGain.triGainParas.triLGain = pIMX219Ctx->CurMode.ae_info.min_long_dgain;
++                break;
++            case SENSOR_STITCHING_DUAL_DCG_NOWAIT:
++            case SENSOR_STITCHING_16BIT_COMPRESS:
++            case SENSOR_STITCHING_L_AND_S:
++            case SENSOR_STITCHING_2DOL:
++                pAeInfo->maxIntTime.dualInt.dualIntTime =
++                    pIMX219Ctx->CurMode.ae_info.max_integration_line * pAeInfo->oneLineExpTime;
++                pAeInfo->minIntTime.dualInt.dualIntTime =
++                    pIMX219Ctx->CurMode.ae_info.min_integration_line * pAeInfo->oneLineExpTime;
++
++                if (pIMX219Ctx->CurMode.stitching_mode == SENSOR_STITCHING_DUAL_DCG_NOWAIT) {
++                    pAeInfo->maxIntTime.dualInt.dualSIntTime = pAeInfo->maxIntTime.dualInt.dualIntTime;
++                    pAeInfo->minIntTime.dualInt.dualSIntTime = pAeInfo->minIntTime.dualInt.dualIntTime;
++                } else {
++                    pAeInfo->maxIntTime.dualInt.dualSIntTime =
++                        pIMX219Ctx->CurMode.ae_info.max_vsintegration_line * pAeInfo->oneLineExpTime;
++                    pAeInfo->minIntTime.dualInt.dualSIntTime =
++                        pIMX219Ctx->CurMode.ae_info.min_vsintegration_line * pAeInfo->oneLineExpTime;
++                }
++                
++                if (pIMX219Ctx->CurMode.stitching_mode == SENSOR_STITCHING_DUAL_DCG_NOWAIT) {
++                    pAeInfo->maxAGain.dualGainParas.dualSGain = pIMX219Ctx->CurMode.ae_info.max_again;
++                    pAeInfo->minAGain.dualGainParas.dualSGain = pIMX219Ctx->CurMode.ae_info.min_again;
++                    pAeInfo->maxDGain.dualGainParas.dualSGain = pIMX219Ctx->CurMode.ae_info.max_dgain;
++                    pAeInfo->minDGain.dualGainParas.dualSGain = pIMX219Ctx->CurMode.ae_info.min_dgain;
++                    pAeInfo->maxAGain.dualGainParas.dualGain  = pIMX219Ctx->CurMode.ae_info.max_long_again;
++                    pAeInfo->minAGain.dualGainParas.dualGain  = pIMX219Ctx->CurMode.ae_info.min_long_again;
++                    pAeInfo->maxDGain.dualGainParas.dualGain  = pIMX219Ctx->CurMode.ae_info.max_long_dgain;
++                    pAeInfo->minDGain.dualGainParas.dualGain  = pIMX219Ctx->CurMode.ae_info.min_long_dgain;
++                } else {
++                    pAeInfo->maxAGain.dualGainParas.dualSGain = pIMX219Ctx->CurMode.ae_info.max_short_again;
++                    pAeInfo->minAGain.dualGainParas.dualSGain = pIMX219Ctx->CurMode.ae_info.min_short_again;
++                    pAeInfo->maxDGain.dualGainParas.dualSGain = pIMX219Ctx->CurMode.ae_info.max_short_dgain;
++                    pAeInfo->minDGain.dualGainParas.dualSGain = pIMX219Ctx->CurMode.ae_info.min_short_dgain;
++                    pAeInfo->maxAGain.dualGainParas.dualGain  = pIMX219Ctx->CurMode.ae_info.max_again;
++                    pAeInfo->minAGain.dualGainParas.dualGain  = pIMX219Ctx->CurMode.ae_info.min_again;
++                    pAeInfo->maxDGain.dualGainParas.dualGain  = pIMX219Ctx->CurMode.ae_info.max_dgain;
++                    pAeInfo->minDGain.dualGainParas.dualGain  = pIMX219Ctx->CurMode.ae_info.min_dgain;
++                }
++                
++                break;
++            default:
++                break;
++        }
++    }
++    pAeInfo->gainStep = pIMX219Ctx->CurMode.ae_info.gain_step;
++    pAeInfo->currFps  = pIMX219Ctx->CurMode.ae_info.cur_fps;
++    pAeInfo->maxFps   = pIMX219Ctx->CurMode.ae_info.max_fps;
++    pAeInfo->minFps   = pIMX219Ctx->CurMode.ae_info.min_fps;
++    pAeInfo->minAfps  = pIMX219Ctx->CurMode.ae_info.min_afps;
++    pAeInfo->hdrRatio[0] = pIMX219Ctx->CurMode.ae_info.hdr_ratio.ratio_l_s;
++    pAeInfo->hdrRatio[1] = pIMX219Ctx->CurMode.ae_info.hdr_ratio.ratio_s_vs;
++
++    pAeInfo->intUpdateDlyFrm = pIMX219Ctx->CurMode.ae_info.int_update_delay_frm;
++    pAeInfo->gainUpdateDlyFrm = pIMX219Ctx->CurMode.ae_info.gain_update_delay_frm;
++
++    if (pIMX219Ctx->minAfps != 0) {
++        pAeInfo->minAfps = pIMX219Ctx->minAfps;
++    } 
++    return RET_SUCCESS;
++}
++
++static RESULT IMX219_IsiGetSensorModeIss(IsiSensorHandle_t handle,
++                                         IsiSensorMode_t *pMode)
++{
++    IMX219_Context_t *pIMX219Ctx = (IMX219_Context_t *) handle;
++
++    TRACE(IMX219_INFO, "%s (enter)\n", __func__);
++
++    if (pMode == NULL)
++        return (RET_NULL_POINTER);
++
++    memcpy(pMode, &pIMX219Ctx->CurMode, sizeof(IsiSensorMode_t));
++
++    TRACE(IMX219_INFO, "%s (exit) \n", __func__);
++
++    return RET_SUCCESS;
++}
++
++static RESULT IMX219_IsiSetSensorModeIss(IsiSensorHandle_t handle,
++                                         IsiSensorMode_t *pMode)
++{
++    int ret = 0;
++
++    TRACE(IMX219_INFO, "%s (enter)\n", __func__);
++
++    IMX219_Context_t *pIMX219Ctx = (IMX219_Context_t *) handle;
++    HalContext_t *pHalCtx = (HalContext_t *) pIMX219Ctx->IsiCtx.HalHandle;
++
++    if (pMode == NULL)
++        return (RET_NULL_POINTER);
++
++    struct vvcam_mode_info_s sensor_mode;
++    memset(&sensor_mode, 0, sizeof(struct vvcam_mode_info_s));
++    sensor_mode.index = pMode->index;
++
++    ret = ioctl(pHalCtx->sensor_fd, VVSENSORIOC_S_SENSOR_MODE, &sensor_mode);
++    if (ret != 0) {
++        TRACE(IMX219_ERROR, "%s set sensor mode error\n", __func__);
++        return RET_FAILURE;
++    }
++
++    memset(&sensor_mode, 0, sizeof(struct vvcam_mode_info_s));
++    ret = ioctl(pHalCtx->sensor_fd, VVSENSORIOC_G_SENSOR_MODE, &sensor_mode);
++    if (ret != 0) {
++        TRACE(IMX219_ERROR, "%s set sensor mode failed", __func__);
++        return RET_FAILURE;
++    }
++    memcpy(&pIMX219Ctx->CurMode, &sensor_mode, sizeof(struct vvcam_mode_info_s));
++    IMX219_UpdateIsiAEInfo(handle);
++
++    TRACE(IMX219_INFO, "%s (exit) \n", __func__);
++
++    return RET_SUCCESS;
++}
++
++static RESULT IMX219_IsiSensorSetStreamingIss(IsiSensorHandle_t handle,
++                                              bool_t on)
++{
++    int ret = 0;
++
++    TRACE(IMX219_INFO, "%s (enter)\n", __func__);
++
++    IMX219_Context_t *pIMX219Ctx = (IMX219_Context_t *) handle;
++    HalContext_t *pHalCtx = (HalContext_t *) pIMX219Ctx->IsiCtx.HalHandle;
++
++    uint32_t status = on;
++    ret = ioctl(pHalCtx->sensor_fd, VVSENSORIOC_S_STREAM, &status);
++    if (ret != 0){
++        TRACE(IMX219_ERROR, "%s set sensor stream %d error\n", __func__,ret);
++        return RET_FAILURE;
++    }
++
++    TRACE(IMX219_INFO, "%s: set streaming %d\n", __func__, on);
++    TRACE(IMX219_INFO, "%s (exit) \n", __func__);
++
++    return RET_SUCCESS;
++}
++
++static RESULT IMX219_IsiCreateSensorIss(IsiSensorInstanceConfig_t * pConfig)
++{
++    RESULT result = RET_SUCCESS;
++    IMX219_Context_t *pIMX219Ctx;
++
++    TRACE(IMX219_INFO, "%s (enter)\n", __func__);
++
++    if (!pConfig || !pConfig->pSensor || !pConfig->HalHandle)
++        return RET_NULL_POINTER;
++
++    pIMX219Ctx = (IMX219_Context_t *) malloc(sizeof(IMX219_Context_t));
++    if (!pIMX219Ctx)
++        return RET_OUTOFMEM;
++
++    memset(pIMX219Ctx, 0, sizeof(IMX219_Context_t));
++    pIMX219Ctx->IsiCtx.HalHandle = pConfig->HalHandle;
++    pIMX219Ctx->IsiCtx.pSensor   = pConfig->pSensor;
++    pConfig->hSensor = (IsiSensorHandle_t) pIMX219Ctx;
++
++    result = IMX219_IsiSensorSetPowerIss(pIMX219Ctx, BOOL_TRUE);
++    if (result != RET_SUCCESS) {
++        TRACE(IMX219_ERROR, "%s set power error\n", __func__);
++        return RET_FAILURE;
++    }
++    struct vvcam_clk_s clk;
++    memset(&clk, 0, sizeof(struct vvcam_clk_s));
++    result = IMX219_IsiSensorGetClkIss(pIMX219Ctx, &clk);
++    if (result != RET_SUCCESS) {
++        TRACE(IMX219_ERROR, "%s get clk error\n", __func__);
++        return RET_FAILURE;
++    }
++    clk.status = 1;
++    result = IMX219_IsiSensorSetClkIss(pIMX219Ctx, &clk);
++    if (result != RET_SUCCESS) {
++        TRACE(IMX219_ERROR, "%s set clk error\n", __func__);
++        return RET_FAILURE;
++    }
++    result = IMX219_IsiResetSensorIss(pIMX219Ctx);
++    if (result != RET_SUCCESS) {
++        TRACE(IMX219_ERROR, "%s retset sensor error\n", __func__);
++        return RET_FAILURE;
++    }
++
++    IsiSensorMode_t SensorMode;
++    SensorMode.index = pConfig->SensorModeIndex;
++    result = IMX219_IsiSetSensorModeIss(pIMX219Ctx, &SensorMode);
++    if (result != RET_SUCCESS) {
++        TRACE(IMX219_ERROR, "%s set sensor mode error\n", __func__);
++        return RET_FAILURE;
++    }
++
++    TRACE(IMX219_INFO, "%s (exit)\n", __func__);
++
++    return result;
++}
++
++static RESULT IMX219_IsiReleaseSensorIss(IsiSensorHandle_t handle)
++{
++    TRACE(IMX219_INFO, "%s (enter) \n", __func__);
++
++    IMX219_Context_t *pIMX219Ctx = (IMX219_Context_t *) handle;
++    if (pIMX219Ctx == NULL)
++        return (RET_WRONG_HANDLE);
++
++    IMX219_IsiSensorSetStreamingIss(pIMX219Ctx, BOOL_FALSE);
++    struct vvcam_clk_s clk;
++    memset(&clk, 0, sizeof(struct vvcam_clk_s));
++    IMX219_IsiSensorGetClkIss(pIMX219Ctx, &clk);
++    clk.status = 0;
++    IMX219_IsiSensorSetClkIss(pIMX219Ctx, &clk);
++    IMX219_IsiSensorSetPowerIss(pIMX219Ctx, BOOL_FALSE);
++    free(pIMX219Ctx);
++    pIMX219Ctx = NULL;
++
++    TRACE(IMX219_INFO, "%s (exit)\n", __func__);
++
++    return RET_SUCCESS;
++}
++
++static RESULT IMX219_IsiHalQuerySensorIss(HalHandle_t HalHandle,
++                                          IsiSensorModeInfoArray_t *pSensorMode)
++{
++    int ret = 0;
++
++    TRACE(IMX219_INFO, "%s (enter) \n", __func__);
++	fprintf(stderr,  "%s (enter) \n", __func__);
++    if (HalHandle == NULL || pSensorMode == NULL)
++        return RET_NULL_POINTER;
++
++    HalContext_t *pHalCtx = (HalContext_t *)HalHandle;
++    ret = ioctl(pHalCtx->sensor_fd, VVSENSORIOC_QUERY, pSensorMode);
++    if (ret != 0) {
++        TRACE(IMX219_ERROR, "%s: query sensor mode info error!\n", __func__);
++        return RET_FAILURE;
++    }
++
++    TRACE(IMX219_INFO, "%s (exit)\n", __func__);
++
++    return RET_SUCCESS;
++}
++
++static RESULT IMX219_IsiQuerySensorIss(IsiSensorHandle_t handle,
++                                       IsiSensorModeInfoArray_t *pSensorMode)
++{
++    RESULT result = RET_SUCCESS;
++
++    TRACE(IMX219_INFO, "%s (enter) \n", __func__);
++
++    IMX219_Context_t *pIMX219Ctx = (IMX219_Context_t *) handle;
++
++    result = IMX219_IsiHalQuerySensorIss(pIMX219Ctx->IsiCtx.HalHandle,
++                                         pSensorMode);
++    if (result != RET_SUCCESS)
++        TRACE(IMX219_ERROR, "%s: query sensor mode info error!\n", __func__);
++
++    TRACE(IMX219_INFO, "%s (exit)\n", __func__);
++
++    return result;
++}
++
++static RESULT IMX219_IsiGetCapsIss(IsiSensorHandle_t handle,
++                                   IsiSensorCaps_t * pIsiSensorCaps)
++{
++    RESULT result = RET_SUCCESS;
++
++    TRACE(IMX219_INFO, "%s (enter) \n", __func__);
++
++    IMX219_Context_t *pIMX219Ctx = (IMX219_Context_t *) handle;
++
++    if (pIsiSensorCaps == NULL)
++        return RET_NULL_POINTER;
++
++    IsiSensorModeInfoArray_t SensorModeInfo;
++    memset(&SensorModeInfo, 0, sizeof(IsiSensorModeInfoArray_t));
++    result = IMX219_IsiQuerySensorIss(handle, &SensorModeInfo);
++    if (result != RET_SUCCESS) {
++        TRACE(IMX219_ERROR, "%s: query sensor mode info error!\n", __func__);
++        return RET_FAILURE;
++    }
++
++    pIsiSensorCaps->FieldSelection    = ISI_FIELDSEL_BOTH;
++    pIsiSensorCaps->YCSequence        = ISI_YCSEQ_YCBYCR;
++    pIsiSensorCaps->Conv422           = ISI_CONV422_NOCOSITED;
++    pIsiSensorCaps->HPol              = ISI_HPOL_REFPOS;
++    pIsiSensorCaps->VPol              = ISI_VPOL_NEG;
++    pIsiSensorCaps->Edge              = ISI_EDGE_RISING;
++    pIsiSensorCaps->supportModeNum    = SensorModeInfo.count;
++    pIsiSensorCaps->currentMode       = pIMX219Ctx->CurMode.index;
++
++    TRACE(IMX219_INFO, "%s (exit)\n", __func__);
++
++    return result;
++}
++
++static RESULT IMX219_IsiSetupSensorIss(IsiSensorHandle_t handle,
++                                       const IsiSensorCaps_t *pIsiSensorCaps )
++{
++    int ret = 0;
++    RESULT result = RET_SUCCESS;
++
++    TRACE(IMX219_INFO, "%s (enter)\n", __func__);
++
++    IMX219_Context_t *pIMX219Ctx = (IMX219_Context_t *) handle;
++    HalContext_t *pHalCtx = (HalContext_t *) pIMX219Ctx->IsiCtx.HalHandle;
++
++    if (pIsiSensorCaps == NULL)
++        return RET_NULL_POINTER;
++
++    if (pIsiSensorCaps->currentMode != pIMX219Ctx->CurMode.index) {
++        IsiSensorMode_t SensorMode;
++        memset(&SensorMode, 0, sizeof(IsiSensorMode_t));
++        SensorMode.index = pIsiSensorCaps->currentMode;
++        result = IMX219_IsiSetSensorModeIss(handle, &SensorMode);
++        if (result != RET_SUCCESS) {
++            TRACE(IMX219_ERROR, "%s:set sensor mode %d failed!\n",
++                  __func__, SensorMode.index);
++            return result;
++        }
++    }
++
++#ifdef SUBDEV_V4L2
++    struct v4l2_subdev_format format;
++    memset(&format, 0, sizeof(struct v4l2_subdev_format));
++    format.format.width  = pIMX219Ctx->CurMode.size.bounds_width;
++    format.format.height = pIMX219Ctx->CurMode.size.bounds_height;
++    format.which = V4L2_SUBDEV_FORMAT_ACTIVE;
++    format.pad = 0;
++    ret = ioctl(pHalCtx->sensor_fd, VIDIOC_SUBDEV_S_FMT, &format);
++    if (ret != 0){
++        TRACE(IMX219_ERROR, "%s: sensor set format error!\n", __func__);
++        return RET_FAILURE;
++    }
++#else
++    ret = ioctrl(pHalCtx->sensor_fd, VVSENSORIOC_S_INIT, NULL);
++    if (ret != 0){
++        TRACE(IMX219_ERROR, "%s: sensor init error!\n", __func__);
++        return RET_FAILURE;
++    }
++#endif
++
++    TRACE(IMX219_INFO, "%s (exit)\n", __func__);
++
++    return RET_SUCCESS;
++}
++
++static RESULT IMX219_IsiGetSensorRevisionIss(IsiSensorHandle_t handle, uint32_t *pValue)
++{
++    int ret = 0;
++
++    TRACE(IMX219_INFO, "%s (enter)\n", __func__);
++
++    IMX219_Context_t *pIMX219Ctx = (IMX219_Context_t *) handle;
++    HalContext_t *pHalCtx = (HalContext_t *) pIMX219Ctx->IsiCtx.HalHandle;
++
++    if (pValue == NULL)
++        return RET_NULL_POINTER;
++
++    ret = ioctl(pHalCtx->sensor_fd, VVSENSORIOC_G_CHIP_ID, pValue);
++    if (ret != 0) {
++        TRACE(IMX219_ERROR, "%s: get chip id error!\n", __func__);
++        return RET_FAILURE;
++    }
++
++    TRACE(IMX219_INFO, "%s (exit)\n", __func__);
++
++    return RET_SUCCESS;
++}
++
++static RESULT IMX219_IsiCheckSensorConnectionIss(IsiSensorHandle_t handle)
++{
++    RESULT result = RET_SUCCESS;
++
++    TRACE(IMX219_INFO, "%s (enter)\n", __func__);
++
++    uint32_t ChipId = 0;
++    result = IMX219_IsiGetSensorRevisionIss(handle, &ChipId);
++    if (result != RET_SUCCESS) {
++        TRACE(IMX219_ERROR, "%s:get sensor chip id error!\n",__func__);
++        return RET_FAILURE;
++    }
++
++    if (ChipId != 0x2770) {
++        TRACE(IMX219_ERROR,
++            "%s:ChipID=0x2770,while read sensor Id=0x%x error!\n",
++             __func__, ChipId);
++        return RET_FAILURE;
++    }
++
++    TRACE(IMX219_INFO, "%s (exit)\n", __func__);
++
++    return RET_SUCCESS;
++}
++
++static RESULT IMX219_IsiGetAeInfoIss(IsiSensorHandle_t handle,
++                                     IsiSensorAeInfo_t *pAeInfo)
++{
++    TRACE(IMX219_INFO, "%s (enter)\n", __func__);
++
++    IMX219_Context_t *pIMX219Ctx = (IMX219_Context_t *) handle;
++
++    if (pAeInfo == NULL)
++        return RET_NULL_POINTER;
++
++    memcpy(pAeInfo, &pIMX219Ctx->AeInfo, sizeof(IsiSensorAeInfo_t));
++
++    TRACE(IMX219_INFO, "%s (exit)\n", __func__);
++
++    return RET_SUCCESS;
++}
++
++static RESULT IMX219_IsiSetHdrRatioIss(IsiSensorHandle_t handle,
++                                       uint8_t hdrRatioNum,
++                                       uint32_t HdrRatio[])
++{
++    int ret = 0;
++
++    TRACE(IMX219_INFO, "%s (enter)\n", __func__);
++
++    IMX219_Context_t *pIMX219Ctx = (IMX219_Context_t *) handle;
++    HalContext_t *pHalCtx = (HalContext_t *) pIMX219Ctx->IsiCtx.HalHandle;
++
++    struct sensor_hdr_artio_s hdr_ratio;
++    if (hdrRatioNum == 2) {
++        hdr_ratio.ratio_s_vs = HdrRatio[1];
++        hdr_ratio.ratio_l_s = HdrRatio[0];
++    }else {
++        hdr_ratio.ratio_s_vs = HdrRatio[0];
++        hdr_ratio.ratio_l_s = 0;
++    }
++
++    if (hdr_ratio.ratio_s_vs == pIMX219Ctx->CurMode.ae_info.hdr_ratio.ratio_s_vs &&
++        hdr_ratio.ratio_l_s == pIMX219Ctx->CurMode.ae_info.hdr_ratio.ratio_l_s)
++        return RET_SUCCESS;
++
++    ret = ioctl(pHalCtx->sensor_fd, VVSENSORIOC_S_HDR_RADIO, &hdr_ratio);
++    if (ret != 0) {
++        TRACE(IMX219_ERROR,"%s: set hdr ratio error!\n", __func__);
++        return RET_FAILURE;
++    }
++    struct vvcam_mode_info_s sensor_mode;
++    ret = ioctl(pHalCtx->sensor_fd, VVSENSORIOC_G_SENSOR_MODE, &sensor_mode);
++    if (ret != 0) {
++        TRACE(IMX219_ERROR,"%s: get mode info error!\n", __func__);
++        return RET_FAILURE;
++    }
++
++    memcpy(&pIMX219Ctx->CurMode, &sensor_mode, sizeof (struct vvcam_mode_info_s));
++    IMX219_UpdateIsiAEInfo(handle);
++
++    TRACE(IMX219_INFO, "%s (exit)\n", __func__);
++
++    return RET_SUCCESS;
++}
++
++static RESULT IMX219_IsiGetIntegrationTimeIss(IsiSensorHandle_t handle,
++                                   IsiSensorIntTime_t *pIntegrationTime)
++{
++    IMX219_Context_t *pIMX219Ctx = (IMX219_Context_t *) handle;
++
++    TRACE(IMX219_INFO, "%s (enter)\n", __func__);
++
++    memcpy(pIntegrationTime, &pIMX219Ctx->IntTime, sizeof(IsiSensorIntTime_t));
++
++    TRACE(IMX219_INFO, "%s (exit)\n", __func__);
++
++    return RET_SUCCESS;
++
++}
++
++static RESULT IMX219_IsiSetIntegrationTimeIss(IsiSensorHandle_t handle,
++                                   IsiSensorIntTime_t *pIntegrationTime)
++{
++    int ret = 0;
++    uint32_t LongIntLine;
++    uint32_t IntLine;
++    uint32_t ShortIntLine;
++    uint32_t oneLineTime;
++
++    TRACE(IMX219_INFO, "%s (enter)\n", __func__);
++
++    IMX219_Context_t *pIMX219Ctx = (IMX219_Context_t *) handle;
++    HalContext_t *pHalCtx = (HalContext_t *) pIMX219Ctx->IsiCtx.HalHandle;
++
++    if (pIntegrationTime == NULL)
++        return RET_NULL_POINTER;
++
++    oneLineTime =  pIMX219Ctx->AeInfo.oneLineExpTime;
++    pIMX219Ctx->IntTime.expoFrmType = pIntegrationTime->expoFrmType;
++
++    switch (pIntegrationTime->expoFrmType) {
++        case ISI_EXPO_FRAME_TYPE_1FRAME:
++            IntLine = (pIntegrationTime->IntegrationTime.linearInt +
++                       (oneLineTime / 2)) / oneLineTime;
++            if (IntLine != pIMX219Ctx->IntLine) {
++                ret = ioctl(pHalCtx->sensor_fd, VVSENSORIOC_S_EXP, &IntLine);
++                if (ret != 0) {
++                    TRACE(IMX219_ERROR,"%s:set sensor linear exp error!\n", __func__);
++                    return RET_FAILURE;
++                }
++               pIMX219Ctx->IntLine = IntLine;
++            }
++            TRACE(IMX219_INFO, "%s set linear exp %d \n", __func__,IntLine);
++            pIMX219Ctx->IntTime.IntegrationTime.linearInt =  IntLine * oneLineTime;
++            break;
++        case ISI_EXPO_FRAME_TYPE_2FRAMES:
++            IntLine = (pIntegrationTime->IntegrationTime.dualInt.dualIntTime +
++                       (oneLineTime / 2)) / oneLineTime;
++            if (IntLine != pIMX219Ctx->IntLine) {
++                ret = ioctl(pHalCtx->sensor_fd, VVSENSORIOC_S_EXP, &IntLine);
++                if (ret != 0) {
++                    TRACE(IMX219_ERROR,"%s:set sensor dual exp error!\n", __func__);
++                    return RET_FAILURE;
++                }
++                pIMX219Ctx->IntLine = IntLine;
++            }
++
++            if (pIMX219Ctx->CurMode.stitching_mode != SENSOR_STITCHING_DUAL_DCG_NOWAIT) {
++                ShortIntLine = (pIntegrationTime->IntegrationTime.dualInt.dualSIntTime +
++                               (oneLineTime / 2)) / oneLineTime;
++                if (ShortIntLine != pIMX219Ctx->ShortIntLine) {
++                    ret = ioctl(pHalCtx->sensor_fd, VVSENSORIOC_S_VSEXP, &ShortIntLine);
++                    if (ret != 0) {
++                        TRACE(IMX219_ERROR,"%s:set sensor dual vsexp error!\n", __func__);
++                        return RET_FAILURE;
++                    }
++                    pIMX219Ctx->ShortIntLine = ShortIntLine;
++                }
++            } else {
++                ShortIntLine = IntLine;
++                pIMX219Ctx->ShortIntLine = ShortIntLine;
++            }
++            TRACE(IMX219_INFO, "%s set dual exp %d short_exp %d\n", __func__, IntLine, ShortIntLine);
++            pIMX219Ctx->IntTime.IntegrationTime.dualInt.dualIntTime  = IntLine * oneLineTime;
++            pIMX219Ctx->IntTime.IntegrationTime.dualInt.dualSIntTime = ShortIntLine * oneLineTime;
++            break;
++        case ISI_EXPO_FRAME_TYPE_3FRAMES:
++            if (pIMX219Ctx->CurMode.stitching_mode != SENSOR_STITCHING_DUAL_DCG_NOWAIT) {
++                LongIntLine = (pIntegrationTime->IntegrationTime.triInt.triLIntTime +
++                        (oneLineTime / 2)) / oneLineTime;
++                if (LongIntLine != pIMX219Ctx->LongIntLine) {
++                    ret = ioctl(pHalCtx->sensor_fd, VVSENSORIOC_S_LONG_EXP, &LongIntLine);
++                    if (ret != 0) {
++                        TRACE(IMX219_ERROR,"%s:set sensor tri lexp error!\n", __func__);
++                        return RET_FAILURE;
++                    }
++                    pIMX219Ctx->LongIntLine = LongIntLine;
++                }
++            } else {
++                LongIntLine = (pIntegrationTime->IntegrationTime.triInt.triIntTime +
++                       (oneLineTime / 2)) / oneLineTime;
++                pIMX219Ctx->LongIntLine = LongIntLine;
++            }
++
++            IntLine = (pIntegrationTime->IntegrationTime.triInt.triIntTime +
++                       (oneLineTime / 2)) / oneLineTime;
++            if (IntLine != pIMX219Ctx->IntLine) {
++                ret = ioctl(pHalCtx->sensor_fd, VVSENSORIOC_S_EXP, &IntLine);
++                if (ret != 0) {
++                    TRACE(IMX219_ERROR,"%s:set sensor tri exp error!\n", __func__);
++                    return RET_FAILURE;
++                }
++                pIMX219Ctx->IntLine = IntLine;
++            }
++            
++            ShortIntLine = (pIntegrationTime->IntegrationTime.triInt.triSIntTime +
++                       (oneLineTime / 2)) / oneLineTime;
++            if (ShortIntLine != pIMX219Ctx->ShortIntLine) {
++                ret = ioctl(pHalCtx->sensor_fd, VVSENSORIOC_S_VSEXP, &ShortIntLine);
++                if (ret != 0) {
++                    TRACE(IMX219_ERROR,"%s:set sensor tri vsexp error!\n", __func__);
++                    return RET_FAILURE;
++                }
++                pIMX219Ctx->ShortIntLine = ShortIntLine;
++            }
++            TRACE(IMX219_INFO, "%s set tri long exp %d exp %d short_exp %d\n", __func__, LongIntLine, IntLine, ShortIntLine);
++            pIMX219Ctx->IntTime.IntegrationTime.triInt.triLIntTime = LongIntLine * oneLineTime;
++            pIMX219Ctx->IntTime.IntegrationTime.triInt.triIntTime = IntLine * oneLineTime;
++            pIMX219Ctx->IntTime.IntegrationTime.triInt.triSIntTime = ShortIntLine * oneLineTime;
++            break;
++        default:
++            return RET_FAILURE;
++            break;
++    }
++    
++    TRACE(IMX219_INFO, "%s (exit)\n", __func__);
++
++    return RET_SUCCESS;
++}
++
++static RESULT IMX219_IsiGetGainIss(IsiSensorHandle_t handle, IsiSensorGain_t *pGain)
++{
++    IMX219_Context_t *pIMX219Ctx = (IMX219_Context_t *) handle;
++
++    TRACE(IMX219_INFO, "%s (enter)\n", __func__);
++
++    if (pGain == NULL)
++        return RET_NULL_POINTER;
++    memcpy(pGain, &pIMX219Ctx->SensorGain, sizeof(IsiSensorGain_t));
++
++    TRACE(IMX219_INFO, "%s (exit)\n", __func__);
++
++    return RET_SUCCESS;
++}
++
++static RESULT IMX219_IsiSetGainIss(IsiSensorHandle_t handle, IsiSensorGain_t *pGain)
++{
++    int ret = 0;
++    uint32_t LongGain;
++    uint32_t Gain;
++    uint32_t ShortGain;
++
++    TRACE(IMX219_INFO, "%s (enter)\n", __func__);
++
++    IMX219_Context_t *pIMX219Ctx = (IMX219_Context_t *) handle;
++    HalContext_t *pHalCtx = (HalContext_t *) pIMX219Ctx->IsiCtx.HalHandle;
++
++    if (pGain == NULL)
++        return RET_NULL_POINTER;
++
++    pIMX219Ctx->SensorGain.expoFrmType = pGain->expoFrmType;
++    switch (pGain->expoFrmType) {
++        case ISI_EXPO_FRAME_TYPE_1FRAME:
++            Gain = pGain->gain.linearGainParas;
++            if (pIMX219Ctx->SensorGain.gain.linearGainParas != Gain) {
++                ret = ioctl(pHalCtx->sensor_fd, VVSENSORIOC_S_GAIN, &Gain);
++                if (ret != 0) {
++                    TRACE(IMX219_ERROR,"%s:set sensor linear gain error!\n", __func__);
++                    return RET_FAILURE;
++                }
++            }
++            pIMX219Ctx->SensorGain.gain.linearGainParas = pGain->gain.linearGainParas;
++            TRACE(IMX219_INFO, "%s set linear gain %d\n", __func__,pGain->gain.linearGainParas);
++            break;
++        case ISI_EXPO_FRAME_TYPE_2FRAMES:
++            Gain = pGain->gain.dualGainParas.dualGain;
++            if (pIMX219Ctx->SensorGain.gain.dualGainParas.dualGain != Gain) {
++                if (pIMX219Ctx->CurMode.stitching_mode != SENSOR_STITCHING_DUAL_DCG_NOWAIT) {
++                    ret = ioctl(pHalCtx->sensor_fd, VVSENSORIOC_S_GAIN, &Gain);
++                } else {
++                    ret = ioctl(pHalCtx->sensor_fd, VVSENSORIOC_S_LONG_GAIN, &Gain);
++                }
++                if (ret != 0) {
++                    TRACE(IMX219_ERROR,"%s:set sensor dual gain error!\n", __func__);
++                    return RET_FAILURE;
++                }
++            }
++
++            ShortGain = pGain->gain.dualGainParas.dualSGain;
++            if (pIMX219Ctx->SensorGain.gain.dualGainParas.dualSGain != ShortGain) {
++                if (pIMX219Ctx->CurMode.stitching_mode != SENSOR_STITCHING_DUAL_DCG_NOWAIT) {
++                    ret = ioctl(pHalCtx->sensor_fd, VVSENSORIOC_S_VSGAIN, &ShortGain);
++                } else {
++                    ret = ioctl(pHalCtx->sensor_fd, VVSENSORIOC_S_GAIN, &ShortGain);
++                }
++                if (ret != 0) {
++                    TRACE(IMX219_ERROR,"%s:set sensor dual vs gain error!\n", __func__);
++                    return RET_FAILURE;
++                }
++            }
++            TRACE(IMX219_INFO,"%s:set gain%d short gain %d!\n", __func__,Gain,ShortGain);
++            pIMX219Ctx->SensorGain.gain.dualGainParas.dualGain = Gain;
++            pIMX219Ctx->SensorGain.gain.dualGainParas.dualSGain = ShortGain;
++            break;
++        case ISI_EXPO_FRAME_TYPE_3FRAMES:
++            LongGain = pGain->gain.triGainParas.triLGain;
++            if (pIMX219Ctx->SensorGain.gain.triGainParas.triLGain != LongGain) {
++                ret = ioctl(pHalCtx->sensor_fd, VVSENSORIOC_S_LONG_GAIN, &LongGain);
++                if (ret != 0) {
++                    TRACE(IMX219_ERROR,"%s:set sensor tri gain error!\n", __func__);
++                    return RET_FAILURE;
++                }
++            }
++            Gain = pGain->gain.triGainParas.triGain;
++            if (pIMX219Ctx->SensorGain.gain.triGainParas.triGain != Gain) {
++                ret = ioctl(pHalCtx->sensor_fd, VVSENSORIOC_S_GAIN, &Gain);
++                if (ret != 0) {
++                    TRACE(IMX219_ERROR,"%s:set sensor tri gain error!\n", __func__);
++                    return RET_FAILURE;
++                }
++            }
++
++            ShortGain = pGain->gain.triGainParas.triSGain;
++            if (pIMX219Ctx->SensorGain.gain.triGainParas.triSGain != ShortGain) {
++                ret = ioctl(pHalCtx->sensor_fd, VVSENSORIOC_S_VSGAIN, &ShortGain);
++                if (ret != 0) {
++                    TRACE(IMX219_ERROR,"%s:set sensor tri vs gain error!\n", __func__);
++                    return RET_FAILURE;
++                }
++            }
++            TRACE(IMX219_INFO,"%s:set long gain %d gain%d short gain %d!\n", __func__, LongGain, Gain, ShortGain);
++            pIMX219Ctx->SensorGain.gain.triGainParas.triLGain = LongGain;
++            pIMX219Ctx->SensorGain.gain.triGainParas.triGain = Gain;
++            pIMX219Ctx->SensorGain.gain.triGainParas.triSGain = ShortGain;
++            break;
++        default:
++            return RET_FAILURE;
++            break;
++    }
++
++    TRACE(IMX219_INFO, "%s (exit)\n", __func__);
++
++    return RET_SUCCESS;
++}
++
++
++static RESULT IMX219_IsiGetSensorFpsIss(IsiSensorHandle_t handle, uint32_t * pfps)
++{
++    TRACE(IMX219_INFO, "%s: (enter)\n", __func__);
++
++    IMX219_Context_t *pIMX219Ctx = (IMX219_Context_t *) handle;
++
++    if (pfps == NULL)
++        return RET_NULL_POINTER;
++
++    *pfps = pIMX219Ctx->CurMode.ae_info.cur_fps;
++
++    TRACE(IMX219_INFO, "%s: (exit)\n", __func__);
++
++    return RET_SUCCESS;
++}
++
++static RESULT IMX219_IsiSetSensorFpsIss(IsiSensorHandle_t handle, uint32_t fps)
++{
++    int ret = 0;
++
++    TRACE(IMX219_INFO, "%s: (enter)\n", __func__);
++
++    IMX219_Context_t *pIMX219Ctx = (IMX219_Context_t *) handle;
++    HalContext_t *pHalCtx = (HalContext_t *) pIMX219Ctx->IsiCtx.HalHandle;
++
++    ret = ioctl(pHalCtx->sensor_fd, VVSENSORIOC_S_FPS, &fps);
++    if (ret != 0) {
++        TRACE(IMX219_ERROR,"%s:set sensor fps error!\n", __func__);
++        return RET_FAILURE;
++    }
++    struct vvcam_mode_info_s SensorMode;
++    ret = ioctl(pHalCtx->sensor_fd, VVSENSORIOC_G_SENSOR_MODE, &SensorMode);
++    if (ret != 0) {
++        TRACE(IMX219_ERROR,"%s:get sensor mode error!\n", __func__);
++        return RET_FAILURE;
++    }
++    memcpy(&pIMX219Ctx->CurMode, &SensorMode, sizeof(struct vvcam_mode_info_s));
++    IMX219_UpdateIsiAEInfo(handle);
++
++    TRACE(IMX219_INFO, "%s: (exit)\n", __func__);
++
++    return RET_SUCCESS;
++}
++static RESULT IMX219_IsiSetSensorAfpsLimitsIss(IsiSensorHandle_t handle, uint32_t minAfps)
++{
++    IMX219_Context_t *pIMX219Ctx = (IMX219_Context_t *) handle;
++
++    TRACE(IMX219_INFO, "%s: (enter)\n", __func__);
++
++    if ((minAfps > pIMX219Ctx->CurMode.ae_info.max_fps) ||
++        (minAfps < pIMX219Ctx->CurMode.ae_info.min_fps))
++        return RET_FAILURE;
++    pIMX219Ctx->minAfps = minAfps;
++    pIMX219Ctx->CurMode.ae_info.min_afps = minAfps;
++
++    TRACE(IMX219_INFO, "%s: (exit)\n", __func__);
++
++    return RET_SUCCESS;
++}
++
++static RESULT IMX219_IsiGetSensorIspStatusIss(IsiSensorHandle_t handle,
++                               IsiSensorIspStatus_t *pSensorIspStatus)
++{
++    IMX219_Context_t *pIMX219Ctx = (IMX219_Context_t *) handle;
++
++    TRACE(IMX219_INFO, "%s: (enter)\n", __func__);
++
++    if (pIMX219Ctx->CurMode.hdr_mode == SENSOR_MODE_HDR_NATIVE) {
++        pSensorIspStatus->useSensorAWB = true;
++        pSensorIspStatus->useSensorBLC = true;
++    } else {
++        pSensorIspStatus->useSensorAWB = false;
++        pSensorIspStatus->useSensorBLC = false;
++    }
++
++    TRACE(IMX219_INFO, "%s: (exit)\n", __func__);
++
++    return RET_SUCCESS;
++}
++#ifndef ISI_LITE
++static RESULT IMX219_IsiSensorSetBlcIss(IsiSensorHandle_t handle, IsiSensorBlc_t * pBlc)
++{
++    int32_t ret = 0;
++
++    TRACE(IMX219_INFO, "%s: (enter)\n", __func__);
++
++    IMX219_Context_t *pIMX219Ctx = (IMX219_Context_t *) handle;
++    HalContext_t *pHalCtx = (HalContext_t *) pIMX219Ctx->IsiCtx.HalHandle;
++
++    if (pBlc == NULL)
++        return RET_NULL_POINTER;
++
++    struct sensor_blc_s SensorBlc;
++    SensorBlc.red = pBlc->red;
++    SensorBlc.gb = pBlc->gb;
++    SensorBlc.gr = pBlc->gr;
++    SensorBlc.blue = pBlc->blue;
++
++    ret = ioctl(pHalCtx->sensor_fd, VVSENSORIOC_S_BLC, &SensorBlc);
++    if (ret != 0) {
++        TRACE(IMX219_ERROR, "%s: set wb error\n", __func__);
++        return RET_FAILURE;
++    }
++
++    TRACE(IMX219_INFO, "%s: (exit)\n", __func__);
++
++    return RET_SUCCESS;
++}
++
++static RESULT IMX219_IsiSensorSetWBIss(IsiSensorHandle_t handle, IsiSensorWB_t *pWb)
++{
++    int32_t ret = 0;
++
++    TRACE(IMX219_INFO, "%s: (enter)\n", __func__);
++
++    IMX219_Context_t *pIMX219Ctx = (IMX219_Context_t *) handle;
++    HalContext_t *pHalCtx = (HalContext_t *) pIMX219Ctx->IsiCtx.HalHandle;
++
++    if (pWb == NULL)
++        return RET_NULL_POINTER;
++
++    struct sensor_white_balance_s SensorWb;
++    SensorWb.r_gain = pWb->r_gain;
++    SensorWb.gr_gain = pWb->gr_gain;
++    SensorWb.gb_gain = pWb->gb_gain;
++    SensorWb.b_gain = pWb->b_gain;
++    ret = ioctl(pHalCtx->sensor_fd, VVSENSORIOC_S_WB, &SensorWb);
++    if (ret != 0) {
++        TRACE(IMX219_ERROR, "%s: set wb error\n", __func__);
++        return RET_FAILURE;
++    }
++
++    TRACE(IMX219_INFO, "%s: (exit)\n", __func__);
++
++    return RET_SUCCESS;
++}
++
++static RESULT IMX219_IsiSensorGetExpandCurveIss(IsiSensorHandle_t handle, IsiSensorExpandCurve_t *pExpandCurve)
++{
++    int32_t ret = 0;
++
++    TRACE(IMX219_INFO, "%s: (enter)\n", __func__);
++
++    IMX219_Context_t *pIMX219Ctx = (IMX219_Context_t *) handle;
++    HalContext_t *pHalCtx = (HalContext_t *) pIMX219Ctx->IsiCtx.HalHandle;
++
++    if (pExpandCurve == NULL)
++        return RET_NULL_POINTER;
++
++    ret = ioctl(pHalCtx->sensor_fd, VVSENSORIOC_G_EXPAND_CURVE, pExpandCurve);
++    if (ret != 0) {
++        TRACE(IMX219_ERROR, "%s: get  expand cure error\n", __func__);
++        return RET_FAILURE;
++    }
++
++    TRACE(IMX219_INFO, "%s: (exit)\n", __func__);
++
++    return RET_SUCCESS;
++}
++
++static RESULT IMX219_IsiSensorGetCompressCurveIss(IsiSensorHandle_t handle, IsiSensorCompressCurve_t *pCompressCurve)
++{
++    int i = 0;
++    TRACE(IMX219_INFO, "%s: (enter)\n", __func__);
++
++    if (pCompressCurve == NULL)
++        return RET_NULL_POINTER;
++
++    if ((pCompressCurve->x_bit == 16) && (pCompressCurve->y_bit == 12)) {
++        uint8_t compress_px[64] = {10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,
++					10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,
++					10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,
++					10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10};
++
++        pCompressCurve->compress_x_data[0] = 0;
++        pCompressCurve->compress_y_data[0] = 0;
++        for (i= 1; i < 65; i++) {
++            pCompressCurve->compress_px[i-1] = compress_px[i-1];
++            pCompressCurve->compress_x_data[i] = pCompressCurve->compress_x_data[i-1] + (1 << compress_px[i-1]);
++            if(pCompressCurve->compress_x_data[i] < 1024) {
++                pCompressCurve->compress_y_data[i] = pCompressCurve->compress_x_data[i] / 2;
++            } else if (pCompressCurve->compress_x_data[i] < 2048) {
++                pCompressCurve->compress_y_data[i] = pCompressCurve->compress_x_data[i] / 4 + 256;
++            } else if (pCompressCurve->compress_x_data[i] < 16384){
++                pCompressCurve->compress_y_data[i] = pCompressCurve->compress_x_data[i] / 8 + 512;
++            } else {
++                pCompressCurve->compress_y_data[i] = pCompressCurve->compress_x_data[i] / 32 + 2048;
++            }
++        }
++
++    } else if ((pCompressCurve->x_bit == 20) && (pCompressCurve->y_bit == 12)) {
++        return RET_FAILURE;
++    } else {
++        return RET_FAILURE;
++    }
++
++    TRACE(IMX219_INFO, "%s: (exit)\n", __func__);
++
++    return RET_SUCCESS;
++}
++
++static RESULT IMX219_IsiSetTestPatternIss(IsiSensorHandle_t handle,
++                                       IsiSensorTpgMode_e  tpgMode)
++{
++    int32_t ret = 0;
++
++    TRACE( IMX219_INFO, "%s (enter)\n", __func__);
++
++    IMX219_Context_t *pIMX219Ctx = (IMX219_Context_t *) handle;
++    HalContext_t *pHalCtx = (HalContext_t *) pIMX219Ctx->IsiCtx.HalHandle;
++
++    struct sensor_test_pattern_s TestPattern;
++    if (tpgMode == ISI_TPG_DISABLE) {
++        TestPattern.enable = 0;
++        TestPattern.pattern = 0;
++    } else {
++        TestPattern.enable = 1;
++        TestPattern.pattern = (uint32_t)tpgMode - 1;
++    }
++
++    ret = ioctl(pHalCtx->sensor_fd, VVSENSORIOC_S_TEST_PATTERN, &TestPattern);
++    if (ret != 0)
++    {
++        TRACE(IMX219_ERROR, "%s: set test pattern %d error\n", __func__, tpgMode);
++        return RET_FAILURE;
++    }
++
++    TRACE(IMX219_INFO, "%s: test pattern enable[%d] mode[%d]\n", __func__, TestPattern.enable, TestPattern.pattern);
++
++    TRACE(IMX219_INFO, "%s: (exit)\n", __func__);
++
++    return RET_SUCCESS;
++}
++
++static RESULT IMX219_IsiFocusSetupIss(IsiSensorHandle_t handle)
++{
++    TRACE( IMX219_INFO, "%s (enter)\n", __func__);
++    TRACE(IMX219_INFO, "%s: (exit)\n", __func__);
++    return RET_SUCCESS;
++}
++
++static RESULT IMX219_IsiFocusReleaseIss(IsiSensorHandle_t handle)
++{
++    TRACE( IMX219_INFO, "%s (enter)\n", __func__);
++    TRACE(IMX219_INFO, "%s: (exit)\n", __func__);
++    return RET_SUCCESS;
++}
++
++static RESULT IMX219_IsiFocusGetIss(IsiSensorHandle_t handle, IsiFocusPos_t *pPos)
++{
++    TRACE( IMX219_INFO, "%s (enter)\n", __func__);
++    TRACE(IMX219_INFO, "%s: (exit)\n", __func__);
++    return RET_SUCCESS;
++}
++
++static RESULT IMX219_IsiFocusSetIss(IsiSensorHandle_t handle, IsiFocusPos_t *pPos)
++{
++    TRACE( IMX219_INFO, "%s (enter)\n", __func__);
++    TRACE(IMX219_INFO, "%s: (exit)\n", __func__);
++    return RET_SUCCESS;
++}
++
++static RESULT IMX219_IsiGetFocusCalibrateIss(IsiSensorHandle_t handle, IsiFoucsCalibAttr_t *pFocusCalib)
++{
++    TRACE( IMX219_INFO, "%s (enter)\n", __func__);
++    TRACE(IMX219_INFO, "%s: (exit)\n", __func__);
++    return RET_SUCCESS;
++}
++
++static RESULT IMX219_IsiGetAeStartExposureIs(IsiSensorHandle_t handle, uint64_t *pExposure)
++{
++    TRACE( IMX219_INFO, "%s (enter)\n", __func__);
++    IMX219_Context_t *pIMX219Ctx = (IMX219_Context_t *) handle;
++
++    if (pIMX219Ctx->AEStartExposure == 0) {
++        pIMX219Ctx->AEStartExposure =
++            (uint64_t)pIMX219Ctx->CurMode.ae_info.start_exposure *
++            pIMX219Ctx->CurMode.ae_info.one_line_exp_time_ns / 1000;
++           
++    }
++    *pExposure =  pIMX219Ctx->AEStartExposure;
++    TRACE(IMX219_INFO, "%s:get start exposure %ld\n", __func__, pIMX219Ctx->AEStartExposure);
++
++    TRACE(IMX219_INFO, "%s: (exit)\n", __func__);
++    return RET_SUCCESS;
++}
++
++static RESULT IMX219_IsiSetAeStartExposureIs(IsiSensorHandle_t handle, uint64_t exposure)
++{
++    TRACE( IMX219_INFO, "%s (enter)\n", __func__);
++    IMX219_Context_t *pIMX219Ctx = (IMX219_Context_t *) handle;
++
++    pIMX219Ctx->AEStartExposure = exposure;
++    TRACE(IMX219_INFO, "%s set start exposure %ld\n", __func__,pIMX219Ctx->AEStartExposure);
++    TRACE(IMX219_INFO, "%s: (exit)\n", __func__);
++    return RET_SUCCESS;
++}
++#endif
++
++RESULT IMX219_IsiGetSensorIss(IsiSensor_t *pIsiSensor)
++{
++    TRACE( IMX219_INFO, "%s (enter)\n", __func__);
++	fprintf(stderr, "Warning: IMX219 %s == !\n",__func__);
++
++    if (pIsiSensor == NULL)
++        return RET_NULL_POINTER;
++     pIsiSensor->pszName                         = SensorName;
++     pIsiSensor->pIsiSensorSetPowerIss           = IMX219_IsiSensorSetPowerIss;
++     pIsiSensor->pIsiCreateSensorIss             = IMX219_IsiCreateSensorIss;
++     pIsiSensor->pIsiReleaseSensorIss            = IMX219_IsiReleaseSensorIss;
++     pIsiSensor->pIsiRegisterReadIss             = IMX219_IsiRegisterReadIss;
++     pIsiSensor->pIsiRegisterWriteIss            = IMX219_IsiRegisterWriteIss;
++     pIsiSensor->pIsiGetSensorModeIss            = IMX219_IsiGetSensorModeIss;
++     pIsiSensor->pIsiSetSensorModeIss            = IMX219_IsiSetSensorModeIss;
++     pIsiSensor->pIsiQuerySensorIss              = IMX219_IsiQuerySensorIss;
++     pIsiSensor->pIsiGetCapsIss                  = IMX219_IsiGetCapsIss;
++     pIsiSensor->pIsiSetupSensorIss              = IMX219_IsiSetupSensorIss;
++     pIsiSensor->pIsiGetSensorRevisionIss        = IMX219_IsiGetSensorRevisionIss;
++     pIsiSensor->pIsiCheckSensorConnectionIss    = IMX219_IsiCheckSensorConnectionIss;
++     pIsiSensor->pIsiSensorSetStreamingIss       = IMX219_IsiSensorSetStreamingIss;
++     pIsiSensor->pIsiGetAeInfoIss                = IMX219_IsiGetAeInfoIss;
++     pIsiSensor->pIsiSetHdrRatioIss              = IMX219_IsiSetHdrRatioIss;
++     pIsiSensor->pIsiGetIntegrationTimeIss       = IMX219_IsiGetIntegrationTimeIss;
++     pIsiSensor->pIsiSetIntegrationTimeIss       = IMX219_IsiSetIntegrationTimeIss;
++     pIsiSensor->pIsiGetGainIss                  = IMX219_IsiGetGainIss;
++     pIsiSensor->pIsiSetGainIss                  = IMX219_IsiSetGainIss;
++     pIsiSensor->pIsiGetSensorFpsIss             = IMX219_IsiGetSensorFpsIss;
++     pIsiSensor->pIsiSetSensorFpsIss             = IMX219_IsiSetSensorFpsIss;
++     pIsiSensor->pIsiSetSensorAfpsLimitsIss      = IMX219_IsiSetSensorAfpsLimitsIss;
++     pIsiSensor->pIsiGetSensorIspStatusIss       = IMX219_IsiGetSensorIspStatusIss;
++#ifndef ISI_LITE
++    pIsiSensor->pIsiSensorSetBlcIss              = IMX219_IsiSensorSetBlcIss;
++    pIsiSensor->pIsiSensorSetWBIss               = IMX219_IsiSensorSetWBIss;
++    pIsiSensor->pIsiSensorGetExpandCurveIss      = IMX219_IsiSensorGetExpandCurveIss;
++    pIsiSensor->pIsiSensorGetCompressCurveIss    = IMX219_IsiSensorGetCompressCurveIss;
++    pIsiSensor->pIsiActivateTestPatternIss       = IMX219_IsiSetTestPatternIss;
++    pIsiSensor->pIsiFocusSetupIss                = IMX219_IsiFocusSetupIss;
++    pIsiSensor->pIsiFocusReleaseIss              = IMX219_IsiFocusReleaseIss;
++    pIsiSensor->pIsiFocusSetIss                  = IMX219_IsiFocusSetIss;
++    pIsiSensor->pIsiFocusGetIss                  = IMX219_IsiFocusGetIss;
++    pIsiSensor->pIsiGetFocusCalibrateIss         = IMX219_IsiGetFocusCalibrateIss;
++    pIsiSensor->pIsiSetAeStartExposureIss        = IMX219_IsiSetAeStartExposureIs;
++    pIsiSensor->pIsiGetAeStartExposureIss        = IMX219_IsiGetAeStartExposureIs;
++#endif
++    TRACE( IMX219_INFO, "%s (exit)\n", __func__);
++    return RET_SUCCESS;
++}
++
++/*****************************************************************************
++* each sensor driver need declare this struct for isi load
++*****************************************************************************/
++IsiCamDrvConfig_t IsiCamDrvConfig = {
++    .CameraDriverID = 0x0219,
++    .pIsiHalQuerySensor = IMX219_IsiHalQuerySensorIss,
++    .pfIsiGetSensorIss = IMX219_IsiGetSensorIss,
++};
+-- 
+2.34.1
+

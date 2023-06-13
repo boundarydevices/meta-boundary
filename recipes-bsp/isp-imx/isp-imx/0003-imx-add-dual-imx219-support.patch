@@ -1,0 +1,56 @@
+From 0d9352ab004ffad9bca3b2c01e975304e8655e92 Mon Sep 17 00:00:00 2001
+From: Gary Bisson <gary.bisson@boundarydevices.com>
+Date: Tue, 6 Jun 2023 17:25:47 +0200
+Subject: [PATCH 3/8] imx: add dual imx219 support
+
+Signed-off-by: Gary Bisson <gary.bisson@boundarydevices.com>
+---
+ imx/run.sh       | 11 ++++++++++-
+ imx/start_isp.sh |  9 +++++++++
+ 2 files changed, 19 insertions(+), 1 deletion(-)
+
+diff --git a/imx/run.sh b/imx/run.sh
+index b8ca8c420..f5a510e1b 100755
+--- a/imx/run.sh
++++ b/imx/run.sh
+@@ -328,7 +328,16 @@ case "$ISP_CONFIG" in
+                          MODE="0"
+                          write_sensor_cfg_file "Sensor0_Entry.cfg" $CAM_NAME $DRV_FILE $MODE_FILE $MODE
+                          ;;
+-
++                 dual_imx219_1080p60 )
++                         MODULES=("imx219" "${MODULES[@]}")
++                         RUN_OPTION="DUAL_CAMERA"
++                         CAM_NAME="imx219"
++                         DRV_FILE="imx219.drv"
++                         MODE_FILE="IMX219_MODES.txt"
++                         MODE="0"
++                         write_sensor_cfg_file "Sensor0_Entry.cfg" $CAM_NAME $DRV_FILE $MODE_FILE $MODE
++                         write_sensor_cfg_file "Sensor1_Entry.cfg" $CAM_NAME $DRV_FILE $MODE_FILE $MODE
++                         ;;
+ 		 *)
+ 			echo "ISP configuration \"$ISP_CONFIG\" unsupported."
+ 			echo -e "$USAGE" >&2
+diff --git a/imx/start_isp.sh b/imx/start_isp.sh
+index 4addbbb59..e73cb1548 100755
+--- a/imx/start_isp.sh
++++ b/imx/start_isp.sh
+@@ -51,6 +51,15 @@ elif [ $NR_DEVICE_TREE_IMX219 -eq 1 ]; then
+         # Available configurations: imx219_1080p60
+         exec ./run.sh -c imx219_1080p60 -lm
+ 
++elif [ $NR_DEVICE_TREE_IMX219 -eq 2 ]; then
++
++        echo "Starting isp_media_server for Dual imx219"
++
++        cd $RUNTIME_DIR
++	# Default configuration for Imx219: imx219_1080p60
++        # Available configurations: imx219_1080p60
++        exec ./run.sh -c dual_imx219_1080p60 -lm
++
+ # check if the os08a20 device has been enabled in the device tree
+ elif [ $NR_DEVICE_TREE_OS08A20 -eq 1 ]; then
+ 
+-- 
+2.34.1
+
