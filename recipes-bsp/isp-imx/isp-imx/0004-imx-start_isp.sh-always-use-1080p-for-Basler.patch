@@ -1,4 +1,4 @@
-From 066b0621b435029781aa9a149f116149fd6a2734 Mon Sep 17 00:00:00 2001
+From f45f02f2ee757fc6954ace6d78163d9cb64ad1b8 Mon Sep 17 00:00:00 2001
 From: Gary Bisson <gary.bisson@boundarydevices.com>
 Date: Tue, 6 Jun 2023 17:57:44 +0200
 Subject: [PATCH 4/8] imx/start_isp.sh: always use 1080p for Basler

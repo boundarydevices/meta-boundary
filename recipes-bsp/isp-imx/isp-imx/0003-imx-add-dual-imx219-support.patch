@@ -1,4 +1,4 @@
-From 0d9352ab004ffad9bca3b2c01e975304e8655e92 Mon Sep 17 00:00:00 2001
+From dbd63d3ed982d78a8a795365b4b9e22260df2ed6 Mon Sep 17 00:00:00 2001
 From: Gary Bisson <gary.bisson@boundarydevices.com>
 Date: Tue, 6 Jun 2023 17:25:47 +0200
 Subject: [PATCH 3/8] imx: add dual imx219 support
@@ -10,7 +10,7 @@ Signed-off-by: Gary Bisson <gary.bisson@boundarydevices.com>
  2 files changed, 19 insertions(+), 1 deletion(-)
 
 diff --git a/imx/run.sh b/imx/run.sh
-index b8ca8c420..f5a510e1b 100755
+index 5e562aeee..60861e9d7 100755
 --- a/imx/run.sh
 +++ b/imx/run.sh
 @@ -328,7 +328,16 @@ case "$ISP_CONFIG" in

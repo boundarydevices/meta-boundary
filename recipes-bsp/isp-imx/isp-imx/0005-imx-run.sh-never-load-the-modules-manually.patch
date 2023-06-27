@@ -1,4 +1,4 @@
-From 8a81ca0ef471543ec4b62f6a4f1b2105e3179f78 Mon Sep 17 00:00:00 2001
+From 65c101f7586e5590884d38fb71cd83c4e0627b1f Mon Sep 17 00:00:00 2001
 From: Gary Bisson <gary.bisson@boundarydevices.com>
 Date: Tue, 6 Jun 2023 17:55:52 +0200
 Subject: [PATCH 5/8] imx/run.sh: never load the modules manually
@@ -11,7 +11,7 @@ Signed-off-by: Gary Bisson <gary.bisson@boundarydevices.com>
  1 file changed, 4 deletions(-)
 
 diff --git a/imx/run.sh b/imx/run.sh
-index f5a510e1b..07c9814b2 100755
+index 60861e9d7..52041c07f 100755
 --- a/imx/run.sh
 +++ b/imx/run.sh
 @@ -356,10 +356,6 @@ fi

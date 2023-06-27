@@ -1,4 +1,4 @@
-From aa9a29de7f5b960f9418fa0af5c2cf62928e2c9a Mon Sep 17 00:00:00 2001
+From c56f368493db948e383fdc59f060ea7eab8f7408 Mon Sep 17 00:00:00 2001
 From: Gary Bisson <gary.bisson@boundarydevices.com>
 Date: Tue, 6 Jun 2023 14:02:16 +0200
 Subject: [PATCH 2/8] imx: add imx219 to startup scripts
@@ -10,7 +10,7 @@ Signed-off-by: Gary Bisson <gary.bisson@boundarydevices.com>
  2 files changed, 34 insertions(+), 2 deletions(-)
 
 diff --git a/imx/run.sh b/imx/run.sh
-index 4ed3669b0..b8ca8c420 100755
+index a9506d09b..5e562aeee 100755
 --- a/imx/run.sh
 +++ b/imx/run.sh
 @@ -34,6 +34,8 @@ USAGE+="\tos08a20_1080p30hdr      - single os08a20 camera on MIPI-CSI1, 1920x108
