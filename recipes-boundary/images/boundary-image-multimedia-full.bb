@@ -24,8 +24,8 @@ CORE_IMAGE_EXTRA_INSTALL += " \
 	networkmanager-nmcli \
 	openssh \
 	packagegroup-fsl-isp \
-	packagegroup-fsl-ml \
 	packagegroup-fsl-opencv-imx \
+	packagegroup-imx-ml \
 	packagegroup-tools-bluetooth \
 	pciutils \
 	psplash \
