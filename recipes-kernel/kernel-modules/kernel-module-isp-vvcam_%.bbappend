@@ -1,3 +1,3 @@
 SRC_URI = "git://github.com/boundarydevices/isp-vvcam.git;protocol=https;branch=${SRCBRANCH}"
-SRCREV = "bd44aa8476abfd421a29ef4fa62b61635bcfb3ca"
-SRCBRANCH = "boundary-lf-5.15.71-2.2.0"
+SRCREV = "e82559d4129848fede0d9181e238314e99ae989d"
+SRCBRANCH = "boundary-lf-6.1.22-2.0.0"
