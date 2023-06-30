@@ -1,7 +1,7 @@
 # Copyright (C) 2016 Boundary Devices
 SUMMARY = "QCACLD driver for QCA9377-based BD-SDMAC module"
 LICENSE = "ISC"
-LIC_FILES_CHKSUM = "file://${S}/CORE/HDD/src/wlan_hdd_main.c;md5=30cffa3af964fc21110aea676905d9f8"
+LIC_FILES_CHKSUM = "file://${S}/CORE/HDD/src/wlan_hdd_main.c;md5=de52d2c36fece51dcd41994f8578ff11"
 
 inherit module
 
