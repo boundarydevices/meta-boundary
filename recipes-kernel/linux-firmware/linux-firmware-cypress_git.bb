@@ -7,7 +7,7 @@ LIC_FILES_CHKSUM = "\
 	file://LICENSE;md5=53d3628b28a0bc3caea61587feade5f9 \
 "
 
-SRCREV = "449919baa69f5ca60f9234f275bb5e329ccedeaf"
+SRCREV = "e8d385cd0ce002f49be9b73cd6684e84ae15d603"
 
 SRC_URI = "git://github.com/boundarydevices/cypress-firmware.git;protocol=https;branch=${SRCBRANCH}"
 SRCBRANCH = "lwb5plus-sdio-sa-firmware-10.54.0.13"
