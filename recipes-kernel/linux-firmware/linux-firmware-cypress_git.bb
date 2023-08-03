@@ -1,7 +1,7 @@
 SUMMARY = "WiFi and BT firmware files for Cypress based modules such as the LWB5+"
 SECTION = "kernel"
 
-LICENSE = "linux-firmware-cypress"
+LICENSE = "Firmware-cypress"
 
 LIC_FILES_CHKSUM = "\
 	file://LICENSE;md5=53d3628b28a0bc3caea61587feade5f9 \
@@ -13,6 +13,10 @@ SRC_URI = "git://github.com/boundarydevices/cypress-firmware.git;protocol=https;
 SRCBRANCH = "lwb5plus-sdio-sa-firmware-10.54.0.13"
 
 S = "${WORKDIR}/git"
+
+# These are not common licenses, set NO_GENERIC_LICENSE for them
+# so that the license files will be copied from fetched source
+NO_GENERIC_LICENSE[Firmware-cypress] = "LICENSE"
 
 inherit allarch
 
