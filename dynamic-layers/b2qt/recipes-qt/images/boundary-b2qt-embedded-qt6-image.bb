@@ -6,6 +6,7 @@ require recipes-qt/images/b2qt-embedded-qt6-image.bb
 IMAGE_INSTALL += " \
 	kernel-module-qcacld \
 	linux-firmware-bdsdmac \
+	linux-firmware-cypress \
 	i2c-tools \
 	iperf3 \
 	imx-gpu-viv-demos \
