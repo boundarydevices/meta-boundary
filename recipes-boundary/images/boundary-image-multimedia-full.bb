@@ -34,7 +34,6 @@ CORE_IMAGE_EXTRA_INSTALL += " \
 	tslib-tests tslib-calibrate \
 	u-boot-boundary-env \
 	u-boot-fw-utils \
-	udev-rules-bt \
 	udev-rules-imx \
 	v4l-utils \
 	wireless-regdb-static \
