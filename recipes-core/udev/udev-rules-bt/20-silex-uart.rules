@@ -1,6 +1,0 @@
-IMPORT{cmdline}="cpu"
-IMPORT{cmdline}="board"
-KERNEL=="ttymxc0",  ENV{cpu}=="8MM", ENV{board}!="moo", MODE=="0660",  OWNER=="root",  GROUP=="dialout", SYMLINK+="bt-uart"
-KERNEL=="ttymxc0",  ENV{cpu}=="8MNano", ENV{board}!="moo", MODE=="0660",  OWNER=="root",  GROUP=="dialout", SYMLINK+="bt-uart"
-KERNEL=="ttymxc1",  ENV{cpu}=="8MM", ENV{board}=="moo", MODE=="0660",  OWNER=="root",  GROUP=="dialout", SYMLINK+="bt-uart"
-KERNEL=="ttymxc2",  ENV{cpu}=="8MQ", MODE=="0660",  OWNER=="root",  GROUP=="dialout", SYMLINK+="bt-uart"
