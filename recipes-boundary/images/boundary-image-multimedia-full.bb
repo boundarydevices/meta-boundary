@@ -29,7 +29,6 @@ CORE_IMAGE_EXTRA_INSTALL += " \
 	pciutils \
 	psplash \
 	screen \
-	silex-uart \
 	spitools \
 	strace \
 	tslib-tests tslib-calibrate \
