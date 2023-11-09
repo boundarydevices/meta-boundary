@@ -1,0 +1,284 @@
+From aa873e8bc2eaf356bd9fab926d5387dfb1efceb8 Mon Sep 17 00:00:00 2001
+From: Howard Lin <howard-yh.lin@mediatek.com>
+Date: Mon, 3 Jul 2023 17:45:01 +0800
+Subject: [PATCH] GENIO: board: mediatek: add AB firmware updates support
+
+This allows the EFI capsule to select which slot would be updated and
+booted by firmware updates when the 'MEDIATEK_IOT_AB_BOOT_SUPPORT'
+is enabled.
+
+Signed-off-by: Howard Lin <howard-yh.lin@mediatek.com>
+---
+ arch/arm/lib/bootm.c                   |  3 +++
+ board/mediatek/mt8188/mt8390_evk.c     | 20 ++++++++++++++++++++
+ board/mediatek/mt8195/mt8195_demo.c    | 20 ++++++++++++++++++++
+ board/mediatek/mt8365/mt8365_pumpkin.c | 20 ++++++++++++++++++++
+ cmd/Makefile                           |  2 ++
+ cmd/iot_ab_cmd.c                       | 26 ++++++++++++++++++++++++++
+ common/main.c                          |  3 +++
+ lib/efi_loader/efi_capsule.c           | 17 ++++++++++++++++-
+ 8 files changed, 110 insertions(+), 1 deletion(-)
+ create mode 100644 cmd/iot_ab_cmd.c
+
+diff --git a/arch/arm/lib/bootm.c b/arch/arm/lib/bootm.c
+index 9f086f3b90..71c730415e 100644
+--- a/arch/arm/lib/bootm.c
++++ b/arch/arm/lib/bootm.c
+@@ -302,6 +302,9 @@ static void boot_jump_linux(bootm_headers_t *images, int flag)
+ 		(ulong) kernel_entry);
+ 	bootstage_mark(BOOTSTAGE_ID_RUN_OS);
+ 
++	if (IS_ENABLED(CONFIG_MEDIATEK_IOT_AB_BOOT_SUPPORT))
++		iot_ab_boot_complete();
++
+ 	announce_and_cleanup(fake);
+ 
+ 	if (!fake) {
+diff --git a/board/mediatek/mt8188/mt8390_evk.c b/board/mediatek/mt8188/mt8390_evk.c
+index 968c95a96c..67b207f104 100644
+--- a/board/mediatek/mt8188/mt8390_evk.c
++++ b/board/mediatek/mt8188/mt8390_evk.c
+@@ -11,6 +11,7 @@
+ #include <asm/io.h>
+ #include <linux/kernel.h>
+ #include <linux/arm-smccc.h>
++#include <iot_ab.h>
+ 
+ #define MT8390_UPDATABLE_IMAGES	5
+ 
+@@ -18,8 +19,13 @@
+ static struct efi_fw_image fw_images[MT8390_UPDATABLE_IMAGES] = {0};
+ 
+ struct efi_capsule_update_info update_info = {
++#if defined(CONFIG_MEDIATEK_IOT_AB_BOOT_SUPPORT)
++	.dfu_string = "mmc 0=bl2.img raw 0x0 0x400000 mmcpart 1;"
++			"fip.bin part 0 %d;firmware.vfat part 0 %d;u-boot-env.bin raw 0x0 0x400000 mmcpart 2",
++#else
+ 	.dfu_string = "mmc 0=bl2.img raw 0x0 0x400000 mmcpart 1;"
+ 			"fip.bin part 0 1;firmware.vfat part 0 3;u-boot-env.bin raw 0x0 0x400000 mmcpart 2",
++#endif
+ 	.images = fw_images,
+ };
+ 
+@@ -69,6 +75,20 @@ void mediatek_capsule_update_board_setup(void)
+ 		fw_images[4].fw_name = u"GENIO-700-EVK-ENV";
+ 	}
+ }
++
++#if defined(CONFIG_MEDIATEK_IOT_AB_BOOT_SUPPORT)
++void set_dfu_alt_info(char *interface, char *devstr)
++{
++	char alt[BOOTCTRL_DFU_ALT_LEN] = {0};
++
++	if (strcmp(env_get(BOOTCTRL_ENV), "a"))
++		sprintf(alt, update_info.dfu_string, BOOTCTRL_FIP_NUM, BOOTCTRL_FW_NUM);
++	else
++		sprintf(alt, update_info.dfu_string, BOOTCTRL_FIP_NUM + PART_BOOT_B, BOOTCTRL_FW_NUM + PART_BOOT_B);
++
++	env_set("dfu_alt_info", alt);
++}
++#endif
+ #endif /* CONFIG_EFI_HAVE_CAPSULE_SUPPORT && CONFIG_EFI_PARTITION */
+ 
+ int board_init(void)
+diff --git a/board/mediatek/mt8195/mt8195_demo.c b/board/mediatek/mt8195/mt8195_demo.c
+index 767754c1a8..4fd4ecd72c 100644
+--- a/board/mediatek/mt8195/mt8195_demo.c
++++ b/board/mediatek/mt8195/mt8195_demo.c
+@@ -11,6 +11,7 @@
+ #include <asm/io.h>
+ #include <linux/kernel.h>
+ #include <linux/arm-smccc.h>
++#include <iot_ab.h>
+ 
+ #define MT8195_UPDATABLE_IMAGES	5
+ 
+@@ -18,8 +19,13 @@
+ static struct efi_fw_image fw_images[MT8195_UPDATABLE_IMAGES] = {0};
+ 
+ struct efi_capsule_update_info update_info = {
++#if defined(CONFIG_MEDIATEK_IOT_AB_BOOT_SUPPORT)
++	.dfu_string = "mmc 0=bl2.img raw 0x0 0x400000 mmcpart 1;"
++			"fip.bin part 0 %d;firmware.vfat part 0 %d;u-boot-env.bin raw 0x0 0x400000 mmcpart 2",
++#else
+ 	.dfu_string = "mmc 0=bl2.img raw 0x0 0x400000 mmcpart 1;"
+ 			"fip.bin part 0 1;firmware.vfat part 0 3;u-boot-env.bin raw 0x0 0x400000 mmcpart 2",
++#endif
+ 	.images = fw_images,
+ };
+ 
+@@ -117,6 +123,20 @@ void mediatek_capsule_update_board_setup(void)
+ 		fw_images[4].fw_name = u"GENIO-1200-EVK-UFS-ENV";
+ 	}
+ }
++
++#if defined(CONFIG_MEDIATEK_IOT_AB_BOOT_SUPPORT)
++void set_dfu_alt_info(char *interface, char *devstr)
++{
++	char alt[BOOTCTRL_DFU_ALT_LEN] = {0};
++
++	if (strcmp(env_get(BOOTCTRL_ENV), "a"))
++		sprintf(alt, update_info.dfu_string, BOOTCTRL_FIP_NUM, BOOTCTRL_FW_NUM);
++	else
++		sprintf(alt, update_info.dfu_string, BOOTCTRL_FIP_NUM + PART_BOOT_B, BOOTCTRL_FW_NUM + PART_BOOT_B);
++
++	env_set("dfu_alt_info", alt);
++}
++#endif
+ #endif /* CONFIG_EFI_HAVE_CAPSULE_SUPPORT && CONFIG_EFI_PARTITION */
+ 
+ int board_init(void)
+diff --git a/board/mediatek/mt8365/mt8365_pumpkin.c b/board/mediatek/mt8365/mt8365_pumpkin.c
+index c5329061b2..7418e22b99 100644
+--- a/board/mediatek/mt8365/mt8365_pumpkin.c
++++ b/board/mediatek/mt8365/mt8365_pumpkin.c
+@@ -11,6 +11,7 @@
+ #include <asm/io.h>
+ #include <linux/kernel.h>
+ #include <linux/arm-smccc.h>
++#include <iot_ab.h>
+ 
+ #define MT8365_UPDATABLE_IMAGES	5
+ 
+@@ -18,8 +19,13 @@
+ static struct efi_fw_image fw_images[MT8365_UPDATABLE_IMAGES] = {0};
+ 
+ struct efi_capsule_update_info update_info = {
++#if defined(CONFIG_MEDIATEK_IOT_AB_BOOT_SUPPORT)
++	.dfu_string = "mmc 0=bl2.img raw 0x0 0x400000 mmcpart 1;"
++			"fip.bin part 0 %d;firmware.vfat part 0 %d;u-boot-env.bin raw 0x0 0x400000 mmcpart 2",
++#else
+ 	.dfu_string = "mmc 0=bl2.img raw 0x0 0x400000 mmcpart 1;"
+ 			"fip.bin part 0 1;firmware.vfat part 0 3;u-boot-env.bin raw 0x0 0x400000 mmcpart 2",
++#endif
+ 	.images = fw_images,
+ };
+ 
+@@ -69,6 +75,20 @@ void mediatek_capsule_update_board_setup(void)
+ 		fw_images[4].fw_name = u"GENIO-350-EVK-ENV";
+ 	}
+ }
++
++#if defined(CONFIG_MEDIATEK_IOT_AB_BOOT_SUPPORT)
++void set_dfu_alt_info(char *interface, char *devstr)
++{
++	char alt[BOOTCTRL_DFU_ALT_LEN] = {0};
++
++	if (strcmp(env_get(BOOTCTRL_ENV), "a"))
++		sprintf(alt, update_info.dfu_string, BOOTCTRL_FIP_NUM, BOOTCTRL_FW_NUM);
++	else
++		sprintf(alt, update_info.dfu_string, BOOTCTRL_FIP_NUM + PART_BOOT_B, BOOTCTRL_FW_NUM + PART_BOOT_B);
++
++	env_set("dfu_alt_info", alt);
++}
++#endif
+ #endif /* CONFIG_EFI_HAVE_CAPSULE_SUPPORT && CONFIG_EFI_PARTITION */
+ 
+ int board_init(void)
+diff --git a/cmd/Makefile b/cmd/Makefile
+index 6a8829b59a..db513d21c1 100644
+--- a/cmd/Makefile
++++ b/cmd/Makefile
+@@ -196,6 +196,8 @@ obj-$(CONFIG_CMD_ETHSW) += ethsw.o
+ obj-$(CONFIG_CMD_AXI) += axi.o
+ obj-$(CONFIG_CMD_PVBLOCK) += pvblock.o
+ 
++obj-$(CONFIG_MEDIATEK_IOT_AB_BOOT_SUPPORT) += iot_ab_cmd.o
++
+ # Power
+ obj-$(CONFIG_CMD_PMIC) += pmic.o
+ obj-$(CONFIG_CMD_REGULATOR) += regulator.o
+diff --git a/cmd/iot_ab_cmd.c b/cmd/iot_ab_cmd.c
+new file mode 100644
+index 0000000000..ccbe23ed21
+--- /dev/null
++++ b/cmd/iot_ab_cmd.c
+@@ -0,0 +1,26 @@
++// SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++/*
++ * Copyright (C) 2023 MediaTek Inc.
++ * Author: Howard Lin <howard-yh.lin@mediatek.com>
++ */
++
++#include <common.h>
++#include <command.h>
++
++static int do_iot_ab_cmd(struct cmd_tbl *cmdtp, int flag, int argc,
++			char *const argv[])
++{
++	if (argc != 1)
++		return CMD_RET_USAGE;
++
++	iot_ab_boot_select();
++
++	printf("The slot is changed successfully!\n");
++	return CMD_RET_SUCCESS;
++}
++
++U_BOOT_CMD(iot_ab, 1, 0, do_iot_ab_cmd,
++	   "Change boot slot to A or B for MediaTek IoT Yocto.",
++	   "\n"
++	   "    - Change boot slot of boot_ctrl data from metadata on the device.\n"
++);
+diff --git a/common/main.c b/common/main.c
+index 682f3359ea..baa2ddb7b4 100644
+--- a/common/main.c
++++ b/common/main.c
+@@ -60,6 +60,9 @@ void main_loop(void)
+ 			efi_launch_capsules();
+ 	}
+ 
++	if (IS_ENABLED(CONFIG_MEDIATEK_IOT_AB_BOOT_SUPPORT))
++		iot_ab_boot_slot(0);
++
+ 	s = bootdelay_process();
+ 	if (cli_process_fdt(&s))
+ 		cli_secure_boot_cmd(s);
+diff --git a/lib/efi_loader/efi_capsule.c b/lib/efi_loader/efi_capsule.c
+index a6b98f066a..10da0443b1 100644
+--- a/lib/efi_loader/efi_capsule.c
++++ b/lib/efi_loader/efi_capsule.c
+@@ -1104,6 +1104,9 @@ efi_status_t efi_launch_capsules(void)
+ 	u16 **files;
+ 	unsigned int nfiles, index, i;
+ 	efi_status_t ret;
++#if defined(CONFIG_MEDIATEK_IOT_AB_BOOT_SUPPORT)
++	unsigned int boot_ab = 0;
++#endif
+ 
+ 	if (check_run_capsules() != EFI_SUCCESS)
+ 		return EFI_SUCCESS;
+@@ -1134,10 +1137,17 @@ efi_status_t efi_launch_capsules(void)
+ 			if (ret != EFI_SUCCESS)
+ 				log_err("Applying capsule %ls failed.\n",
+ 					files[i]);
++#if !defined(CONFIG_MEDIATEK_IOT_AB_BOOT_SUPPORT)
+ 			else
+ 				log_info("Applying capsule %ls succeeded.\n",
+ 					 files[i]);
+-
++#else
++			else {
++				log_info("Applying capsule %ls succeeded.\n",
++					 files[i]);
++				boot_ab++;
++			}
++#endif
+ 			/* create CapsuleXXXX */
+ 			set_capsule_result(index, capsule, ret);
+ 
+@@ -1153,6 +1163,11 @@ efi_status_t efi_launch_capsules(void)
+ 	}
+ 	efi_capsule_scan_done();
+ 
++	if (IS_ENABLED(CONFIG_MEDIATEK_IOT_AB_BOOT_SUPPORT)) {
++		if (boot_ab == nfiles)
++			iot_ab_boot_select();
++	}
++
+ 	for (i = 0; i < nfiles; i++)
+ 		free(files[i]);
+ 	free(files);
+-- 
+2.18.0
+

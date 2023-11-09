@@ -1,0 +1,23 @@
+From 5011327531d6b2af00a9798fb4ea0a7931f43abe Mon Sep 17 00:00:00 2001
+From: Simon Gaynor <simon.gaynor@lairdconnect.com>
+Date: Mon, 21 Aug 2023 13:25:20 -0700
+Subject: [PATCH] mt8188 : Default baud rate for Tungsten is 115200
+
+Signed-off-by: Simon Gaynor <simon.gaynor@lairdconnect.com>
+
+diff --git a/platform/mediatek/mt8188/rules.mk b/platform/mediatek/mt8188/rules.mk
+index 5f0cc4e0..6796fc03 100644
+--- a/platform/mediatek/mt8188/rules.mk
++++ b/platform/mediatek/mt8188/rules.mk
+@@ -8,6 +8,8 @@ WITH_SMP ?= 0
+ WITH_KERNEL_VM ?= 1
+ WITH_MTK_PMIC_WRAP_AND_PMIC ?= 0
+ 
++DEBUG_BAUDRATE ?= 115200
++
+ LK_HEAP_IMPLEMENTATION ?= miniheap
+ 
+ GLOBAL_INCLUDES += -I$(LK_TOP_DIR)/include \
+-- 
+2.34.1
+

@@ -1,0 +1,23 @@
+From ff7d752f979dc712a544d6f1eceedb1ca8225cd0 Mon Sep 17 00:00:00 2001
+From: Simon Gaynor <simon.gaynor@lairdconnect.com>
+Date: Mon, 21 Aug 2023 13:26:49 -0700
+Subject: [PATCH] mt8188 : Use define for debug baud rate
+
+Signed-off-by: Simon Gaynor <simon.gaynor@lairdconnect.com>
+
+diff --git a/platform/mediatek/mt8188/platform.c b/platform/mediatek/mt8188/platform.c
+index adfac260..f69ddb2e 100644
+--- a/platform/mediatek/mt8188/platform.c
++++ b/platform/mediatek/mt8188/platform.c
+@@ -99,7 +99,7 @@ static void dcache_enable(void)
+ 
+ void platform_early_init(void)
+ {
+-    uart_init_port(DEBUG_UART, 921600);
++    uart_init_port(DEBUG_UART, DEBUG_BAUDRATE);
+ 
+     /* initialize the interrupt controller */
+     arm_gic_init();
+-- 
+2.34.1
+

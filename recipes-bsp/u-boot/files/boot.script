@@ -1,0 +1,33 @@
+setenv fastboot "fastboot usb 0"
+
+run check_fastboot_entry
+
+if test "${fastboot_entry}" -eq 1 || test "${force_fastboot}" -eq 1; then
+	setenv force_fastboot 0
+	setenv fastboot_entry 0
+	saveenv
+	run fastboot
+fi
+
+setenv bootargs " ${bootargs} root=PARTLABEL=rootfs rootwait"
+setenv kerneladdr 0x4A000000
+setenv ipaddr 192.168.96.1
+setenv tftp_srv_ipaddr 192.168.96.20
+
+if test "${force_tftpboot}" -eq 1; then
+	tftpboot ${kerneladdr} ${tftp_srv_ipaddr}:fitImage
+else
+	${storage} dev ${storage_dev}
+	part start ${storage} ${storage_dev} kernel kernel_part_addr
+	part size ${storage} ${storage_dev} kernel kernel_part_size
+	${storage} read ${kerneladdr} ${kernel_part_addr} ${kernel_part_size}
+fi
+
+if test "${force_nfsboot}" -eq 1; then
+	setenv g_ether_host_addr f8:dc:7a:00:00:01
+	setenv g_ether_dev_addr f8:dc:7a:00:00:02
+	setenv bootargs "${bootargs} root=/dev/nfs rw ip=${ipaddr}:::::usb0 g_ether.dev_addr=${g_ether_dev_addr} g_ether.host_addr=${g_ether_host_addr} nfsroot=${tftp_srv_ipaddr}:${nfs_export},nfsvers=3"
+fi
+
+env exists boot_conf || setenv boot_conf "${fdt_boot_conf}"
+bootm ${kerneladdr}${boot_conf}

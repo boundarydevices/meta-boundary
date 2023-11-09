@@ -1,0 +1,21 @@
+From 1dc2b668a5cd0a82ec51bc0c5ddd44c9da9f12d7 Mon Sep 17 00:00:00 2001
+From: Simon Gaynor <simon.gaynor@lairdconnect.com>
+Date: Thu, 17 Aug 2023 09:26:03 -0700
+Subject: [PATCH] BL2 : mediatek : Change UART_BAUDRATE to 115200
+
+Signed-off-by: Simon Gaynor <simon.gaynor@lairdconnect.com>
+
+diff --git a/plat/mediatek/common/common_config.mk b/plat/mediatek/common/common_config.mk
+index b22a18275..ff10a5ee1 100644
+--- a/plat/mediatek/common/common_config.mk
++++ b/plat/mediatek/common/common_config.mk
+@@ -14,5 +14,5 @@ PLAT_XLAT_TABLES_DYNAMIC := 1
+ VENDOR_EXTEND_PUBEVENT_ENABLE := 1
+ 
+ # UART
+-UART_BAUDRATE := 921600
++UART_BAUDRATE := 115200
+ UART_CLOCK := 26000000
+-- 
+2.34.1
+
