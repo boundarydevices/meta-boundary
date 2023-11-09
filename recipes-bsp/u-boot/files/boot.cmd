@@ -1,7 +1,7 @@
 setenv bootargs ''
 
 if itest.s x${display_dtbo} == x ; then
-	setenv display_dtbo display-dsi.dtbo;
+	setenv display_dtbo display-hdmi.dtbo;
 fi
 
 if itest.s "x" == "x${bpart}" ; then
