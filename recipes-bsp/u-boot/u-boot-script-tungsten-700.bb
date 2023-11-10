@@ -7,7 +7,7 @@ DEPENDS = "u-boot-mkimage-native"
 SRC_URI = "file://boot.cmd"
 
 do_compile() {
-    mkimage -A arm -T script -C none -n "Boot script" -d "${WORKDIR}/boot.cmd" ${WORKDIR}/boot.scr
+    mkimage -A arm64 -T script -C none -n "Boot script" -d "${WORKDIR}/boot.cmd" ${WORKDIR}/boot.scr
 }
 
 do_install:append() {
