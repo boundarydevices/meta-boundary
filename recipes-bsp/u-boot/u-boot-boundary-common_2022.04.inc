@@ -4,7 +4,7 @@ LIC_FILES_CHKSUM = "file://Licenses/README;md5=5a7450c57ffe5ae63fd732446b988025"
 
 PV = "v2022.04+git${SRCPV}"
 
-SRCREV = "d0e1aba9d400c98230bfcf3bf5a97b93749c4fdb"
+SRCREV = "d798cc0e96f363cfad5cd9d57d9155f0521529d8"
 SRCBRANCH = "boundary-v2022.04"
 SRC_URI = "git://github.com/boundarydevices/u-boot.git;branch=${SRCBRANCH};protocol=https"
 
