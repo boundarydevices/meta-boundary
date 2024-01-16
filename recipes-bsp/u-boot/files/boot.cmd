@@ -10,6 +10,12 @@ fi
 
 setenv bootargs ${bootargs} console=ttyS0,115200;
 
+if itest.s "x" != "x${loglevel}" ; then
+	setenv bootargs ${bootargs} loglevel=${loglevel}
+else
+	setenv bootargs ${bootargs} quiet
+fi
+
 if itest.s "x" != "x${cmd_custom}" ; then
 	run cmd_custom
 fi
