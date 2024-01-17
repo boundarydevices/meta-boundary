@@ -24,6 +24,7 @@ SRC_URI += " \
 	${@bb.utils.contains("DISTRO_FEATURES", "fwupdate", "file://u-boot-cap.key", "", d)} \
 	${@bb.utils.contains("DISTRO_FEATURES", "fwupdate", "file://u-boot-cap.crt", "", d)} \
 	${@bb.utils.contains("DISTRO_FEATURES", "fwupdate", "file://u-boot-cap", "", d)} \
+	file://fw_env.config \
 "
 
 UBOOT_MKIMAGE_CMD = "${@bb.utils.contains("DISTRO_FEATURES", "secure-boot", "${UBOOT_MKIMAGE_SIGN} -F -k ${UBOOT_SIGN_KEYDIR}", "${UBOOT_MKIMAGE}", d)}"
