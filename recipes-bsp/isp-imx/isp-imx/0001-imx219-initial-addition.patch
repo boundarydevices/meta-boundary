@@ -1,9 +1,10 @@
-From e8f65d713181ecbeed82ed6bef357c4b0cac2dc2 Mon Sep 17 00:00:00 2001
-From: Gary Bisson <gary.bisson@boundarydevices.com>
-Date: Tue, 6 Jun 2023 13:28:58 +0200
-Subject: [PATCH 1/8] imx219: initial addition
+From 0dbba88c2f6523f6fd9be0ee63fc71ed468a7ba0 Mon Sep 17 00:00:00 2001
+From: Chris Dimich <chris.dimich@boundarydevices.com>
+Date: Thu, 18 Jan 2024 08:05:09 -0800
+Subject: [PATCH 1/1] imx219: initial addition
 
 Signed-off-by: Gary Bisson <gary.bisson@boundarydevices.com>
+Signed-off-by: Chris Dimich <chris.dimich@boundarydevices.com>
 ---
  .../sensor_dwe_imx219_1080P_config.json       |   35 +
  units/isi/CMakeLists.txt                      |    1 +
@@ -24,7 +25,7 @@ Signed-off-by: Gary Bisson <gary.bisson@boundarydevices.com>
 
 diff --git a/dewarp/dewarp_config/sensor_dwe_imx219_1080P_config.json b/dewarp/dewarp_config/sensor_dwe_imx219_1080P_config.json
 new file mode 100644
-index 000000000..a53d09935
+index 0000000..a53d099
 --- /dev/null
 +++ b/dewarp/dewarp_config/sensor_dwe_imx219_1080P_config.json
 @@ -0,0 +1,35 @@
@@ -64,17 +65,19 @@ index 000000000..a53d09935
 +
 +}
 diff --git a/units/isi/CMakeLists.txt b/units/isi/CMakeLists.txt
-index 06d582a49..942f6b3cc 100755
+index 8cd95b5..8ff43a5 100755
 --- a/units/isi/CMakeLists.txt
 +++ b/units/isi/CMakeLists.txt
-@@ -64,3 +64,4 @@ include(${UNITS_TOP_DIRECTORY}/targets.cmake)
- 
- # add sensor driver modules here
+@@ -78,5 +78,6 @@ add_subdirectory( drv/AR1335 )
+ #add_subdirectory( drv/OV5640 )
+ else (GENERATE_PARTITION_BUILD)
  add_subdirectory( drv/OS08a20 )
 +add_subdirectory( drv/IMX219 )
+ endif (GENERATE_PARTITION_BUILD)
+ 
 diff --git a/units/isi/drv/IMX219/CMakeLists.txt b/units/isi/drv/IMX219/CMakeLists.txt
 new file mode 100644
-index 000000000..ce07c7589
+index 0000000..ce07c75
 --- /dev/null
 +++ b/units/isi/drv/IMX219/CMakeLists.txt
 @@ -0,0 +1,105 @@
@@ -185,7 +188,7 @@ index 000000000..ce07c7589
 +add_subdirectory(calib)
 diff --git a/units/isi/drv/IMX219/Sensor0_Entry_imx219.cfg b/units/isi/drv/IMX219/Sensor0_Entry_imx219.cfg
 new file mode 100644
-index 000000000..818427fb8
+index 0000000..818427f
 --- /dev/null
 +++ b/units/isi/drv/IMX219/Sensor0_Entry_imx219.cfg
 @@ -0,0 +1,11 @@
@@ -202,7 +205,7 @@ index 000000000..818427fb8
 +dwe = "dewarp_config/sensor_dwe_imx219_1080P_config.json"
 diff --git a/units/isi/drv/IMX219/Sensor1_Entry_imx219.cfg b/units/isi/drv/IMX219/Sensor1_Entry_imx219.cfg
 new file mode 100644
-index 000000000..818427fb8
+index 0000000..818427f
 --- /dev/null
 +++ b/units/isi/drv/IMX219/Sensor1_Entry_imx219.cfg
 @@ -0,0 +1,11 @@
@@ -219,7 +222,7 @@ index 000000000..818427fb8
 +dwe = "dewarp_config/sensor_dwe_imx219_1080P_config.json"
 diff --git a/units/isi/drv/IMX219/calib/CMakeLists.txt b/units/isi/drv/IMX219/calib/CMakeLists.txt
 new file mode 100644
-index 000000000..9944bca1d
+index 0000000..9944bca
 --- /dev/null
 +++ b/units/isi/drv/IMX219/calib/CMakeLists.txt
 @@ -0,0 +1,44 @@
@@ -269,7 +272,7 @@ index 000000000..9944bca1d
 +
 diff --git a/units/isi/drv/IMX219/calib/IMX219/IMX219_8M_02_1080p_linear.xml b/units/isi/drv/IMX219/calib/IMX219/IMX219_8M_02_1080p_linear.xml
 new file mode 100644
-index 000000000..48c912da9
+index 0000000..48c912d
 --- /dev/null
 +++ b/units/isi/drv/IMX219/calib/IMX219/IMX219_8M_02_1080p_linear.xml
 @@ -0,0 +1,736 @@
@@ -1011,7 +1014,7 @@ index 000000000..48c912da9
 +
 diff --git a/units/isi/drv/IMX219/source/IMX219.c b/units/isi/drv/IMX219/source/IMX219.c
 new file mode 100644
-index 000000000..252436f58
+index 0000000..252436f
 --- /dev/null
 +++ b/units/isi/drv/IMX219/source/IMX219.c
 @@ -0,0 +1,1322 @@
@@ -2338,5 +2341,5 @@ index 000000000..252436f58
 +    .pfIsiGetSensorIss = IMX219_IsiGetSensorIss,
 +};
 -- 
-2.34.1
+2.43.0
 
