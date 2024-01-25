@@ -1,5 +1,5 @@
 SRCBRANCH:nitrogen93 = "boundary-imx_6.1.y-imx93"
-SRCREV:nitrogen93 = "c5e3d493fb6b3e086e31c1c692a0c42ca91a6f7f"
+SRCREV:nitrogen93 = "69dccade4ab3e8b7819af4d34c79ee4ef99da418"
 
 COMPATIBLE_MACHINE = "(nitrogen6x|nitrogen6x-lite|nitrogen6sx|nitrogen7|nitrogen8m|nitrogen8mm|nitrogen8mn|nitrogen8mp|nitrogen8ulp|nitrogen93)"
 
