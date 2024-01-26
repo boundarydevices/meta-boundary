@@ -15,4 +15,4 @@ KERNEL_INCLUDE:append = " \
 	${STAGING_KERNEL_BUILDDIR}/include/generated \
 "
 
-COMPATIBLE_MACHINE = "tungsten-700-smarc"
+COMPATIBLE_MACHINE = "(tungsten-510-smarc|tungsten-700-smarc)"
