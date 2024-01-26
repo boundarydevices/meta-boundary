@@ -28,4 +28,4 @@ else
 fi
 
 read ${devtype} ${devnum}#kernel ${loadaddr} 0 0xffff;
-bootm ${loadaddr}#conf-mediatek_mt8390-tungsten_smarc.dtb#conf-apusys.dtbo#conf-${display_dtbo}#conf-gpu-mali.dtbo#conf-video.dtbo;
+bootm ${loadaddr}#conf-mediatek_${board}.dtb#conf-apusys.dtbo#conf-${display_dtbo}#conf-gpu-mali.dtbo#conf-video.dtbo;
