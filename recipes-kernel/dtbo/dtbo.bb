@@ -1,13 +1,29 @@
 SUMMARY = "Device-Tree Blob Overlays"
 inherit devicetree
 
-SRCBRANCH = "mtk-v5.15-pass1"
-SRCREV = "fd5fcf1f05fdea1171c07c66abe824003df6320c"
+SRCBRANCH = "boundary-mtk-v5.15-dev"
+SRCREV = "22205980b04d7fb630b2bc6f298cd144b246c8c4"
 SRC_URI:append = "git://github.com/boundarydevices/linux.git;branch=${SRCBRANCH};protocol=https"
 
 S = "${WORKDIR}/git"
 
-DT_FILES_PATH = "${S}/arch/arm64/boot/dts/mediatek/dtbo"
+DT_FILES_PATH = "${S}/arch/arm64/boot/dts/mediatek/mt83x0-tungsten-smarc"
+
+do_unpack_dtbo_tungsten510() {
+    cp ${S}/arch/arm64/boot/dts/mediatek/mt8370/* ${S}/arch/arm64/boot/dts/mediatek/mt83x0-tungsten-smarc
+}
+
+do_unpack_dtbo_tungsten700() {
+    cp ${S}/arch/arm64/boot/dts/mediatek/mt8390/* ${S}/arch/arm64/boot/dts/mediatek/mt83x0-tungsten-smarc
+}
+
+python do_unpack:append:tungsten-510-smarc() {
+    bb.build.exec_func('do_unpack_dtbo_tungsten510', d)
+}
+
+python do_unpack:append:tungsten-700-smarc() {
+    bb.build.exec_func('do_unpack_dtbo_tungsten700', d)
+}
 
 do_compile[depends] += "virtual/kernel:do_shared_workdir"
 KERNEL_INCLUDE:append = " \
