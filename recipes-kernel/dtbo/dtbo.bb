@@ -2,7 +2,7 @@ SUMMARY = "Device-Tree Blob Overlays"
 inherit devicetree
 
 SRCBRANCH = "boundary-mtk-v5.15-dev"
-SRCREV = "22205980b04d7fb630b2bc6f298cd144b246c8c4"
+SRCREV = "7bfc048948e7f8646123893a1984f775d1eff0cf"
 SRC_URI:append = "git://github.com/boundarydevices/linux.git;branch=${SRCBRANCH};protocol=https"
 
 S = "${WORKDIR}/git"
