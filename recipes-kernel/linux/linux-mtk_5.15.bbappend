@@ -7,20 +7,23 @@ KBUILD_DEFCONFIG = "boundary_defconfig"
 
 # Needed for kernel-fitimage-mtk class so dtbos are installed in fitimage
 python __anonymous () {
-    d.setVar('EXTERNAL_KERNEL_DEVICETREE', "${D}/boot/devicetree")
+    d.setVar('EXTERNAL_KERNEL_DEVICETREE', "${D}/boot/devicetree/")
 }
 
 # Install dtbos
-do_install:append() {
+do_install_dtos() {
     install -d ${D}/boot/devicetree/
     install -Dm 0644 ${B}/arch/arm64/boot/dts/mediatek/mt83x0-tungsten-smarc/*.dtbo ${D}/boot/devicetree/
 }
 
-do_install:append:tungsten-510-smarc() {
+do_install_dtos:append:tungsten-510-smarc() {
+    install -d ${D}/boot/devicetree/
     install -Dm 0644 ${B}/arch/arm64/boot/dts/mediatek/mt8370/*.dtbo ${D}/boot/devicetree/
 }
 
-do_install:append:tungsten-700-smarc() {
+do_install_dtos:append:tungsten-700-smarc() {
+    install -d ${D}/boot/devicetree/
     install -Dm 0644 ${B}/arch/arm64/boot/dts/mediatek/mt8390/*.dtbo ${D}/boot/devicetree/
 }
 
+addtask do_install_dtos after do_compile before do_assemble_fitimage
