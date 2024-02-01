@@ -1,3 +1,5 @@
+SRCREV = "0542fa2fda2ac04f70e513f1603f335f27976636"
+
 SRCBRANCH:nitrogen93 = "boundary-imx_6.1.y-imx93"
 SRCREV:nitrogen93 = "217fc61fe67048f1464d33c1f85f5e6039b0be75"
 
