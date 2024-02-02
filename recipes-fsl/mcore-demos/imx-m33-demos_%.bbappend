@@ -1,4 +1,6 @@
-FILESEXTRAPATHS:prepend:nitrogen8ulp := "${THISDIR}/nitrogen8ulp:"
+FILESEXTRAPATHS:append:nitrogen8ulp := "${THISDIR}/nitrogen8ulp:"
+
+SRC_URI:append = " file://power_mode_switch_2.15.0.bin"
 
 do_deploy:append:nitrogen8ulp () {
    # Install the demo binaries
