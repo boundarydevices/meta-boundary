@@ -3,36 +3,45 @@
 
 require recipes-qt/images/b2qt-embedded-qt6-image.bb
 
+IMAGE_INSTALL_QCA ?= "${IMAGE_INSTALL_QCA_PKGS}"
+IMAGE_INSTALL_QCA_PKGS = " \
+    kernel-module-qcacld \
+    linux-firmware-bdsdmac \
+"
+IMAGE_INSTALL_QCA_PKGS:mx93-nxp-bsp = ""
+
+IMX_GPU_VIV_DEMOS ?= "imx-gpu-viv-demos"
+# imx-gpu-viv-demos are not compatible with i.MX7 and i.MX9
+IMX_GPU_VIV_DEMOS:mx7-nxp-bsp = ""
+IMX_GPU_VIV_DEMOS:mx93-nxp-bsp = ""
+
 IMAGE_INSTALL += " \
-	kernel-module-qcacld \
-	linux-firmware-bdsdmac \
+	can-utils \
+	e2fsprogs \
+	evtest \
 	i2c-tools \
 	iperf3 \
-	imx-gpu-viv-demos \
-	mmc-utils \
-	spitools \
-	tslib-tests tslib-calibrate \
-	evtest \
-	silex-uart \
-	udev-rules-bt \
-	can-utils \
 	iproute2 \
-	pciutils \
-	e2fsprogs \
-	packagegroup-tools-bluetooth \
 	libdrm-tests \
-	v4l-utils \
-	strace \
+	linux-firmware-cypress \
+	memtester \
+	minicom \
+	mmc-utils \
 	modemmanager \
-	screen \
-	psplash \
 	packagegroup-fsl-isp \
 	packagegroup-fsl-opencv-imx \
-	packagegroup-fsl-ml \
+	packagegroup-imx-ml \
+	packagegroup-tools-bluetooth \
+	pciutils \
+	psplash \
+	screen \
+	spitools \
+	strace \
+	tslib-tests tslib-calibrate \
+	u-boot-boundary-env \
+	u-boot-fw-utils \
+	udev-rules-imx \
+	v4l-utils \
+	wireless-regdb-static \
+	${IMAGE_INSTALL_QCA} \
 "
-
-#FIX ME: build failing on 8mn, temporarily remove from image
-IMAGE_INSTALL:remove:mx8mn-nxp-bsp += " packagegroup-fsl-ml"
-
-#imx-gpu-viv-demos are not compatible with i.MX7
-IMAGE_INSTALL:remove:mx7-nxp-bsp += " imx-gpu-viv-demos"
