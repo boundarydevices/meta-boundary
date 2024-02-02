@@ -69,7 +69,7 @@ Examples:
 clean_up()
 {
    unset EULA LIST_MACHINES VALID_MACHINE
-   unset CWD TEMPLATES SHORTOPTS LONGOPTS ARGS PROGNAME
+   unset CWD SHORTOPTS LONGOPTS ARGS PROGNAME
    unset generated_config updated
    unset MACHINE SDKMACHINE DISTRO OEROOT
 }
@@ -151,7 +151,6 @@ if [ "$build_dir_setup_enabled" = "true" ]; then
     mv conf/local.conf conf/local.conf.sample
 
     # Generate the local.conf based on the Yocto defaults
-    TEMPLATES=$CWD/sources/base/conf 
     grep -v '^#\|^$' conf/local.conf.sample > conf/local.conf
     cat >> conf/local.conf <<EOF
 
@@ -166,8 +165,6 @@ EOF
         -e "s,SDKMACHINE ??=.*,SDKMACHINE ??= '$SDKMACHINE',g" \
         -e "s,DISTRO ?=.*,DISTRO ?= '$DISTRO',g" \
         -i conf/local.conf
-
-    cp $TEMPLATES/* conf/
 
     for s in $HOME/.oe $HOME/.yocto; do
         if [ -e $s/site.conf ]; then
