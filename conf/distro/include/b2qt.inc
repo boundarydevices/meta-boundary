@@ -1,8 +1,8 @@
 include conf/distro/include/imx.inc
 
-DEPLOY_CONF_NAME:nitrogen8m = "nitrogen8m"
-DEPLOY_CONF_NAME:nitrogen8mm = "nitrogen8mm"
-DEPLOY_CONF_NAME:nitrogen8mp = "nitrogen8mp"
+DEPLOY_CONF_NAME:nitrogen8m = "Boundary Devices Nitrogen8M"
+DEPLOY_CONF_NAME:nitrogen8mm = "Boundary Devices Nitrogen8M Mini"
+DEPLOY_CONF_NAME:nitrogen8mp = "Boundary Devices Nitrogen8M Plus"
 DEPLOY_CONF_TYPE = "Boot2Qt 6.6.1"
 
 DRI_DEVICE:nitrogen8m = "card0"
