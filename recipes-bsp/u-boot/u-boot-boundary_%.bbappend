@@ -1,6 +1,6 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
-SRCREV = "c6e83ebaf45916b4acb7ba781d6c83f70ff58fbe"
+SRCREV = "c919112f674b66bde546b7078348f4f4fa3bcd6c"
 
 SRCBRANCH:nitrogen93 = "boundary-lf_v2023.04"
 SRCREV:nitrogen93 = "a996afa64846bd96e4437e220ed060a2d381393a"
