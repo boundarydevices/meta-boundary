@@ -3,12 +3,14 @@
 
 require recipes-fsl/images/fsl-image-multimedia-full.bb
 
-IMAGE_INSTALL_QCA ?= "${IMAGE_INSTALL_QCA_PKGS}"
-IMAGE_INSTALL_QCA_PKGS = " \
-    kernel-module-qcacld \
-    linux-firmware-bdsdmac \
+IMAGE_INSTALL_WIFI_BT ?= "${IMAGE_INSTALL_WIFI_BT_PKGS}"
+IMAGE_INSTALL_WIFI_BT_PKGS = " \
+    bdsdmac-firmware \
+    if513-sdio-firmware \
+    if573-sdio-firmware \
+    lwb5plus-sdio-sa-firmware \
+    kernel-module-bdsdmac-backports \
 "
-IMAGE_INSTALL_QCA_PKGS:mx93-nxp-bsp = ""
 
 IMX_GPU_VIV_DEMOS ?= "imx-gpu-viv-demos"
 # imx-gpu-viv-demos are not compatible with i.MX7 and i.MX9
@@ -23,7 +25,6 @@ CORE_IMAGE_EXTRA_INSTALL += " \
 	iperf3 \
 	iproute2 \
 	libdrm-tests \
-	linux-firmware-cypress \
 	memtester \
 	minicom \
 	mmc-utils \
@@ -46,7 +47,7 @@ CORE_IMAGE_EXTRA_INSTALL += " \
 	udev-rules-imx \
 	v4l-utils \
 	wireless-regdb-static \
-	${IMAGE_INSTALL_QCA} \
+	${IMAGE_INSTALL_WIFI_BT} \
 	${IMX_GPU_VIV_DEMOS} \
 "
 
