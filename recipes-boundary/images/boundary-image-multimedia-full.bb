@@ -6,7 +6,6 @@ require recipes-fsl/images/fsl-image-multimedia-full.bb
 IMAGE_INSTALL_WIFI_BT ?= "${IMAGE_INSTALL_WIFI_BT_PKGS}"
 IMAGE_INSTALL_WIFI_BT_PKGS = " \
     bdsdmac-firmware \
-    if513-sdio-firmware \
     if573-sdio-firmware \
     lwb5plus-sdio-sa-firmware \
     kernel-module-bdsdmac-backports \
