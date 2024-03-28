@@ -1,0 +1,37 @@
+# POKY_BBLAYERS_CONF_VERSION is increased each time build/conf/bblayers.conf
+# changes incompatibly
+POKY_BBLAYERS_CONF_VERSION = "2"
+
+BBPATH = "${TOPDIR}"
+BBFILES ?= ""
+
+BBLAYERS ?= " \
+  ##OEROOT##/meta \
+  ##OEROOT##/meta-poky \
+  ##OEROOT##/meta-yocto-bsp \
+  ##OEROOT##/../meta-arm/meta-arm \
+  ##OEROOT##/../meta-arm/meta-arm-toolchain \
+  ##OEROOT##/../meta-clang \
+  ##OEROOT##/../meta-mediatek-bsp \
+  ##OEROOT##/../meta-mediatek-tsn \
+  ##OEROOT##/../meta-mediatek-bluedroid \
+  ##OEROOT##/../meta-mediatek-demo \
+  ##OEROOT##/../meta-nn \
+  ##OEROOT##/../meta-stress-test \
+  ##OEROOT##/../meta-security \
+  ##OEROOT##/../meta-openembedded/meta-multimedia \
+  ##OEROOT##/../meta-openembedded/meta-networking \
+  ##OEROOT##/../meta-openembedded/meta-oe \
+  ##OEROOT##/../meta-openembedded/meta-python \
+  ##OEROOT##/../meta-openembedded/meta-perl \
+  ##OEROOT##/../meta-rity/meta \
+  ##OEROOT##/../meta-rity/meta-rity-bringup \
+  ##OEROOT##/../meta-rity/meta-rity-bsp \
+  ##OEROOT##/../meta-rity/meta-rity-demo \
+  ##OEROOT##/../meta-tensorflow \
+  ##OEROOT##/../meta-boundary \
+  ##OEROOT##/../meta-qt6 \
+  ##OEROOT##/../meta-mingw \
+  ##OEROOT##/../meta-boot2qt/meta-boot2qt-distro \
+  ##OEROOT##/../meta-boot2qt/meta-boot2qt \
+  "
