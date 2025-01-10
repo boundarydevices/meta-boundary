@@ -13,7 +13,9 @@ IMAGE_INSTALL += " \
     packagegroup-qt6-imx \
     tzdata \
     ${IMAGE_INSTALL_OPENCV} \
-    ${IMAGE_INSTALL_PARSEC}"
+    ${IMAGE_INSTALL_PARSEC} \
+    ${IMAGE_INSTALL_PKCS11TOOL} \
+"
 
 IMAGE_INSTALL_OPENCV              = ""
 IMAGE_INSTALL_OPENCV:imxgpu       = "${IMAGE_INSTALL_OPENCV_PKGS}"
@@ -31,6 +33,10 @@ IMAGE_INSTALL_PARSEC = " \
     os-release \
     ${@bb.utils.contains('MACHINE_FEATURES', 'optee', 'optee-client optee-os', '', d)}"
 
+IMAGE_INSTALL_PKCS11TOOL = ""
+IMAGE_INSTALL_PKCS11TOOL:mx8-nxp-bsp = "opensc pkcs11-provider"
+IMAGE_INSTALL_PKCS11TOOL:mx9-nxp-bsp = "opensc pkcs11-provider"
+
 IMAGE_INSTALL_WIFI_BT ?= "${IMAGE_INSTALL_WIFI_BT_PKGS}"
 IMAGE_INSTALL_WIFI_BT_PKGS = " \
     bdsdmac-firmware \
@@ -44,6 +50,7 @@ IMX_GPU_VIV_DEMOS ?= "imx-gpu-viv-demos"
 # imx-gpu-viv-demos are not compatible with i.MX7 and i.MX9
 IMX_GPU_VIV_DEMOS:mx7-nxp-bsp = ""
 IMX_GPU_VIV_DEMOS:mx93-nxp-bsp = ""
+IMX_GPU_VIV_DEMOS:mx95-nxp-bsp = ""
 
 CORE_IMAGE_EXTRA_INSTALL += " \
 	can-utils \
