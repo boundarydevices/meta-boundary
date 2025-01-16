@@ -17,7 +17,7 @@ LOCALVERSION = "+yocto"
 SRCBRANCH = "ezurio-lf-6.6.y"
 SRCREV = "f3ee0e4caefbeab623229628ebd7b43874a29b68"
 DEPENDS += "lzop-native bc-native"
-COMPATIBLE_MACHINE = "(nitrogen6x|nitrogen6x-lite|nitrogen6sx|nitrogen7|nitrogen8m|nitrogen8mm|nitrogen8mn|nitrogen8mp|nitrogen8ulp|nitrogen93)"
+COMPATIBLE_MACHINE = "(nitrogen6x|nitrogen6x-lite|nitrogen6sx|nitrogen7|nitrogen8m|nitrogen8mm|nitrogen8mn|nitrogen8mp|nitrogen8ulp|nitrogen93|porpoise)"
 
 KBUILD_DEFCONFIG ?= "ezurio_defconfig"
 
