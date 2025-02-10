@@ -1,3 +1,3 @@
 SRC_URI = "git://github.com/boundarydevices/isp-vvcam.git;protocol=https;branch=${SRCBRANCH}"
-SRCREV = "34c0d13d71dcb8c8091258cc0b81482369b61b82"
-SRCBRANCH = "ezurio-lf-6.6.3_1.0.0"
+SRCREV = "40bc2760aea029be89321e281c066ff703e1cb13"
+SRCBRANCH = "ezurio-lf-6.6.52-2.2.0"
