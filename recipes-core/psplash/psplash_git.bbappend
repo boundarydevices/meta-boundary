@@ -1,3 +1,3 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
-SPLASH_IMAGES = "file://boundary-logo-img.h;outsuffix=default"
+SPLASH_IMAGES = "file://ezurio-logo-img.h;outsuffix=default"
