@@ -6,10 +6,10 @@ SRC_URI:append:porpoise = " file://m33_image.bin"
 
 do_deploy:append:nitrogen8ulp () {
    # Install the demo binaries
-   install -m 0644 ${WORKDIR}/*.${DEPLOY_FILE_EXT} ${DEPLOYDIR}/
+   install -m 0644 ${WORKDIR}/*.${DEPLOY_FILE_EXT} ${DEPLOYDIR}/mcore-demos/
 }
 
 do_deploy:append:porpoise () {
    # Install the demo binaries
-   install -m 0644 ${WORKDIR}/*.${DEPLOY_FILE_EXT} ${DEPLOYDIR}/
+   install -m 0644 ${WORKDIR}/*.${DEPLOY_FILE_EXT} ${DEPLOYDIR}/mcore-demos/
 }
