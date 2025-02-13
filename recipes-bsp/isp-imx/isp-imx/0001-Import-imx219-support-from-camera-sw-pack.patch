@@ -1,31 +1,34 @@
-From 0dbba88c2f6523f6fd9be0ee63fc71ed468a7ba0 Mon Sep 17 00:00:00 2001
-From: Chris Dimich <chris.dimich@boundarydevices.com>
-Date: Thu, 18 Jan 2024 08:05:09 -0800
-Subject: [PATCH 1/1] imx219: initial addition
+From 0e243cb3b17eccf9c1594f45bfc8d7eebcbbcf81 Mon Sep 17 00:00:00 2001
+From: Gary Bisson <gary.bisson@ezurio.com>
+Date: Mon, 27 Jan 2025 14:14:23 +0100
+Subject: [PATCH 1/4] Import imx219 support from camera sw pack
 
-Signed-off-by: Gary Bisson <gary.bisson@boundarydevices.com>
-Signed-off-by: Chris Dimich <chris.dimich@boundarydevices.com>
+As available in the following NXP repo:
+https://github.com/nxp-imx-support/imx-camera-sw-pack
+branch: LF6.6.3_P24.1
+
+Signed-off-by: Gary Bisson <gary.bisson@ezurio.com>
 ---
  .../sensor_dwe_imx219_1080P_config.json       |   35 +
- units/isi/CMakeLists.txt                      |    1 +
- units/isi/drv/IMX219/CMakeLists.txt           |  105 ++
- units/isi/drv/IMX219/Sensor0_Entry_imx219.cfg |   11 +
- units/isi/drv/IMX219/Sensor1_Entry_imx219.cfg |   11 +
+ imx/run.sh                                    |   19 +-
+ imx/start_isp.sh                              |   10 +
+ units/isi/CMakeLists.txt                      |    3 +-
+ units/isi/drv/IMX219/CMakeLists.txt           |  122 ++
+ units/isi/drv/IMX219/Sensor0_Entry_imx219.cfg |    7 +
  units/isi/drv/IMX219/calib/CMakeLists.txt     |   44 +
  .../IMX219/IMX219_8M_02_1080p_linear.xml      |  736 +++++++++
- units/isi/drv/IMX219/source/IMX219.c          | 1322 +++++++++++++++++
- 8 files changed, 2265 insertions(+)
+ units/isi/drv/IMX219/source/IMX219.c          | 1316 +++++++++++++++++
+ 9 files changed, 2290 insertions(+), 2 deletions(-)
  create mode 100644 dewarp/dewarp_config/sensor_dwe_imx219_1080P_config.json
  create mode 100644 units/isi/drv/IMX219/CMakeLists.txt
  create mode 100644 units/isi/drv/IMX219/Sensor0_Entry_imx219.cfg
- create mode 100644 units/isi/drv/IMX219/Sensor1_Entry_imx219.cfg
  create mode 100644 units/isi/drv/IMX219/calib/CMakeLists.txt
  create mode 100644 units/isi/drv/IMX219/calib/IMX219/IMX219_8M_02_1080p_linear.xml
  create mode 100644 units/isi/drv/IMX219/source/IMX219.c
 
 diff --git a/dewarp/dewarp_config/sensor_dwe_imx219_1080P_config.json b/dewarp/dewarp_config/sensor_dwe_imx219_1080P_config.json
 new file mode 100644
-index 0000000..a53d099
+index 000000000..094f3a27c
 --- /dev/null
 +++ b/dewarp/dewarp_config/sensor_dwe_imx219_1080P_config.json
 @@ -0,0 +1,35 @@
@@ -38,7 +41,7 @@ index 0000000..a53d099
 +			},
 +
 +			"?dewarpType": "LENS_CORRECTION, FISHEYE_EXPAND, SPLIT_SCREEN",
-+			"dewarpType": "FISHEYE_DEWARP",
++			"dewarpType": "LENS_CORRECTION",
 +
 +			"scale": {
 +				"roix"   : 0,
@@ -52,7 +55,7 @@ index 0000000..a53d099
 +				"vertical_line_down": 960
 +			},
 +
-+			"bypass" : false,
++			"bypass" : true,
 +			"hflip"  : false,
 +			"vflip"  : false,
 +
@@ -64,23 +67,110 @@ index 0000000..a53d099
 +	]
 +
 +}
+diff --git a/imx/run.sh b/imx/run.sh
+index a9506d09b..dd46d1aa7 100755
+--- a/imx/run.sh
++++ b/imx/run.sh
+@@ -34,6 +34,8 @@ USAGE+="\tos08a20_1080p30hdr      - single os08a20 camera on MIPI-CSI1, 1920x108
+ USAGE+="\tdual_os08a20_1080p30hdr - dual os08a20 cameras on MIPI-CSI1/2, 1920x1080, 30 fps, HDR configuration\n"
+ USAGE+="\tos08a20_4khdr           - single os08a20 camera on MIPI-CSI1, 3840x2160, 15 fps, HDR configuration\n"
+ 
++USAGE+="\timx219_1080p30         - single imx219 camera on MIPI-CSI1, 1920x1080, 30 fps\n"
++
+ # parse command line arguments
+ while [ "$1" != "" ]; do
+ 	case $1 in
+@@ -87,6 +89,12 @@ write_default_mode_files () {
+ 	echo "[mode.3]" >> DAA3840_MODES.txt
+ 	echo "xml = \"DAA3840_30MC_1080P-hdr.xml\"" >> DAA3840_MODES.txt
+ 	echo "dwe = \"dewarp_config/daA3840_30mc_1080P.json\"" >> DAA3840_MODES.txt
++
++	#IMX219  modes file
++        echo -n "" > IMX219_MODES.txt
++        echo "[mode.0]" >> IMX219_MODES.txt
++        echo "xml = \"IMX219_8M_02_1080p_linear.xml\"" >> IMX219_MODES.txt
++        echo "dwe = \"dewarp_config/sensor_dwe_imx219_1080P_config.json\"" >> IMX219_MODES.txt
+ }
+ 
+ # write the sensonr config file
+@@ -194,7 +202,7 @@ load_modules () {
+ write_default_mode_files
+ 
+ echo "Trying configuration \"$ISP_CONFIG\"..."
+-MODULES_TO_REMOVE=("basler-camera-driver-vvcam" "os08a20" "ov2775" "${MODULES[@]}")
++MODULES_TO_REMOVE=("basler-camera-driver-vvcam" "os08a20" "ov2775" "imx219" "${MODULES[@]}")
+ case "$ISP_CONFIG" in
+ 		basler_4k )
+ 			MODULES=("basler-camera-driver-vvcam" "${MODULES[@]}")
+@@ -308,6 +316,15 @@ case "$ISP_CONFIG" in
+                          write_sensor_cfg_file "Sensor0_Entry.cfg" $CAM_NAME $DRV_FILE $MODE_FILE $MODE
+                          write_sensor_cfg_file "Sensor1_Entry.cfg" $CAM_NAME $DRV_FILE $MODE_FILE $MODE
+                          ;;
++                 imx219_1080p30 )
++                         MODULES=("imx219" "${MODULES[@]}")
++                         RUN_OPTION="CAMERA0"
++                         CAM_NAME="imx219"
++                         DRV_FILE="imx219.drv"
++                         MODE_FILE="IMX219_MODES.txt"
++                         MODE="0"
++                         write_sensor_cfg_file "Sensor0_Entry.cfg" $CAM_NAME $DRV_FILE $MODE_FILE $MODE
++                         ;;
+ 		 *)
+ 			echo "ISP configuration \"$ISP_CONFIG\" unsupported."
+ 			echo -e "$USAGE" >&2
+diff --git a/imx/start_isp.sh b/imx/start_isp.sh
+index d544b4ca2..8acded509 100755
+--- a/imx/start_isp.sh
++++ b/imx/start_isp.sh
+@@ -10,6 +10,7 @@ RUNTIME_DIR="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+ NR_DEVICE_TREE_BASLER=$(grep basler-camera-vvcam `find /sys/firmware/devicetree/base/soc@0/ -name compatible | grep i2c` -l | wc -l 2> /dev/null)
+ NR_DEVICE_TREE_OV5640=$(grep ov5640 `find /sys/firmware/devicetree/base/soc@0/ -name compatible | grep i2c` -l | wc -l 2> /dev/null)
+ NR_DEVICE_TREE_OS08A20=$(grep os08a20 `find /sys/firmware/devicetree/base/soc@0/ -name compatible | grep i2c` -l | wc -l 2> /dev/null)
++NR_DEVICE_TREE_IMX219=$(grep imx219 `find /sys/firmware/devicetree/base/soc@0/ -name compatible | grep i2c` -l | wc -l 2> /dev/null)
+ 
+ 
+ # check if the basler device has been enabled in the device tree
+@@ -69,6 +70,15 @@ elif [ $NR_DEVICE_TREE_OS08A20 -eq 2 ]; then
+ 	# Available configurations: dual_Os08a20_1080p60, dual_Os08a20_1080p30hdr
+ 	exec ./run.sh -c dual_os08a20_1080p60 -lm
+ 
++elif [ $NR_DEVICE_TREE_IMX219 -eq 1 ]; then
++
++        echo "Starting isp_media_server for Single imx219"
++
++        cd $RUNTIME_DIR
++        # Default configuration for IMX219: imx219_1080p30
++        # Available configurations: imx219_1080p30
++        exec ./run.sh -c imx219_1080p30 -lm
++
+ else
+ 	# no device tree found exit with code no device or address
+ 	echo "No device tree found for Basler camera or os08a20, check dtb file!" >&2
 diff --git a/units/isi/CMakeLists.txt b/units/isi/CMakeLists.txt
-index 8cd95b5..8ff43a5 100755
+index a91699b4a..1b7e654bc 100755
 --- a/units/isi/CMakeLists.txt
 +++ b/units/isi/CMakeLists.txt
-@@ -78,5 +78,6 @@ add_subdirectory( drv/AR1335 )
- #add_subdirectory( drv/OV5640 )
- else (GENERATE_PARTITION_BUILD)
+@@ -69,6 +69,7 @@ endif( DEFINED APPSHELL_TOP_COMPILE)
+ add_subdirectory( drv/OV2775 )
  add_subdirectory( drv/OS08a20 )
+ add_subdirectory( drv/AR1335 )
 +add_subdirectory( drv/IMX219 )
+ #add_subdirectory( drv/OV5630 )
+ ###add_subdirectory( drv/OV8810 )
+ #add_subdirectory( drv/OV14825 )
+@@ -98,4 +99,4 @@ add_dependencies(copy_shell_libs_${module} drv/OS08a20)
  endif (GENERATE_PARTITION_BUILD)
  
+ # create common targets for this module
+-include(${UNITS_TOP_DIRECTORY}/targets.cmake)
+\ No newline at end of file
++include(${UNITS_TOP_DIRECTORY}/targets.cmake)
 diff --git a/units/isi/drv/IMX219/CMakeLists.txt b/units/isi/drv/IMX219/CMakeLists.txt
 new file mode 100644
-index 0000000..ce07c75
+index 000000000..32195703e
 --- /dev/null
 +++ b/units/isi/drv/IMX219/CMakeLists.txt
-@@ -0,0 +1,105 @@
+@@ -0,0 +1,122 @@
 +cmake_minimum_required(VERSION 2.6)
 +
 +# define module name & interface version
@@ -131,14 +221,6 @@ index 0000000..ce07c75
 +                  )
 +endif()
 +
-+if(${APPMODE} STREQUAL NATIVE)
-+add_custom_target(${module}.init
-+                  ALL
-+		  DEPENDS ${module}_shared
-+                  COMMENT "Copying ${module} init files"
-+                  )
-+endif (${APPMODE} STREQUAL NATIVE)
-+
 +# define lib dependencies
 +#target_link_libraries(${module}_static
 +#                      ${platform_libs}
@@ -147,12 +229,29 @@ index 0000000..ce07c75
 +#                      isi_shared
 +#                      )
 +
-+#target_link_libraries(${module}_shared
-+#                      ${platform_libs}
-+#                      ${base_libs}
-+#                      ${drv_libs}
-+#                      isi_shared
-+#                      )
++# add link libs, or dlopen failed on Android
++if (ANDROID)
++if (GENERATE_PARTITION_BUILD)
++target_link_libraries(${module}_shared
++                      ${platform_libs}
++                      ${base_libs}
++                      ${drv_libs}
++                      isi_shared
++                      )
++else (GENERATE_PARTITION_BUILD)
++target_link_libraries(${module}_shared
++                      ${android_partial_platform_libs}
++                      ${android_partial_base_libs}
++                      ${android_partial_drv_libs}
++                      isi_shared
++                      )
++add_library(PrebuiltLibs SHARED IMPORTED)
++set_target_properties(PrebuiltLibs PROPERTIES IMPORTED_LOCATION ${LIB_ROOT}/${CMAKE_BUILD_TYPE}/lib/libhal.so)
++set_target_properties(PrebuiltLibs PROPERTIES IMPORTED_LOCATION ${LIB_ROOT}/${CMAKE_BUILD_TYPE}/lib/libbufferpool.so)
++set_target_properties(PrebuiltLibs PROPERTIES IMPORTED_LOCATION ${LIB_ROOT}/${CMAKE_BUILD_TYPE}/lib/libcameric_drv.so)
++target_link_libraries(${module}_shared PRIVATE PrebuiltLibs)
++endif (GENERATE_PARTITION_BUILD)
++endif (ANDROID)
 +
 +# define stuff to install
 +#install(TARGETS ${module}_static
@@ -175,12 +274,20 @@ index 0000000..ce07c75
 +if( DEFINED APPSHELL_TOP_COMPILE)
 +add_custom_target(copy_shell_libs_${module} ALL
 +       COMMENT "##Copy libs to shell libs"
-+       COMMAND ${CMAKE_COMMAND} -E copy ${LIB_ROOT}/${CMAKE_BUILD_TYPE}/lib/lib${module}.so ${CMAKE_HOME_DIRECTORY}/shell_libs/${APPMODE}/ispcore/${PLATFORM}/lib${module}.so
++       COMMAND ${CMAKE_COMMAND} -E copy ${LIB_ROOT}/${CMAKE_BUILD_TYPE}/lib/lib${module}.so ${CMAKE_HOME_DIRECTORY}/shell_libs/ispcore/${PLATFORM}/lib${module}.so
 +       #COMMAND ${CMAKE_COMMAND} -E copy_directory ${LIB_ROOT}/${CMAKE_BUILD_TYPE}/include/${module} ${CMAKE_HOME_DIRECTORY}/shell_libs/include/units_headers/${module}
 +)
 +add_dependencies(copy_shell_libs_${module} ${module}_shared)
 +endif( DEFINED APPSHELL_TOP_COMPILE)
 +
++if (NOT GENERATE_PARTITION_BUILD)
++add_custom_target(${module}_create_isi_dir
++                  COMMAND ${CMAKE_COMMAND} -E make_directory ${LIB_ROOT}/${CMAKE_BUILD_TYPE}/include/isi
++                  COMMENT "Create isi dir for ${module}")
++add_dependencies(${module}_create_isi_dir ${module}_shared)
++endif (NOT GENERATE_PARTITION_BUILD)
++
++unset(HEADER_CP_VAR)
 +# create common targets for this module
 +include(${UNITS_TOP_DIRECTORY}/targets.cmake)
 +
@@ -188,41 +295,20 @@ index 0000000..ce07c75
 +add_subdirectory(calib)
 diff --git a/units/isi/drv/IMX219/Sensor0_Entry_imx219.cfg b/units/isi/drv/IMX219/Sensor0_Entry_imx219.cfg
 new file mode 100644
-index 0000000..818427f
+index 000000000..cd7994462
 --- /dev/null
 +++ b/units/isi/drv/IMX219/Sensor0_Entry_imx219.cfg
-@@ -0,0 +1,11 @@
+@@ -0,0 +1,7 @@
 +name="imx219"
 +drv = "imx219.drv"
 +mode= 0
 +
 +[mode.0]
 +xml = "IMX219_8M_02_1080p_linear.xml"
-+dwe = "dewarp_config/sensor_dwe_imx219_1080P_config.json"
-+
-+[mode.1]
-+xml = "IMX219_8M_02_720p.xml"
-+dwe = "dewarp_config/sensor_dwe_imx219_1080P_config.json"
-diff --git a/units/isi/drv/IMX219/Sensor1_Entry_imx219.cfg b/units/isi/drv/IMX219/Sensor1_Entry_imx219.cfg
-new file mode 100644
-index 0000000..818427f
---- /dev/null
-+++ b/units/isi/drv/IMX219/Sensor1_Entry_imx219.cfg
-@@ -0,0 +1,11 @@
-+name="imx219"
-+drv = "imx219.drv"
-+mode= 0
-+
-+[mode.0]
-+xml = "IMX219_8M_02_1080p_linear.xml"
-+dwe = "dewarp_config/sensor_dwe_imx219_1080P_config.json"
-+
-+[mode.1]
-+xml = "IMX219_8M_02_720p.xml"
-+dwe = "dewarp_config/sensor_dwe_imx219_1080P_config.json"
++dwe = "dewarp_config/sensor_dwe_imx219_1080P_config.json
 diff --git a/units/isi/drv/IMX219/calib/CMakeLists.txt b/units/isi/drv/IMX219/calib/CMakeLists.txt
 new file mode 100644
-index 0000000..9944bca
+index 000000000..9944bca1d
 --- /dev/null
 +++ b/units/isi/drv/IMX219/calib/CMakeLists.txt
 @@ -0,0 +1,44 @@
@@ -272,7 +358,7 @@ index 0000000..9944bca
 +
 diff --git a/units/isi/drv/IMX219/calib/IMX219/IMX219_8M_02_1080p_linear.xml b/units/isi/drv/IMX219/calib/IMX219/IMX219_8M_02_1080p_linear.xml
 new file mode 100644
-index 0000000..48c912d
+index 000000000..48c912da9
 --- /dev/null
 +++ b/units/isi/drv/IMX219/calib/IMX219/IMX219_8M_02_1080p_linear.xml
 @@ -0,0 +1,736 @@
@@ -1014,22 +1100,16 @@ index 0000000..48c912d
 +
 diff --git a/units/isi/drv/IMX219/source/IMX219.c b/units/isi/drv/IMX219/source/IMX219.c
 new file mode 100644
-index 0000000..252436f
+index 000000000..6f46f96cc
 --- /dev/null
 +++ b/units/isi/drv/IMX219/source/IMX219.c
-@@ -0,0 +1,1322 @@
-+/******************************************************************************\
-+|* Copyright (c) 2020 by VeriSilicon Holdings Co., Ltd. ("VeriSilicon")       *|
-+|* All Rights Reserved.                                                       *|
-+|*                                                                            *|
-+|* The material in this file is confidential and contains trade secrets of    *|
-+|* of VeriSilicon.  This is proprietary information owned or licensed by      *|
-+|* VeriSilicon.  No part of this work may be disclosed, reproduced, copied,   *|
-+|* transmitted, or used in any way for any purpose, without the express       *|
-+|* written permission of VeriSilicon.                                         *|
-+|*                                                                            *|
-+\******************************************************************************/
-+//#undef NDEBUG
+@@ -0,0 +1,1316 @@
++/****************************************************************************
++ * Copyright (c) 2020 VeriSilicon Holdings Co., Ltd.
++ * Copyright 2023-2024 NXP
++ *
++ * SPDX-License-Identifier: MIT
++ *****************************************************************************/
 +
 +#include <ebase/types.h>
 +#include <ebase/trace.h>
@@ -2341,5 +2421,5 @@ index 0000000..252436f
 +    .pfIsiGetSensorIss = IMX219_IsiGetSensorIss,
 +};
 -- 
-2.43.0
+2.47.2
 

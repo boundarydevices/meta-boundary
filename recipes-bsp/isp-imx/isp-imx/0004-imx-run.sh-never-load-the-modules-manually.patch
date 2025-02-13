@@ -1,20 +1,20 @@
-From 65c101f7586e5590884d38fb71cd83c4e0627b1f Mon Sep 17 00:00:00 2001
-From: Gary Bisson <gary.bisson@boundarydevices.com>
+From 2b662ed96d0644ce55726186ab9ff078e0cf31ba Mon Sep 17 00:00:00 2001
+From: Gary Bisson <gary.bisson@ezurio.com>
 Date: Tue, 6 Jun 2023 17:55:52 +0200
-Subject: [PATCH 5/8] imx/run.sh: never load the modules manually
+Subject: [PATCH 4/4] imx/run.sh: never load the modules manually
 
 Unnecessary as we properly probe the ISP driver.
 
-Signed-off-by: Gary Bisson <gary.bisson@boundarydevices.com>
+Signed-off-by: Gary Bisson <gary.bisson@ezurio.com>
 ---
  imx/run.sh | 4 ----
  1 file changed, 4 deletions(-)
 
 diff --git a/imx/run.sh b/imx/run.sh
-index 60861e9d7..52041c07f 100755
+index 0fd29a7cf..036ddd77e 100755
 --- a/imx/run.sh
 +++ b/imx/run.sh
-@@ -356,10 +356,6 @@ fi
+@@ -354,10 +354,6 @@ fi
  # Need a sure way to wait untill all the above processes terminated
  sleep 1
  
@@ -26,5 +26,5 @@ index 60861e9d7..52041c07f 100755
  	set_libs_path "libmedia_server.so"
  fi
 -- 
-2.34.1
+2.47.2
 

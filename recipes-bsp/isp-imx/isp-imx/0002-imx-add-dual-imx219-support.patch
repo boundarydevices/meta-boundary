@@ -1,0 +1,63 @@
+From ceac37930a8a1a2aae07cb28145b87ee36230275 Mon Sep 17 00:00:00 2001
+From: Gary Bisson <gary.bisson@ezurio.com>
+Date: Tue, 6 Jun 2023 17:25:47 +0200
+Subject: [PATCH 2/4] imx: add dual imx219 support
+
+Signed-off-by: Gary Bisson <gary.bisson@ezurio.com>
+---
+ imx/run.sh       | 11 +++++++++++
+ imx/start_isp.sh |  9 +++++++++
+ 2 files changed, 20 insertions(+)
+
+diff --git a/imx/run.sh b/imx/run.sh
+index dd46d1aa7..0fd29a7cf 100755
+--- a/imx/run.sh
++++ b/imx/run.sh
+@@ -35,6 +35,7 @@ USAGE+="\tdual_os08a20_1080p30hdr - dual os08a20 cameras on MIPI-CSI1/2, 1920x10
+ USAGE+="\tos08a20_4khdr           - single os08a20 camera on MIPI-CSI1, 3840x2160, 15 fps, HDR configuration\n"
+ 
+ USAGE+="\timx219_1080p30         - single imx219 camera on MIPI-CSI1, 1920x1080, 30 fps\n"
++USAGE+="\tdual_imx219_1080p30    - dual imx219 camera on MIPI-CSI1, 1920x1080, 30 fps\n"
+ 
+ # parse command line arguments
+ while [ "$1" != "" ]; do
+@@ -325,6 +326,16 @@ case "$ISP_CONFIG" in
+                          MODE="0"
+                          write_sensor_cfg_file "Sensor0_Entry.cfg" $CAM_NAME $DRV_FILE $MODE_FILE $MODE
+                          ;;
++                 dual_imx219_1080p30 )
++                         MODULES=("imx219" "${MODULES[@]}")
++                         RUN_OPTION="DUAL_CAMERA"
++                         CAM_NAME="imx219"
++                         DRV_FILE="imx219.drv"
++                         MODE_FILE="IMX219_MODES.txt"
++                         MODE="0"
++                         write_sensor_cfg_file "Sensor0_Entry.cfg" $CAM_NAME $DRV_FILE $MODE_FILE $MODE
++                         write_sensor_cfg_file "Sensor1_Entry.cfg" $CAM_NAME $DRV_FILE $MODE_FILE $MODE
++                         ;;
+ 		 *)
+ 			echo "ISP configuration \"$ISP_CONFIG\" unsupported."
+ 			echo -e "$USAGE" >&2
+diff --git a/imx/start_isp.sh b/imx/start_isp.sh
+index 8acded509..094b3361f 100755
+--- a/imx/start_isp.sh
++++ b/imx/start_isp.sh
+@@ -79,6 +79,15 @@ elif [ $NR_DEVICE_TREE_IMX219 -eq 1 ]; then
+         # Available configurations: imx219_1080p30
+         exec ./run.sh -c imx219_1080p30 -lm
+ 
++elif [ $NR_DEVICE_TREE_IMX219 -eq 2 ]; then
++
++        echo "Starting isp_media_server for Dual imx219"
++
++        cd $RUNTIME_DIR
++	# Default configuration for Imx219: imx219_1080p30
++        # Available configurations: imx219_1080p30
++        exec ./run.sh -c dual_imx219_1080p30 -lm
++
+ else
+ 	# no device tree found exit with code no device or address
+ 	echo "No device tree found for Basler camera or os08a20, check dtb file!" >&2
+-- 
+2.47.2
+

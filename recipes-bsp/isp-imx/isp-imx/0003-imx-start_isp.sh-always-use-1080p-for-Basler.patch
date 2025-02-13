@@ -1,18 +1,18 @@
-From f45f02f2ee757fc6954ace6d78163d9cb64ad1b8 Mon Sep 17 00:00:00 2001
-From: Gary Bisson <gary.bisson@boundarydevices.com>
+From 087ffc6789511cf1deb2a52175de924bf1cecb46 Mon Sep 17 00:00:00 2001
+From: Gary Bisson <gary.bisson@ezurio.com>
 Date: Tue, 6 Jun 2023 17:57:44 +0200
-Subject: [PATCH 4/8] imx/start_isp.sh: always use 1080p for Basler
+Subject: [PATCH 3/4] imx/start_isp.sh: always use 1080p for Basler
 
-Signed-off-by: Gary Bisson <gary.bisson@boundarydevices.com>
+Signed-off-by: Gary Bisson <gary.bisson@ezurio.com>
 ---
  imx/start_isp.sh | 15 +++------------
  1 file changed, 3 insertions(+), 12 deletions(-)
 
 diff --git a/imx/start_isp.sh b/imx/start_isp.sh
-index e73cb1548..56661cbba 100755
+index 094b3361f..fc6be4473 100755
 --- a/imx/start_isp.sh
 +++ b/imx/start_isp.sh
-@@ -19,18 +19,9 @@ if [ $NR_DEVICE_TREE_BASLER -eq 1 ]; then
+@@ -20,18 +20,9 @@ if [ $NR_DEVICE_TREE_BASLER -eq 1 ]; then
  
  	cd $RUNTIME_DIR
  
@@ -35,5 +35,5 @@ index e73cb1548..56661cbba 100755
  elif [ $NR_DEVICE_TREE_BASLER -eq 2 ]; then
  
 -- 
-2.34.1
+2.47.2
 
