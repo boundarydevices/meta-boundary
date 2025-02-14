@@ -3,27 +3,24 @@
 
 require recipes-qt/images/b2qt-embedded-qt6-image.bb
 
-IMAGE_INSTALL_QCA ?= "${IMAGE_INSTALL_QCA_PKGS}"
-IMAGE_INSTALL_QCA_PKGS = " \
-    kernel-module-qcacld \
-    linux-firmware-bdsdmac \
+IMAGE_INSTALL_WIFI_BT ?= "${IMAGE_INSTALL_WIFI_BT_PKGS}"
+IMAGE_INSTALL_WIFI_BT_PKGS = " \
+        bdsdmac-firmware \
+        if573-sdio-firmware \
+        lwb5plus-sdio-sa-firmware \
+        nx61x-firmware \
+        kernel-module-bdsdmac-backports \
 "
-IMAGE_INSTALL_QCA_PKGS:mx93-nxp-bsp = ""
-
-IMX_GPU_VIV_DEMOS ?= "imx-gpu-viv-demos"
-# imx-gpu-viv-demos are not compatible with i.MX7 and i.MX9
-IMX_GPU_VIV_DEMOS:mx7-nxp-bsp = ""
-IMX_GPU_VIV_DEMOS:mx93-nxp-bsp = ""
 
 IMAGE_INSTALL += " \
 	can-utils \
 	e2fsprogs \
 	evtest \
+	fw-env-rules \
 	i2c-tools \
 	iperf3 \
 	iproute2 \
 	libdrm-tests \
-	linux-firmware-cypress \
 	memtester \
 	minicom \
 	mmc-utils \
@@ -43,5 +40,5 @@ IMAGE_INSTALL += " \
 	udev-rules-imx \
 	v4l-utils \
 	wireless-regdb-static \
-	${IMAGE_INSTALL_QCA} \
+	${IMAGE_INSTALL_WIFI_BT} \
 "
