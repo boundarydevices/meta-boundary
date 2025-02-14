@@ -13,15 +13,14 @@ BBLAYERS = " \
   ${BSPDIR}/sources/meta-openembedded/meta-python \
   \
   ${BSPDIR}/sources/meta-freescale \
-  ${BSPDIR}/sources/meta-freescale-3rdparty \
   ${BSPDIR}/sources/meta-freescale-distro \
 "
 
 # i.MX Yocto Project Release layers
-BBLAYERS += "${BSPDIR}/sources/meta-imx/meta-bsp"
-BBLAYERS += "${BSPDIR}/sources/meta-imx/meta-sdk"
-BBLAYERS += "${BSPDIR}/sources/meta-imx/meta-ml"
-BBLAYERS += "${BSPDIR}/sources/meta-imx/meta-v2x"
+BBLAYERS += "${BSPDIR}/sources/meta-imx/meta-imx-bsp"
+BBLAYERS += "${BSPDIR}/sources/meta-imx/meta-imx-sdk"
+BBLAYERS += "${BSPDIR}/sources/meta-imx/meta-imx-ml"
+BBLAYERS += "${BSPDIR}/sources/meta-imx/meta-imx-v2x"
 BBLAYERS += "${BSPDIR}/sources/meta-nxp-demo-experience"
 
 BBLAYERS += "${BSPDIR}/sources/meta-arm/meta-arm"
@@ -35,6 +34,7 @@ BBLAYERS += "${BSPDIR}/sources/meta-security/meta-parsec"
 BBLAYERS += "${BSPDIR}/sources/meta-security/meta-tpm"
 BBLAYERS += "${BSPDIR}/sources/meta-virtualization"
 BBLAYERS += "${BSPDIR}/sources/meta-boundary"
+BBLAYERS += "${BSPDIR}/sources/meta-summit-radio/meta-summit-radio"
 BBLAYERS += "${BSPDIR}/sources/meta-mingw"
 BBLAYERS += "${BSPDIR}/sources/meta-boot2qt/meta-boot2qt"
 BBLAYERS += "${BSPDIR}/sources/meta-boot2qt/meta-boot2qt-distro"
