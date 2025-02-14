@@ -22,6 +22,7 @@
 
 CWD=`pwd`
 PROGNAME="setup-environment"
+PACKAGE_CLASSES=${PACKAGE_CLASSES:-package_rpm}
 
 usage()
 {
@@ -44,12 +45,15 @@ directory <build-dir>. The build directory configuration is unchanged.
 
     ls sources/*/conf/machine/*.conf > /dev/null 2>&1
     ls sources/meta-freescale-distro/conf/distro/fslc-*.conf > /dev/null 2>&1
+    ls sources/meta-freescale-distro/conf/distro/fsl-*.conf > /dev/null 2>&1
     if [ $? -eq 0 ]; then
         echo -e "
 Supported machines: `echo; ls sources/*/conf/machine/*.conf \
 | sed s/\.conf//g | sed -r 's/^.+\///' | xargs -I% echo -e "\t%"`
 
 Supported Freescale's distros: `echo; ls sources/meta-freescale-distro/conf/distro/fslc-*.conf \
+| sed s/\.conf//g | sed -r 's/^.+\///' | xargs -I% echo -e "\t%"`
+`echo; ls sources/meta-freescale-distro/conf/distro/fsl-*.conf \
 | sed s/\.conf//g | sed -r 's/^.+\///' | xargs -I% echo -e "\t%"`
 
 Available Poky's distros: `echo; ls sources/poky/meta-poky/conf/distro/*.conf \
@@ -69,7 +73,7 @@ Examples:
 clean_up()
 {
    unset EULA LIST_MACHINES VALID_MACHINE
-   unset CWD SHORTOPTS LONGOPTS ARGS PROGNAME
+   unset CWD TEMPLATES SHORTOPTS LONGOPTS ARGS PROGNAME
    unset generated_config updated
    unset MACHINE SDKMACHINE DISTRO OEROOT
 }
@@ -130,6 +134,13 @@ if [ "$build_dir_setup_enabled" = "true" ] && [ -z "$DISTRO" ]; then
     return 1
 fi
 
+[ -z "$FSL_EULA_FILE" ] && FSL_EULA_FILE=$CWD/sources/meta-freescale/EULA
+if [ ! -e $FSL_EULA_FILE ]; then
+    echo -e "ERROR: EULA not found at $FSL_EULA_FILE."
+    clean_up
+    return 1
+fi
+
 OEROOT=$PWD/sources/poky
 if [ -e $PWD/sources/oe-core ]; then
     OEROOT=$PWD/sources/oe-core
@@ -151,6 +162,7 @@ if [ "$build_dir_setup_enabled" = "true" ]; then
     mv conf/local.conf conf/local.conf.sample
 
     # Generate the local.conf based on the Yocto defaults
+    TEMPLATES=$CWD/sources/base/conf
     grep -v '^#\|^$' conf/local.conf.sample > conf/local.conf
     cat >> conf/local.conf <<EOF
 
@@ -164,7 +176,10 @@ EOF
     sed -e "s,MACHINE ??=.*,MACHINE ??= '$MACHINE',g" \
         -e "s,SDKMACHINE ??=.*,SDKMACHINE ??= '$SDKMACHINE',g" \
         -e "s,DISTRO ?=.*,DISTRO ?= '$DISTRO',g" \
+        -e "s,PACKAGE_CLASSES ?=.*,PACKAGE_CLASSES ?= '$PACKAGE_CLASSES',g" \
         -i conf/local.conf
+
+    cp $TEMPLATES/* conf/
 
     for s in $HOME/.oe $HOME/.yocto; do
         if [ -e $s/site.conf ]; then
@@ -199,7 +214,7 @@ else
     # accepts the FSL EULA:
     cat <<EOF
 
-Some BSPs depend on libraries and packages which are covered by Freescale's
+Some BSPs depend on libraries and packages which are covered by NXP's
 End User License Agreement (EULA). To have the right to use these binaries in
 your images, you need to read and accept the following...
 
@@ -207,7 +222,7 @@ EOF
 
     sleep 4
 
-    more -d $CWD/sources/meta-freescale/EULA
+    more -d $FSL_EULA_FILE
     echo
     REPLY=
     while [ -z "$REPLY" ]; do
