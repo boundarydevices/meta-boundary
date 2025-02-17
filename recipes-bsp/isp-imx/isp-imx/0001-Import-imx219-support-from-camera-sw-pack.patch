@@ -12,13 +12,13 @@ Signed-off-by: Gary Bisson <gary.bisson@ezurio.com>
  .../sensor_dwe_imx219_1080P_config.json       |   35 +
  imx/run.sh                                    |   19 +-
  imx/start_isp.sh                              |   10 +
- units/isi/CMakeLists.txt                      |    3 +-
+ units/isi/CMakeLists.txt                      |    4 +-
  units/isi/drv/IMX219/CMakeLists.txt           |  122 ++
  units/isi/drv/IMX219/Sensor0_Entry_imx219.cfg |    7 +
  units/isi/drv/IMX219/calib/CMakeLists.txt     |   44 +
  .../IMX219/IMX219_8M_02_1080p_linear.xml      |  736 +++++++++
  units/isi/drv/IMX219/source/IMX219.c          | 1316 +++++++++++++++++
- 9 files changed, 2290 insertions(+), 2 deletions(-)
+ 9 files changed, 2291 insertions(+), 2 deletions(-)
  create mode 100644 dewarp/dewarp_config/sensor_dwe_imx219_1080P_config.json
  create mode 100644 units/isi/drv/IMX219/CMakeLists.txt
  create mode 100644 units/isi/drv/IMX219/Sensor0_Entry_imx219.cfg
@@ -147,7 +147,7 @@ index d544b4ca2..8acded509 100755
  	# no device tree found exit with code no device or address
  	echo "No device tree found for Basler camera or os08a20, check dtb file!" >&2
 diff --git a/units/isi/CMakeLists.txt b/units/isi/CMakeLists.txt
-index a91699b4a..1b7e654bc 100755
+index a91699b4a..d91883712 100755
 --- a/units/isi/CMakeLists.txt
 +++ b/units/isi/CMakeLists.txt
 @@ -69,6 +69,7 @@ endif( DEFINED APPSHELL_TOP_COMPILE)
@@ -158,7 +158,15 @@ index a91699b4a..1b7e654bc 100755
  #add_subdirectory( drv/OV5630 )
  ###add_subdirectory( drv/OV8810 )
  #add_subdirectory( drv/OV14825 )
-@@ -98,4 +99,4 @@ add_dependencies(copy_shell_libs_${module} drv/OS08a20)
+@@ -87,6 +88,7 @@ include_directories(
+     )
+ 
+ add_subdirectory( drv/OS08a20 )
++add_subdirectory( drv/IMX219 )
+ 
+ add_custom_target(copy_shell_libs_${module} ALL
+        COMMENT "##Copy isi drv cfg to shell libs"
+@@ -98,4 +100,4 @@ add_dependencies(copy_shell_libs_${module} drv/OS08a20)
  endif (GENERATE_PARTITION_BUILD)
  
  # create common targets for this module
