@@ -38,3 +38,5 @@ BBLAYERS += "${BSPDIR}/sources/meta-summit-radio/meta-summit-radio"
 BBLAYERS += "${BSPDIR}/sources/meta-mingw"
 BBLAYERS += "${BSPDIR}/sources/meta-boot2qt/meta-boot2qt"
 BBLAYERS += "${BSPDIR}/sources/meta-boot2qt/meta-boot2qt-distro"
+
+BBMASK += "meta-imx/meta-imx-bsp/recipes-graphics/libsdl2/libsdl2_%.bbappend"
