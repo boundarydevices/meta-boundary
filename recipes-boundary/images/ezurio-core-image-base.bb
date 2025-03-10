@@ -22,6 +22,7 @@ CORE_IMAGE_EXTRA_INSTALL += " \
     ethtool \
     evtest \
     fw-env-rules \
+    firmwared \
     i2c-tools \
     iperf3 \
     iproute2 \
