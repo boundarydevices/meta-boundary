@@ -16,6 +16,7 @@ IMAGE_INSTALL += " \
 	can-utils \
 	e2fsprogs \
 	evtest \
+	firmwared \
 	fw-env-rules \
 	i2c-tools \
 	iperf3 \
