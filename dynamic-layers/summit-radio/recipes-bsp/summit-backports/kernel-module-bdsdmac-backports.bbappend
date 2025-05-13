@@ -14,5 +14,6 @@ do_export_sources() {
 }
 
 # add nx611 module parameters
+module_conf_btnxpuart = "softdep btnxpuart pre: moal"
 module_conf_moal = "options moal mod_para=nxp/wifi_prod_serdev_params.conf"
-KERNEL_MODULE_PROBECONF += "moal"
+KERNEL_MODULE_PROBECONF += "btnxpuart moal"
