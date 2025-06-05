@@ -10,7 +10,7 @@ IMAGE_INSTALL_WIFI_BT_PKGS = " \
     bdsdmac-firmware \
     if573-sdio-firmware \
     lwb5plus-sdio-sa-firmware \
-    nx61x-firmware \
+    nx61x-firmware-1216-serdev \
     kernel-module-bdsdmac-backports \
 "
 
