@@ -4,9 +4,9 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda
 
 SRC_URI = " file://fw-env.rules"
 
-S = "${WORKDIR}"
+S = "${UNPACKDIR}"
 
 do_install () {
 	install -d ${D}${sysconfdir}/udev/rules.d
-	install -m 0644 ${WORKDIR}/fw-env.rules ${D}${sysconfdir}/udev/rules.d/
+	install -m 0644 ${UNPACKDIR}/fw-env.rules ${D}${sysconfdir}/udev/rules.d/
 }
