@@ -9,24 +9,28 @@ SRC_URI = "git://github.com/boundarydevices/u-boot.git;branch=${SRCBRANCH};proto
 SRC_URI += "file://fw_env.config"
 
 LIC_FILES_CHKSUM = "file://Licenses/README;md5=5a7450c57ffe5ae63fd732446b988025"
+LIC_FILES_CHKSUM:nitrogen91 = "file://Licenses/README;md5=2ca5f2c35c8cc335f0a19756634782f1"
 LIC_FILES_CHKSUM:nitrogen93 = "file://Licenses/README;md5=2ca5f2c35c8cc335f0a19756634782f1"
 LIC_FILES_CHKSUM:nitrogen95 = "file://Licenses/README;md5=2ca5f2c35c8cc335f0a19756634782f1"
 LIC_FILES_CHKSUM:porpoise = "file://Licenses/README;md5=2ca5f2c35c8cc335f0a19756634782f1"
 
 PV = "v2022.04+git${SRCPV}"
+PV:nitrogen91 = "v2024.04+git${SRCPV}"
 PV:nitrogen93 = "v2024.04+git${SRCPV}"
 PV:nitrogen95 = "v2024.04+git${SRCPV}"
 PV:porpoise  = "v2024.04+git${SRCPV}"
 
 SRCBRANCH = "boundary-v2022.04"
+SRCBRANCH:nitrogen91 = "ezurio-lf_v2024.04"
 SRCBRANCH:nitrogen93 = "ezurio-lf_v2024.04"
 SRCBRANCH:nitrogen95 = "ezurio-lf_v2024.04"
 SRCBRANCH:porpoise  = "ezurio-lf_v2024.04"
 
 SRCREV = "022ec9bc33131d26db56cceee6272e65dd3ee62f"
-SRCREV:nitrogen93 = "972a45adb210c10c620b1429e4ac2a3d24508b6a"
-SRCREV:nitrogen95 = "972a45adb210c10c620b1429e4ac2a3d24508b6a"
-SRCREV:porpoise  = "972a45adb210c10c620b1429e4ac2a3d24508b6a"
+SRCREV:nitrogen91 = "a1f4d25e90a4c6e541c06f42712dcc6a6466a924"
+SRCREV:nitrogen93 = "a1f4d25e90a4c6e541c06f42712dcc6a6466a924"
+SRCREV:nitrogen95 = "a1f4d25e90a4c6e541c06f42712dcc6a6466a924"
+SRCREV:porpoise  = "a1f4d25e90a4c6e541c06f42712dcc6a6466a924"
 
 DEPENDS += "bison-native dtc-native python3-setuptools-native"
 
@@ -36,4 +40,4 @@ S = "${WORKDIR}/git"
 B = "${WORKDIR}/build"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
-COMPATIBLE_MACHINE = "(nitrogen8m|nitrogen8mm|nitrogen8mn|nitrogen8mp|nitrogen8ulp|nitrogen93|nitrogen95|porpoise)"
+COMPATIBLE_MACHINE = "(nitrogen8m|nitrogen8mm|nitrogen8mn|nitrogen8mp|nitrogen8ulp|nitrogen91|nitrogen93|nitrogen95|porpoise)"
