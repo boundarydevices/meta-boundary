@@ -21,7 +21,7 @@ elif itest.s x8M == "x${cpu2}"; then
 	a_base=0x40000000
 	kernelimage=Image
 	bootcommand=booti
-elif itest.s x8U == "x${cpu2}"  || itest.s x93 == "${cpu3}"; then
+elif itest.s x8U == "x${cpu2}" || itest.s x91 == "${cpu3}" || itest.s x93 == "${cpu3}"; then
 	a_base=0x80000000
 	kernelimage=Image
 	bootcommand=booti
@@ -67,6 +67,8 @@ elif itest.s x8MQ == "x${cpu3}" ; then
 	dtb_prefix=imx8mq;
 elif itest.s x8UL == "x${cpu3}" ; then
 	dtb_prefix=imx8ulp;
+elif itest.s x91 == "${cpu3}" ; then
+	dtb_prefix=imx91;
 elif itest.s x93 == "${cpu3}" ; then
 	dtb_prefix=imx93;
 elif itest.s x95 == "${cpu3}" ; then
