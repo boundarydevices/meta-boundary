@@ -3,8 +3,6 @@
 
 require recipes-fsl/images/imx-image-multimedia.bb
 
-inherit populate_sdk_qt6
-
 CONFLICT_DISTRO_FEATURES = "directfb"
 
 IMAGE_INSTALL += " \
