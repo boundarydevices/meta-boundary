@@ -1,9 +1,11 @@
-LINUX_VERSION ?= "5.15.x-boundary"
-SRCBRANCH = "boundary-mtk-v5.15-v24.0"
-SRCREV = "f69835768eec1b753307d05bc1af5a08b7516a67"
+LINUX_VERSION ?= "6.6.x-boundary"
+SRCBRANCH = "ezurio-mtk-v6.6-pass1"
+SRCREV = "d89b6eac77e662c409ab54bdcbdead7dec833d40"
 SRC_URI = "git://github.com/boundarydevices/linux.git;branch=${SRCBRANCH};protocol=https"
 
-KBUILD_DEFCONFIG = "boundary_defconfig"
+# Add the Linux kernel config fragment as a Yocto config fragment
+SRC_URI:append := "https://raw.githubusercontent.com/boundarydevices/linux/${SRCREV}/arch/arm64/configs/tungsten.config;downloadfilename=tungsten.cfg"
+SRC_URI[sha256sum] = "7166cfdce8c2655fbadb3fe86c28e087702f7696658afd3d91687eb2ec69bf14"
 
 # Needed for kernel-fitimage-mtk class so dtbos are installed in fitimage
 python __anonymous () {

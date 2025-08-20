@@ -1,12 +1,12 @@
-From 76ea12098bd15c559cc8ae2511b618de775574c1 Mon Sep 17 00:00:00 2001
-From: Simon Gaynor <simon.gaynor@lairdconnect.com>
-Date: Thu, 31 Aug 2023 17:15:50 -0700
+From f37004cced045edd388b700683ba75d71fa94881 Mon Sep 17 00:00:00 2001
+From: Simon Gaynor <simon.gaynor@ezurio.com>
+Date: Wed, 20 Aug 2025 09:58:43 -0700
 Subject: [PATCH] trusted-firmware-a : Use LOG_LEVEL_ERROR for Release builds
 
-Signed-off-by: Simon Gaynor <simon.gaynor@lairdconnect.com>
+Signed-off-by: Simon Gaynor <simon.gaynor@ezurio.com>
 
 diff --git a/Makefile b/Makefile
-index 73007b413..a9250c6b0 100644
+index debf36de4..e4786025a 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -319,8 +319,8 @@ ifneq (${DEBUG}, 0)
@@ -21,7 +21,7 @@ index 73007b413..a9250c6b0 100644
  
  # Default build string (git branch and commit)
 diff --git a/plat/mediatek/mt8188/drivers/pmic_wrap_bl2/pmic_wrap_init.c b/plat/mediatek/mt8188/drivers/pmic_wrap_bl2/pmic_wrap_init.c
-index 971ea6ca7..a895fd6b1 100644
+index 07d2306d9..3ba9c59af 100644
 --- a/plat/mediatek/mt8188/drivers/pmic_wrap_bl2/pmic_wrap_init.c
 +++ b/plat/mediatek/mt8188/drivers/pmic_wrap_bl2/pmic_wrap_init.c
 @@ -5,7 +5,7 @@
@@ -31,7 +31,7 @@ index 971ea6ca7..a895fd6b1 100644
 -#define PMIC_WRAP_DEBUG 1
 +// #define PMIC_WRAP_DEBUG 1
  
- #include <pmic_wrap_init.h>
+ #include <stdint.h>
  #include <reg_PMIC_WRAP.h>
 -- 
 2.34.1

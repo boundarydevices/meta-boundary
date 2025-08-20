@@ -17,7 +17,6 @@ BBLAYERS ?= " \
   ##OEROOT##/../meta-mediatek-bluedroid \
   ##OEROOT##/../meta-mediatek-demo \
   ##OEROOT##/../meta-nn \
-  ##OEROOT##/../meta-stress-test \
   ##OEROOT##/../meta-security \
   ##OEROOT##/../meta-openembedded/meta-multimedia \
   ##OEROOT##/../meta-openembedded/meta-networking \
@@ -26,7 +25,6 @@ BBLAYERS ?= " \
   ##OEROOT##/../meta-openembedded/meta-perl \
   ##OEROOT##/../meta-rity/meta \
   ##OEROOT##/../meta-rity/meta-rity-bringup \
-  ##OEROOT##/../meta-rity/meta-rity-bsp \
   ##OEROOT##/../meta-rity/meta-rity-demo \
   ##OEROOT##/../meta-tensorflow \
   ##OEROOT##/../meta-qt5 \
