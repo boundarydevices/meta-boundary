@@ -15,7 +15,7 @@ SRC_URI = "git://github.com/boundarydevices/linux.git;branch=${SRCBRANCH};protoc
 
 LINUX_VERSION_EXTENSION = "+yocto"
 SRCBRANCH = "ezurio-lf-6.6.y"
-SRCREV = "ad9f584054f97c7f87d986e2e9ae323293b9c1f6"
+SRCREV = "9f12ebe29ec58a9e0d107a5d982ad2c877aa0e6f"
 DEPENDS += "lzop-native bc-native"
 COMPATIBLE_MACHINE = "(nitrogen8m|nitrogen8mm|nitrogen8mn|nitrogen8mp|nitrogen8ulp|nitrogen91|nitrogen93|nitrogen95|porpoise)"
 
