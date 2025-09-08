@@ -1,3 +1,3 @@
-SRCBRANCH = "ezurio-lf-6.6.52-2.2.0"
+SRCBRANCH = "ezurio-lf-6.12.20-2.0.0"
 SRC_URI = "git://github.com/boundarydevices/imx-oei.git;branch=${SRCBRANCH};protocol=https"
-SRCREV = "84dcaf380836af6a8e98bd26be459c9e3e83b7f2"
+SRCREV = "578b1aada4292c17787ff1378cb2770f208673ba"
