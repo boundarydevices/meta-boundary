@@ -27,10 +27,10 @@ SRCBRANCH:nitrogen95 = "ezurio-lf_v2024.04"
 SRCBRANCH:porpoise  = "ezurio-lf_v2024.04"
 
 SRCREV = "022ec9bc33131d26db56cceee6272e65dd3ee62f"
-SRCREV:nitrogen91 = "67fd254f4868b1970d86c8d0b1e047f863cab85e"
-SRCREV:nitrogen93 = "67fd254f4868b1970d86c8d0b1e047f863cab85e"
-SRCREV:nitrogen95 = "67fd254f4868b1970d86c8d0b1e047f863cab85e"
-SRCREV:porpoise  = "67fd254f4868b1970d86c8d0b1e047f863cab85e"
+SRCREV:nitrogen91 = "8e1aa8bfbc109fbfd64bb9dac80aa8ad628191eb"
+SRCREV:nitrogen93 = "8e1aa8bfbc109fbfd64bb9dac80aa8ad628191eb"
+SRCREV:nitrogen95 = "8e1aa8bfbc109fbfd64bb9dac80aa8ad628191eb"
+SRCREV:porpoise  = "8e1aa8bfbc109fbfd64bb9dac80aa8ad628191eb"
 
 DEPENDS += "bison-native dtc-native python3-setuptools-native"
 
