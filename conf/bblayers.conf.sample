@@ -30,5 +30,7 @@ BBLAYERS ?= " \
   ##OEROOT##/../meta-rity/meta-rity-demo \
   ##OEROOT##/../meta-tensorflow \
   ##OEROOT##/../meta-qt5 \
+  ##OEROOT##/../meta-lts-mixins \
+  ##OEROOT##/../meta-browser/meta-chromium \
   ##OEROOT##/../meta-boundary \
   "
