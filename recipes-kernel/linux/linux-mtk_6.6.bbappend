@@ -1,6 +1,6 @@
 LINUX_VERSION ?= "6.6.x-boundary"
 SRCBRANCH = "ezurio-mtk-v6.6-pass1"
-SRCREV = "d89b6eac77e662c409ab54bdcbdead7dec833d40"
+SRCREV = "f69c9f57e11c914c0b0a01b748c00f7f59348f0d"
 SRC_URI = "git://github.com/boundarydevices/linux.git;branch=${SRCBRANCH};protocol=https"
 
 # Add the Linux kernel config fragment as a Yocto config fragment
