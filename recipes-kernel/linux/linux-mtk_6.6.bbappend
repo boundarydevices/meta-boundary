@@ -1,12 +1,19 @@
-LINUX_VERSION ?= "6.6.x-boundary"
-SRCBRANCH = "ezurio-mtk-v6.6-pass1"
-SRCREV = "f69c9f57e11c914c0b0a01b748c00f7f59348f0d"
+
+FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
+
+LINUX_VERSION = "6.6.92-boundary"
+SRCBRANCH = "ezurio-mtk-v6.6-pass2"
+SRCREV = "bc4f79322d101d2c54eaae4ce1a90c794230f620"
 SRC_URI = "git://github.com/boundarydevices/linux.git;branch=${SRCBRANCH};protocol=https"
 
-# Add the Linux kernel config fragment as a Yocto config fragment
-SRC_URI:append := "https://raw.githubusercontent.com/boundarydevices/linux/${SRCREV}/arch/arm64/configs/tungsten.config;downloadfilename=tungsten.cfg"
-SRC_URI[sha256sum] = "7166cfdce8c2655fbadb3fe86c28e087702f7696658afd3d91687eb2ec69bf14"
+SRC_URI:append := " \
+	file://tungsten.cfg \
+	file://reduce_kernel.cfg \
+"
 
+SRC_URI:remove = " \
+	file://0001-GENIO-drivers-lib-Strip-path-components.patch \
+"
 # Needed for kernel-fitimage-mtk class so dtbos are installed in fitimage
 python __anonymous () {
     d.setVar('EXTERNAL_KERNEL_DEVICETREE', "${D}/boot/devicetree/")
