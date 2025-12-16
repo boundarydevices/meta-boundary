@@ -3,7 +3,7 @@ FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
 LINUX_VERSION = "6.6.92-boundary"
 SRCBRANCH = "ezurio-mtk-v6.6-pass2"
-SRCREV = "bc4f79322d101d2c54eaae4ce1a90c794230f620"
+SRCREV = "6480249e1d693be33b0ce44385f7d2757b741786"
 SRC_URI = "git://github.com/boundarydevices/linux.git;branch=${SRCBRANCH};protocol=https"
 
 SRC_URI:append := " \
