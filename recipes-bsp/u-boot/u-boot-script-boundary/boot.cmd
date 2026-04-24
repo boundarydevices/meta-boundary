@@ -91,20 +91,28 @@ if test ! -z "${m4enabled}"; then
 fi
 
 if test -z "${fdtfile}" ; then
-	if test -z "${fdt_file}" ; then
-	    bn=${dtb_prefix}-${board}${board_rv}${board_carrier}${board_modifier};
-	    if test ! -z "${mcore_dtb}" ; then
-		    if test -e ${devtype} ${devnum}:${distro_bootpart} ${prefix}${bn}-rpmsg.dtb; then
-		            fdt_file=${bn}-rpmsg.dtb
-		    else
-		            fdt_file=${bn}-m4.dtb
-		    fi
-	    else
-		    fdt_file=${bn}.dtb
-	    fi
-	fi
+    if test -z "${fdt_file}" ; then
+        bn=${dtb_prefix}-${board}${board_rv}${board_carrier}${board_modifier};
+        if test "imx8mq-nitrogen8m" = "${bn}" ; then
+            if i2c dev 4 && i2c probe 60 ; then
+                fdt_file=${bn}-rev50.dtb
+            else
+                fdt_file=${bn}.dtb
+            fi
+        else
+            if test ! -z "${mcore_dtb}" ; then
+                if test -e ${devtype} ${devnum}:${distro_bootpart} ${prefix}${bn}-rpmsg.dtb; then
+                    fdt_file=${bn}-rpmsg.dtb
+                else
+                    fdt_file=${bn}-m4.dtb
+                fi
+            else
+                fdt_file=${bn}.dtb
+            fi
+        fi
+    fi
 else
-	fdt_file=${fdtfile}
+    fdt_file=${fdtfile}
 fi
 
 if test ! -z "${mcore_dtb}" ; then
